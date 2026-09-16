@@ -19,8 +19,8 @@ SOURCE_INTERVAL_S = 0.03125
 SOURCE_INTERVAL_MS = 31.25
 DEADLINE_EPSILON_MS = 0.5
 TARGET_REAR_ASSET_ID = "source:nature:east-rear-tree-neutral-001"
-VIEWPORT_UPDATE_POLICY = "UPDATE_ONCE_PER_SOURCE_STATE"
-SUBMIT_SEMANTICS = "AFTER_STATE_GEOMETRY_UPDATE_BEFORE_ONE_SHOT_VIEWPORT_DRAW_REQUEST"
+VIEWPORT_UPDATE_POLICY = "UPDATE_ALWAYS_PIPELINED"
+SUBMIT_SEMANTICS = "AFTER_STATE_GEOMETRY_UPDATE_BEFORE_POST_DRAW_OBSERVATION"
 
 
 def _load(path: str | Path) -> dict[str, Any]:
@@ -64,6 +64,16 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         draw_times = [float(row.get("draw_time_s", -1.0)) for row in samples]
         submit_lateness = [float(row.get("submit_lateness_ms", 999999.0)) for row in samples]
         draw_lateness = [float(row.get("draw_lateness_ms", 999999.0)) for row in samples]
+        submit_misses = [
+            int(row.get("index", -1))
+            for row in samples
+            if float(row.get("submit_lateness_ms", 999999.0)) > SOURCE_INTERVAL_MS + DEADLINE_EPSILON_MS
+        ]
+        draw_misses = [
+            int(row.get("index", -1))
+            for row in samples
+            if float(row.get("draw_lateness_ms", 999999.0)) > SOURCE_INTERVAL_MS + DEADLINE_EPSILON_MS
+        ]
 
         exact_samples = (
             len(samples) == 17
@@ -84,8 +94,8 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         )
         monotonic = _strictly_non_decreasing(submit_times) and _strictly_non_decreasing(draw_times)
         submit_before_draw = len(samples) == 17 and all(submit <= draw for submit, draw in zip(submit_times, draw_times))
-        submit_deadline = len(samples) == 17 and max(submit_lateness, default=999999.0) <= SOURCE_INTERVAL_MS + DEADLINE_EPSILON_MS
-        draw_deadline = len(samples) == 17 and max(draw_lateness, default=999999.0) <= SOURCE_INTERVAL_MS + DEADLINE_EPSILON_MS
+        submit_deadline = len(samples) == 17 and not submit_misses
+        draw_deadline = len(samples) == 17 and not draw_misses
 
         near_clips = 0
         for row in samples:
@@ -122,6 +132,10 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
             "sample_count": len(samples),
             "maximum_submit_lateness_ms": max(submit_lateness, default=None),
             "maximum_draw_lateness_ms": max(draw_lateness, default=None),
+            "submission_deadline_miss_count": len(submit_misses),
+            "submission_deadline_miss_indices": submit_misses,
+            "post_draw_deadline_miss_count": len(draw_misses),
+            "post_draw_deadline_miss_indices": draw_misses,
             "final_draw_time_s": draw_times[-1] if draw_times else None,
             "near_clipped_endpoint_count": near_clips,
             "viewport_update_policy": block.get("viewport_update_policy"),
@@ -142,7 +156,7 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         "both_fixed_contexts_observed": set(receipt_contexts) == set(CONTEXTS),
         "all_17_exact_source_states_presented_per_context": all_exact_samples,
         "exact_0p03125_source_schedule_preserved": all_schedule_exact,
-        "one_shot_viewport_policy_and_post_geometry_submit_semantics_exact": (
+        "pipelined_viewport_policy_and_post_geometry_submit_semantics_exact": (
             receipt.get("viewport_update_policy") == VIEWPORT_UPDATE_POLICY
             and receipt.get("submit_semantics") == SUBMIT_SEMANTICS
             and all_context_policies
@@ -165,7 +179,9 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         "source_interval_s": SOURCE_INTERVAL_S,
         "viewport_update_policy": VIEWPORT_UPDATE_POLICY,
         "submit_semantics": SUBMIT_SEMANTICS,
-        "deadline_policy": "EACH_POST_GEOMETRY_SUBMIT_AND_ITS_ONE_SHOT_POST_DRAW_MUST_COMPLETE_WITHIN_ONE_0P03125_SECOND_SOURCE_INTERVAL_OF_ITS_EXACT_SOURCE_TIME",
+        "submission_cadence_state": "PASS" if all_submit_deadlines else "FAIL",
+        "post_draw_cadence_state": "PASS" if all_draw_deadlines else "FAIL",
+        "deadline_policy": "EACH_POST_GEOMETRY_SOURCE_STATE_SUBMISSION_AND_ITS_NEXT_PIPELINED_POST_DRAW_OBSERVATION_MUST_COMPLETE_WITHIN_ONE_0P03125_SECOND_SOURCE_INTERVAL_OF_ITS_EXACT_SOURCE_TIME",
         "deadline_epsilon_ms": DEADLINE_EPSILON_MS,
         "checks": checks,
         "context_metrics": context_metrics,
@@ -173,7 +189,7 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         "measured_width_count": measured_width_count,
         "near_clip_totals": near_clip_totals,
         "truth_boundary": (
-            "PASS proves only that the exact 17 already-authored Weather-width + sapling states were materialized and submitted in order at their exact 0.03125 s source-evaluation schedule, with exactly one proof SubViewport draw requested per source state, and each was followed by a Godot post-draw observation within one source interval in both fixed 1100x720 cameras. "
+            "PASS proves only that the exact 17 already-authored Weather-width + sapling states were materialized and submitted in order at their exact 0.03125 s source-evaluation schedule while the proof SubViewport rendered continuously, and each exact post-geometry submission was followed by a Godot post-draw observation within one source interval in both fixed 1100x720 cameras. "
             "The submit timestamp is taken after source-state geometry update, not at scheduler wake. No interpolated states are invented. This is not a frame-time benchmark, target-device performance certification, physical-weather simulation, gameplay/controller authority, arbitrary-camera guarantee, final Art Direction acceptance, CANON, production readiness, or VFX mastery."
         ),
     }
