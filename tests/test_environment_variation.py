@@ -80,13 +80,24 @@ class EnvironmentVariationTests(unittest.TestCase):
         self.assertEqual(result["receipt"]["attempts_exhausted"], 3)
         self.assertEqual(result["evidence"]["status"], "FAIL")
 
+    def test_retained_failure_control_matches_the_source_owned_hold_path(self):
+        control = variation.build_retained_failure_control(self.base, self.family)
+        self.assertEqual(control["schema"], variation.FAILURE_CONTROL_SCHEMA)
+        self.assertEqual(control["control_id"], "impossible-double-scale-001")
+        self.assertEqual(control["expected_status"], "HOLD")
+        self.assertEqual(control["observed_status"], "HOLD")
+        self.assertEqual(control["attempts_exhausted"], 3)
+        self.assertEqual(control["last_evidence_status"], "FAIL")
+        self.assertEqual(control["base_source_digest"], composition.digest(self.base))
+        self.assertEqual(control["truth_boundary"], "SYNTHETIC_NEGATIVE_CONTROL_ONLY_NOT_A_RETAINED_ASSET_VARIANT")
+
     def test_rule_cannot_modify_building_or_map_authority(self):
         changed = copy.deepcopy(self.family)
         changed["rules"][0]["asset_id"] = "proxy:building-pavilion"
         with self.assertRaisesRegex(ValueError, "cannot modify owned kind"):
             variation.generate_variant(self.base, changed, 7)
 
-    def test_evidence_build_retains_three_distinct_variants_and_views(self):
+    def test_evidence_build_retains_three_distinct_variants_views_and_failure_bound(self):
         with tempfile.TemporaryDirectory() as temp:
             summary = variation.build_family(self.base_path, self.family_path, temp)
             output = Path(temp)
@@ -100,6 +111,15 @@ class EnvironmentVariationTests(unittest.TestCase):
                 svg = (output / f"seed-{seed}-top.svg").read_text(encoding="utf-8")
                 self.assertIn('stroke-dasharray="6 4"', svg)
                 self.assertIn("proxy:object-crate-east", svg)
+
+            failure_path = output / "negative-control-impossible-double-scale.json"
+            self.assertTrue(failure_path.exists())
+            failure = json.loads(failure_path.read_text(encoding="utf-8"))
+            self.assertEqual(failure["observed_status"], "HOLD")
+            self.assertEqual(failure["attempts_exhausted"], 3)
+            self.assertEqual(failure["last_evidence_status"], "FAIL")
+            self.assertEqual(summary["retained_failure_control"]["path"], failure_path.name)
+            self.assertEqual(summary["retained_failure_control"]["observed_status"], "HOLD")
 
 
 if __name__ == "__main__":
