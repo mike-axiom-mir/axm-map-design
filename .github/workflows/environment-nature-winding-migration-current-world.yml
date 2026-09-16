@@ -5,12 +5,14 @@ on:
     branches: [studio/environment-weather-variant-object-convergence-001]
     paths:
       - "tools/environment_nature_winding_migration_current_world.py"
+      - "tools/environment_nature_winding_migration_current_world_v2.py"
       - "environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd"
       - "docs/ENVIRONMENT_NATURE_WINDING_MIGRATION_CURRENT_WORLD_001.md"
       - ".github/workflows/environment-nature-winding-migration-current-world.yml"
   pull_request:
     paths:
       - "tools/environment_nature_winding_migration_current_world.py"
+      - "tools/environment_nature_winding_migration_current_world_v2.py"
       - "environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd"
       - "docs/ENVIRONMENT_NATURE_WINDING_MIGRATION_CURRENT_WORLD_001.md"
       - ".github/workflows/environment-nature-winding-migration-current-world.yml"
@@ -38,7 +40,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
           git cat-file -e b9d9ed28e9a826c4698014db5f91c59aba9dddfc^{commit}
           git merge-base --is-ancestor b9d9ed28e9a826c4698014db5f91c59aba9dddfc HEAD
-          python -m py_compile tools/environment_nature_winding_migration_current_world.py
+          python -m py_compile tools/environment_nature_winding_migration_current_world.py tools/environment_nature_winding_migration_current_world_v2.py
           grep -F 'NATURE_SOURCE_MIGRATION_HEAD := "4ddbe66e5c02d22407ef773d5346a2fe6f349a2d"' environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
           grep -F 'NATURE_VFX_HEAD := "0b9167ac6d7b6d94d9fef92720f8c60e3ef45700"' environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
 
@@ -83,7 +85,7 @@ jobs:
           set -euo pipefail
           out=evidence/environment_nature_winding_migration_current_world_001
           mkdir -p environment-proof/generated
-          python tools/environment_nature_winding_migration_current_world.py build \
+          python tools/environment_nature_winding_migration_current_world_v2.py build \
             --parent "$out/parent/combined_current_world.json" \
             --nature-root .nature-donor \
             --environment-head "$(cat exact-head.txt)" \
@@ -96,7 +98,8 @@ jobs:
           assert all(p['checks'].values()),p
           assert p['nature_source_migration_head']=='4ddbe66e5c02d22407ef773d5346a2fe6f349a2d',p
           assert p['nature_vfx_head']=='0b9167ac6d7b6d94d9fef92720f8c60e3ef45700',p
-          assert p['sapling_max_vertex_residual_m'] <= 1e-12,p
+          assert p['maximum_translation_residual_m'] <= 1e-12,p
+          assert p['winding_changed_triangles']=={'sapling-neutral-001':260,'compact-east-tree-neutral-001':260,'east-rear-tree-neutral-001':0},p
           print('PASS_EXACT_NATURE_MIGRATED_CURRENT_WORLD_STRUCTURE')
           PY
 
@@ -182,7 +185,7 @@ jobs:
         run: |
           set -euo pipefail
           out=evidence/environment_nature_winding_migration_current_world_001
-          python tools/environment_nature_winding_migration_current_world.py verify \
+          python tools/environment_nature_winding_migration_current_world_v2.py verify \
             --payload "$out/combined_current_world.json" \
             --reference-root "$out/reference/candidate" \
             --candidate-root "$out/candidate" \
@@ -199,6 +202,7 @@ jobs:
           print(json.dumps({
             'state':p['state'],
             'composition_digest':p['composition_digest'],
+            'mixed_parent_lineage_discovery':p['mixed_parent_lineage_discovery'],
             'visual_delta_characterization':p['visual_delta_characterization'],
             'runtime_deltas':p['runtime_deltas'],
             'decision':p['decision'],
