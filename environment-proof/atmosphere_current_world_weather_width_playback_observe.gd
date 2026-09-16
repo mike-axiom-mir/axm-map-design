@@ -5,6 +5,8 @@ const PLAYBACK_STATE := "OBSERVED_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_WALL_CLOCK_
 const PLAYBACK_CONTEXTS := ["path_eye", "elevated_oblique"]
 const PLAYBACK_INTERVAL_S := 0.03125
 const PLAYBACK_INTERVAL_US := 31250
+const PLAYBACK_VIEWPORT_POLICY := "UPDATE_ONCE_PER_SOURCE_STATE"
+const PLAYBACK_SUBMIT_SEMANTICS := "AFTER_STATE_GEOMETRY_UPDATE_BEFORE_ONE_SHOT_VIEWPORT_DRAW_REQUEST"
 
 func write_playback_receipt(data:Dictionary)->void:
     var file:=FileAccess.open("res://atmosphere-current-world-weather-width-playback-runtime.json",FileAccess.WRITE)
@@ -20,7 +22,10 @@ func wait_until_tick(target_us:int)->void:
 func sapling_receipt_is_live(receipt:Dictionary)->bool:
     return int(receipt.get("surface_count",0))>0 and int(receipt.get("source_vertex_count",0))>0 and int(receipt.get("source_triangle_count",0))>0
 
-func run_context_playback(camera:Camera3D,states:Array,context:String)->Dictionary:
+func request_one_shot_draw(viewport:SubViewport)->void:
+    viewport.render_target_update_mode=SubViewport.UPDATE_ONCE
+
+func run_context_playback(camera:Camera3D,viewport:SubViewport,states:Array,context:String)->Dictionary:
     var first=states[0] as Dictionary
     var first_scene=first["scene"] as Dictionary
     configure_camera(camera,first_scene,context)
@@ -33,7 +38,12 @@ func run_context_playback(camera:Camera3D,states:Array,context:String)->Dictiona
     var warm_weather=fill_weather_width_ribbons(first_scene["weather_lines"] as Array,camera)
     if warm_weather.get("state")!="PASS_SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBONS":
         return {"state":"FAIL_WARMUP_WEATHER","detail":warm_weather}
-    await settle()
+    # Do not continuously rasterize the 1100x720 proof world while waiting for
+    # the next authored source time. One explicit draw is requested per source
+    # state instead, so the timing receipt measures source-state presentation
+    # rather than background proof-host rendering pressure.
+    request_one_shot_draw(viewport)
+    await RenderingServer.frame_post_draw
 
     var clock_start_us:=Time.get_ticks_usec()
     var samples=[]
@@ -43,7 +53,6 @@ func run_context_playback(camera:Camera3D,states:Array,context:String)->Dictiona
         var scheduled_time_s:=float(row["time_s"])
         var target_tick_us:=clock_start_us+int(round(scheduled_time_s*1000000.0))
         await wait_until_tick(target_tick_us)
-        var submit_tick_us:=Time.get_ticks_usec()
 
         var sapling_update=fill_sapling(scene["sapling"] as Dictionary)
         if not sapling_receipt_is_live(sapling_update):
@@ -54,6 +63,13 @@ func run_context_playback(camera:Camera3D,states:Array,context:String)->Dictiona
         if float(weather_update.get("maximum_projected_width_residual_px",999.0))>WIDTH_RESIDUAL_TOL_PX:
             return {"state":"FAIL_WIDTH_RESIDUAL","index":row["index"],"detail":weather_update}
 
+        # "submit" is intentionally measured after the exact source state has
+        # been materialized into the stable sapling/weather resources and just
+        # before requesting the one-shot viewport draw. Earlier evidence took
+        # this timestamp before geometry update, which measured scheduler wake
+        # timing rather than actual state submission.
+        var submit_tick_us:=Time.get_ticks_usec()
+        request_one_shot_draw(viewport)
         await RenderingServer.frame_post_draw
         var draw_tick_us:=Time.get_ticks_usec()
         var submit_time_s:=float(submit_tick_us-clock_start_us)/1000000.0
@@ -81,6 +97,8 @@ func run_context_playback(camera:Camera3D,states:Array,context:String)->Dictiona
         "clock_start_us":clock_start_us,
         "interval_s":PLAYBACK_INTERVAL_S,
         "interval_us":PLAYBACK_INTERVAL_US,
+        "viewport_update_policy":PLAYBACK_VIEWPORT_POLICY,
+        "submit_semantics":PLAYBACK_SUBMIT_SEMANTICS,
         "samples":samples
     }
 
@@ -92,7 +110,9 @@ func _initialize()->void:
         "promotion_effect":"NONE",
         "presentation_mode":WIDTH_PRESENTATION_MODE,
         "schedule":"EXACT_SOURCE_EVALUATION_TIMES_0_TO_0P5_SECONDS_17_STATES",
-        "truth_boundary":"Wall-clock presentation observation for the exact already-proven source-width Weather + sapling states in the two fixed 1100x720 cameras. The observer schedules the 17 direct source states at their exact 0.03125 s source-evaluation times and waits for a Godot post-draw signal after each update. It does not invent interpolation, claim physical wind, controller/gameplay authority, arbitrary camera or resolution behavior, target-device performance, frame-time budget certification, final Art Direction, CANON, or mastery."
+        "viewport_update_policy":PLAYBACK_VIEWPORT_POLICY,
+        "submit_semantics":PLAYBACK_SUBMIT_SEMANTICS,
+        "truth_boundary":"Wall-clock presentation observation for the exact already-proven source-width Weather + sapling states in the two fixed 1100x720 cameras. The observer schedules the 17 direct source states at their exact 0.03125 s source-evaluation times, materializes each state into stable source resources, requests exactly one SubViewport draw for that source state, and waits for a Godot post-draw signal. It does not invent interpolation, claim physical wind, controller/gameplay authority, arbitrary camera or resolution behavior, target-device performance, frame-time budget certification, final Art Direction, CANON, or mastery."
     }
     var payload:=load_payload()
     if payload.is_empty() or String(payload.get("schema",""))!=WIDTH_SCHEMA:
@@ -131,7 +151,7 @@ func _initialize()->void:
     var viewport:=SubViewport.new()
     viewport.size=Vector2i(1100,720)
     viewport.own_world_3d=true
-    viewport.render_target_update_mode=SubViewport.UPDATE_ALWAYS
+    viewport.render_target_update_mode=SubViewport.UPDATE_DISABLED
     viewport.render_target_clear_mode=SubViewport.CLEAR_MODE_ALWAYS
     get_root().add_child(viewport)
     var root3d:=Node3D.new()
@@ -163,7 +183,7 @@ func _initialize()->void:
     var contexts={}
     for context_value in PLAYBACK_CONTEXTS:
         var context=String(context_value)
-        var result=await run_context_playback(camera,states,context)
+        var result=await run_context_playback(camera,viewport,states,context)
         contexts[context]=result
         if String(result.get("state",""))!="OBSERVED_EXACT_17_STATE_WALL_CLOCK_SEQUENCE":
             playback_receipt["state"]="FAIL_CONTEXT_PLAYBACK"
