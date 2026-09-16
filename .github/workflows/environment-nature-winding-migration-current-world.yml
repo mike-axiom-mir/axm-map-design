@@ -57,6 +57,7 @@ jobs:
           git -C .nature-donor cat-file -e 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d^{commit}
           git -C .nature-donor merge-base --is-ancestor 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d HEAD
           grep -F 'MIGRATED_NEUTRAL_MESH_DIGEST = "47dd4d82651138299d05071df3e8a410f21f673ab8d42b936d7222eb5351b862"' .nature-donor/src/axm_nature_design/wind_response_migrated.py
+          python -m pip install --disable-pip-version-check pytest
           python -m pytest -q .nature-donor/tests/test_source_topology_migration.py .nature-donor/tests/test_wind_response_migrated.py
 
       - name: Download exact Object-material current-world payload authority
