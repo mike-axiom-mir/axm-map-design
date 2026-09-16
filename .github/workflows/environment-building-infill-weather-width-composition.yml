@@ -175,7 +175,7 @@ jobs:
           mat=json.loads((root/'material-donor/evidence/building_current_world_infill_repair_001/candidate_current_world.json').read_text())
           cases=[]
           bad=copy.deepcopy(env); bad['receiving_head']='drifted'; cases.append(('environment head drift',bad,mat))
-          bad=copy.deepcopy(env); bad['states'][0]['scene']['weather_lines'][0]['source_width_px']+=0.1; cases.append(('weather width drift',bad,mat))
+          bad=copy.deepcopy(env); bad['states'][0]['scene']['weather_lines'][0]['source_width_px']+=0.1; bad['states'][0]['scene']['scene_digest']=m.scene_digest(bad['states'][0]['scene']); cases.append(('weather width drift',bad,mat))
           bad=copy.deepcopy(mat); bad['receiving_head']='drifted'; cases.append(('material head drift',env,bad))
           bad=copy.deepcopy(mat); bad['candidate_infill']['roughness']=0.5; cases.append(('material candidate drift',env,bad))
           for label,e,mv in cases:
