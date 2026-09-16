@@ -1,0 +1,242 @@
+name: VFX synchronized atmosphere evidence
+
+on:
+  push:
+    branches: [studio/vfx-synchronized-weather-sapling-001]
+    paths:
+      - "tools/environment_atmosphere_sync.py"
+      - "tests/test_environment_atmosphere_sync.py"
+      - "docs/ENVIRONMENT_ATMOSPHERE_SYNC_001.md"
+      - ".github/workflows/vfx-atmosphere-sync.yml"
+      - "environment-proof/**"
+      - "tools/environment_weather_sequence.py"
+      - "tools/environment_motion_scene.py"
+      - "tools/environment_eye_level.py"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  pull_request:
+    paths:
+      - "tools/environment_atmosphere_sync.py"
+      - "tests/test_environment_atmosphere_sync.py"
+      - "docs/ENVIRONMENT_ATMOSPHERE_SYNC_001.md"
+      - ".github/workflows/vfx-atmosphere-sync.yml"
+      - "environment-proof/**"
+      - "tools/environment_weather_sequence.py"
+      - "tools/environment_motion_scene.py"
+      - "tools/environment_eye_level.py"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-atmosphere-sync-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact VFX receiving head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact accepted Nature visual response
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cee14f5b3feea78b0adcd044bad2ea3c97657fc6
+          path: .nature
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Verify exact dependency heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature rev-parse HEAD)" = "cee14f5b3feea78b0adcd044bad2ea3c97657fc6"
+          test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
+          git rev-parse HEAD > exact-head.txt
+
+      - name: Compile and test synchronized atmosphere contract
+        env:
+          AXM_NATURE_ROOT: .nature
+          AXM_WEATHER_ROOT: .weather
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_atmosphere_sync -v
+
+      - name: Build exact synchronized atmosphere sequence
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python tools/environment_atmosphere_sync.py \
+            --nature-root .nature \
+            --weather-root .weather \
+            --nature-response-head cee14f5b3feea78b0adcd044bad2ea3c97657fc6 \
+            --output evidence/environment_atmosphere_sync_001
+
+      - name: Validate exact source coupling boundary before rendering
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_atmosphere_sync_001')
+          payload=json.loads((root/'atmosphere_sync.json').read_text())
+          assert payload['status']=='PASS_SYNCHRONIZED_VISUAL_ATMOSPHERE_SEQUENCE',payload
+          assert all(payload['checks'].values()),payload
+          assert payload['sampling_schedule_s']==[0.0,0.0625,0.125,0.1875,0.25,0.3125,0.375,0.4375,0.5],payload
+          assert payload['nature_response']['head']=='cee14f5b3feea78b0adcd044bad2ea3c97657fc6',payload
+          assert payload['weather_source']['head']=='ca2eaba519e8449835b0ea6ef944b7080c3caa6a',payload
+          assert payload['nature_response']['visual_wind_xy']==payload['weather_source']['visual_wind_xy'],payload
+          assert payload['nature_response']['semantics']=='VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED',payload
+          assert payload['shared_relationship']=='SHARED_EVIDENCE_CLOCK_AND_EXACT_VISUAL_DIRECTION_NOT_PHYSICAL_COUPLING',payload
+          assert len(payload['states'])==9,payload
+          assert all(len(row['candidate_scene']['weather_lines'])==36 for row in payload['states']),payload
+          assert payload['states'][0]['control_scene']['sapling']['vertices_source_xyz_m']==payload['states'][0]['candidate_scene']['sapling']['vertices_source_xyz_m'],payload
+          assert payload['states'][4]['control_scene']['sapling']['vertices_source_xyz_m']!=payload['states'][4]['candidate_scene']['sapling']['vertices_source_xyz_m'],payload
+          assert payload['states'][8]['control_scene']['sapling']['vertices_source_xyz_m']==payload['states'][8]['candidate_scene']['sapling']['vertices_source_xyz_m'],payload
+          print(json.dumps({k:payload[k] for k in ('status','checks','measurements','sequence_digest')},indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render all nine synchronized candidates
+        run: |
+          set -euo pipefail
+          out=evidence/environment_atmosphere_sync_001/rendered
+          mkdir -p "$out" environment-proof/generated
+          rm -f "$out"/*
+          for index in 00 01 02 03 04 05 06 07 08; do
+            cp "evidence/environment_atmosphere_sync_001/candidate_scene_${index}.json" environment-proof/generated/scene_runtime.json
+            rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+            xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+              .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+              --display-driver x11 \
+              --rendering-method gl_compatibility \
+              --path environment-proof \
+              --script observe.gd
+            mv environment-proof/environment-eye-level-runtime-receipt.json "$out/candidate_runtime_${index}.json"
+            mv environment-proof/path_eye.png "$out/candidate_path_eye_${index}.png"
+            mv environment-proof/elevated_oblique.png "$out/candidate_elevated_oblique_${index}.png"
+          done
+
+      - name: Render matched Weather-only controls at start peak and return
+        run: |
+          set -euo pipefail
+          out=evidence/environment_atmosphere_sync_001/rendered
+          for index in 00 04 08; do
+            cp "evidence/environment_atmosphere_sync_001/control_scene_${index}.json" environment-proof/generated/scene_runtime.json
+            rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+            xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+              .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+              --display-driver x11 \
+              --rendering-method gl_compatibility \
+              --path environment-proof \
+              --script observe.gd
+            mv environment-proof/environment-eye-level-runtime-receipt.json "$out/control_runtime_${index}.json"
+            mv environment-proof/path_eye.png "$out/control_path_eye_${index}.png"
+            mv environment-proof/elevated_oblique.png "$out/control_elevated_oblique_${index}.png"
+          done
+
+      - name: Validate target-host synchronized visual evidence
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('evidence/environment_atmosphere_sync_001')
+          out=root/'rendered'
+          payload=json.loads((root/'atmosphere_sync.json').read_text())
+          candidate_hashes={'path_eye':[],'elevated_oblique':[]}
+          receipts=[]
+          for row in payload['states']:
+              idx=f"{row['index']:02d}"
+              receipt=json.loads((out/f'candidate_runtime_{idx}.json').read_text())
+              scene=json.loads((root/f'candidate_scene_{idx}.json').read_text())
+              assert receipt['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',receipt
+              assert receipt['promotion_effect']=='NONE',receipt
+              assert receipt['scene_digest']==scene['scene_digest'],(receipt,scene)
+              assert receipt['receiving_head']==payload['receiving_head'],(receipt,payload)
+              for context,capture in receipt['contexts'].items():
+                  assert capture['state']=='PASS',(idx,context,capture)
+                  assert capture['capture']['bytes']>3000,(idx,context,capture)
+                  assert capture['sapling']['vertices']==390,capture
+                  assert capture['sapling']['triangles']==570,capture
+                  assert capture['weather']['streaks']==36,capture
+                  p=out/f'candidate_{context}_{idx}.png'
+                  candidate_hashes[context].append(hashlib.sha256(p.read_bytes()).hexdigest())
+              receipts.append(hashlib.sha256((out/f'candidate_runtime_{idx}.json').read_bytes()).hexdigest())
+          assert len(set(candidate_hashes['path_eye']))==9,candidate_hashes
+          assert len(set(candidate_hashes['elevated_oblique']))==9,candidate_hashes
+
+          paired={}
+          for idx in ('00','04','08'):
+              paired[idx]={}
+              control_receipt=json.loads((out/f'control_runtime_{idx}.json').read_text())
+              assert control_receipt['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',control_receipt
+              for context in ('path_eye','elevated_oblique'):
+                  control=out/f'control_{context}_{idx}.png'
+                  candidate=out/f'candidate_{context}_{idx}.png'
+                  ch=hashlib.sha256(control.read_bytes()).hexdigest()
+                  ah=hashlib.sha256(candidate.read_bytes()).hexdigest()
+                  paired[idx][context]={'control_sha256':ch,'candidate_sha256':ah,'byte_identical':ch==ah}
+          assert all(paired['00'][c]['byte_identical'] for c in paired['00']),paired
+          assert all(not paired['04'][c]['byte_identical'] for c in paired['04']),paired
+          assert all(paired['08'][c]['byte_identical'] for c in paired['08']),paired
+
+          summary={
+              'schema':'axm.environment-atmosphere-sync-render-evidence/v0.1',
+              'state':'PASS_SHARED_CLOCK_TARGET_HOST_VISUAL_RETURN',
+              'receiving_head':payload['receiving_head'],
+              'sequence_digest':payload['sequence_digest'],
+              'candidate_image_hashes':candidate_hashes,
+              'candidate_runtime_receipt_hashes':receipts,
+              'paired_control_candidate':paired,
+              'truth_boundary':'Nine distinct synchronized target-host candidate states plus exact visual equality at the neutral endpoints and inequality at the midpoint prove the bounded visual receiving path. They do not prove continuous interpolation, physical wind coupling, forces, target performance, final Art Direction, gameplay, CANON, or mastery.'
+          }
+          (root/'render_evidence.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+
+      - name: Upload exact synchronized atmosphere evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-atmosphere-sync-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            exact-head.txt
+            evidence/environment_atmosphere_sync_001/atmosphere_sync.json
+            evidence/environment_atmosphere_sync_001/control_scene_*.json
+            evidence/environment_atmosphere_sync_001/candidate_scene_*.json
+            evidence/environment_atmosphere_sync_001/render_evidence.json
+            evidence/environment_atmosphere_sync_001/rendered/*.json
+            evidence/environment_atmosphere_sync_001/rendered/*.png
+          if-no-files-found: warn
+          retention-days: 30
