@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "environment-proof/atmosphere_current_world_weather_width_runtime_cache_observe.gd"
+      - "environment-proof/atmosphere_current_world_weather_width_runtime_cache_snapshot_observe.gd"
       - "tools/environment_weather_width_runtime_cache.py"
       - ".github/workflows/runtime-weather-width-cadence-cache.yml"
       - "docs/RUNTIME_WEATHER_WIDTH_CADENCE_CACHE_001.md"
@@ -132,7 +133,7 @@ jobs:
             --display-driver x11 \
             --rendering-method gl_compatibility \
             --path environment-proof \
-            --script atmosphere_current_world_weather_width_runtime_cache_observe.gd \
+            --script atmosphere_current_world_weather_width_runtime_cache_snapshot_observe.gd \
             2>&1 | tee "$out/godot.log"
           cp environment-proof/atmosphere-current-world-weather-width-runtime-cache.json "$out/runtime.json"
 
