@@ -57,8 +57,8 @@ func build_context_cache(camera:Camera3D,states:Array,context:String)->Dictionar
         if residual>WIDTH_RESIDUAL_TOL_PX:
             return {"state":"FAIL_CACHE_WIDTH_RESIDUAL","index":row["index"],"detail":weather_update}
         maximum_width_residual=maxf(maximum_width_residual,residual)
-        var cached_weather=weather_mesh.duplicate(true) as Mesh
-        var cached_sapling=sapling_mesh.duplicate(true) as Mesh
+        var cached_weather:Mesh=weather_mesh.duplicate(true) as Mesh
+        var cached_sapling:Mesh=sapling_mesh.duplicate(true) as Mesh
         if cached_weather==null or cached_sapling==null:
             return {"state":"FAIL_CACHE_DUPLICATE","index":row["index"]}
         weather_meshes.append(cached_weather)
