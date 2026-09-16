@@ -1,0 +1,192 @@
+name: VFX Environment Weather sequence evidence
+
+on:
+  push:
+    branches: [studio/vfx-weather-scene-sequence-001]
+    paths:
+      - "tools/environment_weather_sequence.py"
+      - "tests/test_environment_weather_sequence.py"
+      - "docs/ENVIRONMENT_WEATHER_SEQUENCE_001.md"
+      - ".github/workflows/vfx-environment-weather-sequence.yml"
+      - "environment-proof/**"
+      - "tools/environment_eye_level.py"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  pull_request:
+    paths:
+      - "tools/environment_weather_sequence.py"
+      - "tests/test_environment_weather_sequence.py"
+      - "docs/ENVIRONMENT_WEATHER_SEQUENCE_001.md"
+      - ".github/workflows/vfx-environment-weather-sequence.yml"
+      - "environment-proof/**"
+      - "tools/environment_eye_level.py"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-weather-sequence-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout VFX receiving lane
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Verify dependency heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature rev-parse HEAD)" = "fbc202449981f2bac153951c561ed0ed6120c936"
+          test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
+
+      - name: Compile and test sampled Weather receiving contract
+        env:
+          AXM_NATURE_ROOT: .nature
+          AXM_WEATHER_ROOT: .weather
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_weather_sequence -v
+
+      - name: Build exact sampled Weather sequence
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python tools/environment_weather_sequence.py \
+            --nature-root .nature \
+            --weather-root .weather \
+            --output evidence/environment_weather_sequence_001
+
+      - name: Validate source-derived sequence before rendering
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_weather_sequence_001')
+          seq=json.loads((root/'weather_sequence.json').read_text())
+          assert seq['status']=='PASS',seq
+          assert all(seq['checks'].values()),seq
+          assert len(seq['states'])==9,seq
+          assert seq['sampling_schedule_s']==[0.0,0.0625,0.125,0.1875,0.25,0.3125,0.375,0.4375,0.5],seq
+          assert seq['weather_source']['head']=='ca2eaba519e8449835b0ea6ef944b7080c3caa6a',seq
+          assert seq['weather_source']['semantics']=='VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED',seq
+          assert len({row['field_digest'] for row in seq['states']})==9,seq
+          assert all(len(row['scene']['weather_lines'])==36 for row in seq['states']),seq
+          print(json.dumps({k:seq[k] for k in ('status','checks','motion_metrics','sequence_digest')},indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render all nine exact Weather states through existing Environment host
+        run: |
+          set -euo pipefail
+          out=evidence/environment_weather_sequence_001/rendered
+          mkdir -p "$out" environment-proof/generated
+          rm -f "$out"/*
+          for index in 00 01 02 03 04 05 06 07 08; do
+            cp "evidence/environment_weather_sequence_001/scene_${index}.json" environment-proof/generated/scene_runtime.json
+            rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+            xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+              .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+              --display-driver x11 \
+              --rendering-method gl_compatibility \
+              --path environment-proof \
+              --script observe.gd
+            mv environment-proof/environment-eye-level-runtime-receipt.json "$out/runtime_${index}.json"
+            mv environment-proof/path_eye.png "$out/path_eye_${index}.png"
+            mv environment-proof/elevated_oblique.png "$out/elevated_oblique_${index}.png"
+          done
+
+      - name: Validate retained target-host sample sequence
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('evidence/environment_weather_sequence_001')
+          out=root/'rendered'
+          seq=json.loads((root/'weather_sequence.json').read_text())
+          hashes={'path_eye':[],'elevated_oblique':[]}
+          receipts=[]
+          for row in seq['states']:
+              idx=f"{row['index']:02d}"
+              receipt=json.loads((out/f'runtime_{idx}.json').read_text())
+              scene=json.loads((root/f'scene_{idx}.json').read_text())
+              assert receipt['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',receipt
+              assert receipt['promotion_effect']=='NONE',receipt
+              assert receipt['scene_digest']==scene['scene_digest'],(receipt,scene)
+              assert receipt['receiving_head']==seq['receiving_head'],(receipt,seq)
+              for context,capture in receipt['contexts'].items():
+                  assert capture['state']=='PASS',(idx,context,capture)
+                  assert capture['capture']['bytes']>3000,(idx,context,capture)
+                  assert capture['sapling']['vertices']==390,capture
+                  assert capture['sapling']['triangles']==570,capture
+                  assert capture['weather']['streaks']==36,capture
+                  p=out/f'{context}_{idx}.png'
+                  hashes[context].append(hashlib.sha256(p.read_bytes()).hexdigest())
+              receipts.append(hashlib.sha256((out/f'runtime_{idx}.json').read_bytes()).hexdigest())
+          assert len(set(hashes['path_eye']))==9,hashes
+          assert len(set(hashes['elevated_oblique']))==9,hashes
+          summary={
+              'schema':'axm.environment-weather-sequence-render-evidence/v0.1',
+              'state':'PASS_NINE_DISTINCT_TARGET_HOST_SAMPLED_STATES',
+              'receiving_head':seq['receiving_head'],
+              'sequence_digest':seq['sequence_digest'],
+              'image_hashes':hashes,
+              'runtime_receipt_hashes':receipts,
+              'truth_boundary':'Distinct target-host images prove the exact sampled Weather states are visibly different and renderable in this fixed host. They do not prove continuous live playback, interpolation quality, update cost, target FPS, physical weather, final art direction, gameplay, CANON, or mastery.'
+          }
+          (root/'render_evidence.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+
+      - name: Upload exact sampled Weather receiving-scene evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-weather-sequence-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_weather_sequence_001/weather_sequence.json
+            evidence/environment_weather_sequence_001/scene_*.json
+            evidence/environment_weather_sequence_001/render_evidence.json
+            evidence/environment_weather_sequence_001/rendered/*.json
+            evidence/environment_weather_sequence_001/rendered/*.png
+          if-no-files-found: warn
+          retention-days: 30
