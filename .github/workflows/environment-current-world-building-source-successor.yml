@@ -1,0 +1,273 @@
+name: Environment current-world Building source-successor evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_building_source_successor_current_world.py"
+      - "docs/ENVIRONMENT_CURRENT_WORLD_BUILDING_SOURCE_SUCCESSOR_001.md"
+      - ".github/workflows/environment-current-world-building-source-successor.yml"
+  pull_request:
+    paths:
+      - "tools/environment_building_source_successor_current_world.py"
+      - "docs/ENVIRONMENT_CURRENT_WORLD_BUILDING_SOURCE_SUCCESSOR_001.md"
+      - ".github/workflows/environment-current-world-building-source-successor.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-building-source-successor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment lane head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact receiving head and historical parent
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5^{commit}
+          git merge-base --is-ancestor 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5 HEAD
+          python -m py_compile tools/environment_building_source_successor_current_world.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download exact retained PR24 current-world material parent
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_source_successor_001
+          mkdir -p "$out/parent"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10447016718/zip" \
+            --output "$out/parent.zip"
+          echo "aeda6e564ae8ac99906c61ac56a692792c4227f2539b0c453e66914b9d15f1ff  $out/parent.zip" | sha256sum --check --strict
+          unzip -q "$out/parent.zip" -d "$out/parent"
+          test "$(cat "$out/parent/exact-head.txt")" = 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_current_world_building_source_successor_001/parent/combined_material.json'))
+          assert p['schema']=='axm.environment-current-world-building-material-convergence-evidence/v0.1',p
+          assert p['status']=='PASS_CURRENT_WORLD_BUILDING_MATERIAL_CONVERGENCE_STRUCTURE',p
+          assert p['receiving_head']=='48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5',p
+          assert p['building_source_head']=='4faa769b406bf3ad0ba9489a77141c27f122ce51',p
+          assert p['building_material_profile_sha256']=='e8dd0c33b9b2aea108194af57a8fe8de39c7e67bb86109af6dbf3895f22c010b',p
+          assert len(p['states'])==17,p
+          PY
+
+      - name: Checkout exact source-owned Building successor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 57f66b1245812f0c3d402232a046b86c0b5c72d8
+          path: .building-successor
+          fetch-depth: 1
+
+      - name: Checkout exact current Building Materials source-bound lane
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 318181b4e4f2cd957c8d7e22a6a2beeec9c58256
+          path: .building-material-successor
+          fetch-depth: 1
+
+      - name: Verify exact Building donor heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-successor rev-parse HEAD)" = 57f66b1245812f0c3d402232a046b86c0b5c72d8
+          test "$(git -C .building-material-successor rev-parse HEAD)" = 318181b4e4f2cd957c8d7e22a6a2beeec9c58256
+
+      - name: Rebuild exact successor-bound Building material payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_source_successor_001/building-material
+          python .building-material-successor/tools/build_building_material_lookdev_evidence.py \
+            --source-root .building-successor \
+            --source-head 57f66b1245812f0c3d402232a046b86c0b5c72d8 \
+            --profile .building-material-successor/lookdev/building_material_profile_001.json \
+            --out "$out"
+          python - <<'PY'
+          import json
+          root='evidence/environment_current_world_building_source_successor_001/building-material'
+          r=json.load(open(root+'/build_receipt.json'))
+          assert r['result']=='PASS_SOURCE_BOUND_BUILDING_SURFACE_PAYLOAD',r
+          assert r['hard_surface_source_head']=='57f66b1245812f0c3d402232a046b86c0b5c72d8',r
+          assert r['source_schema']=='axm.building-hard-surface/v0.2',r
+          assert r['source_revision']=='service-pavilion-001/closed-outward-box-shells-002',r
+          assert r['box_topology_revision']=='closed-outward-12-triangle-v1',r
+          assert r['material_profile_sha256']=='e8dd0c33b9b2aea108194af57a8fe8de39c7e67bb86109af6dbf3895f22c010b',r
+          t=r['topology_summary']
+          assert (t['object_count'],t['vertex_count'],t['triangle_count'])==(19,152,228),t
+          assert t['boundary_edge_count']==t['nonmanifold_edge_count']==t['orientation_conflict_edge_count']==t['degenerate_triangle_count']==0,t
+          assert t['outward_triangle_count']==228 and t['inward_triangle_count']==0,t
+          PY
+
+      - name: Rebind exact source-owned topology into current world
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_source_successor_001
+          python tools/environment_building_source_successor_current_world.py \
+            --base "$out/parent/combined_material.json" \
+            --building-source-root .building-successor \
+            --material-payload "$out/building-material/building_material_payload.json" \
+            --material-receipt "$out/building-material/build_receipt.json" \
+            --source-head 57f66b1245812f0c3d402232a046b86c0b5c72d8 \
+            --material-head 318181b4e4f2cd957c8d7e22a6a2beeec9c58256 \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/successor_current_world.json" \
+            --observer-output "$out/successor_observer.json"
+          cp exact-head.txt "$out/exact-head.txt"
+
+      - name: Exercise fail-closed successor controls
+        run: |
+          python - <<'PY'
+          import copy, importlib.util, json
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location('envsucc','tools/environment_building_source_successor_current_world.py')
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          root=Path('evidence/environment_current_world_building_source_successor_001')
+          base=json.loads((root/'parent/combined_material.json').read_text())
+          mp=json.loads((root/'building-material/building_material_payload.json').read_text())
+          mr=json.loads((root/'building-material/build_receipt.json').read_text())
+          cases=[]
+          bad=copy.deepcopy(mr); bad['box_topology_revision']='historical-malformed'; cases.append(('topology identity drift',base,mp,bad))
+          bad=copy.deepcopy(mr); bad['material_profile_sha256']='0'*64; cases.append(('material profile drift',base,mp,bad))
+          badmp=copy.deepcopy(mp); badmp['materials']['candidate']['infill_coating']['roughness']=0.01; cases.append(('unauthorized material retune',base,badmp,mr))
+          badbase=copy.deepcopy(base); badbase['states'][0]['scene']['environment_building_material_receiving']['vertices_source_xyz_m'][0][0]+=0.001; cases.append(('world vertex drift',badbase,mp,mr))
+          for label,b,p,r in cases:
+              try:
+                  m.build(b,'.building-successor',p,r,'57f66b1245812f0c3d402232a046b86c0b5c72d8','318181b4e4f2cd957c8d7e22a6a2beeec9c58256','NEGATIVE')
+              except ValueError:
+                  print('PASS_NEGATIVE_CONTROL',label)
+              else:
+                  raise AssertionError(label)
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Observe exact successor in real current world
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_source_successor_001
+          mkdir -p environment-proof/generated "$out/rendered-successor"
+          cp "$out/successor_observer.json" environment-proof/generated/current_world_weather_variant.json
+          rm -f environment-proof/atmosphere-current-world-weather-variant-runtime.json environment-proof/building-material-*.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1100x720x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_weather_variant_building_material_observe.gd
+          cp environment-proof/atmosphere-current-world-weather-variant-runtime.json "$out/successor_runtime.json"
+          cp environment-proof/building-material-*.png "$out/rendered-successor/"
+
+      - name: Validate target-host successor and historical A-B
+        run: |
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root=Path('evidence/environment_current_world_building_source_successor_001')
+          p=json.loads((root/'successor_current_world.json').read_text())
+          r=json.loads((root/'successor_runtime.json').read_text())
+          assert p['status']=='PASS_CURRENT_WORLD_BUILDING_SOURCE_SUCCESSOR_STRUCTURE' and all(p['checks'].values()),p
+          assert r['state']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_LIVE_OBSERVATION',r
+          assert r['receiving_head']==p['receiving_head']==(root/'exact-head.txt').read_text().strip(),r
+          assert len(r['samples'])==17,r
+          changed={'path_eye':0,'elevated_oblique':0}; hashes={k:[] for k in changed}; counters={k:set() for k in changed}
+          for sample in r['samples']:
+              rows=[x for x in sample['static_source_meshes'] if x.get('asset_id')=='source:building:service-pavilion-001']
+              assert len(rows)==1,rows
+              b=rows[0]
+              assert b['vertices']==152 and b['triangles']==228 and b['surface_count']==5,b
+              assert b['material_ids']==['frame_galvanized','infill_coating','roof_membrane','slab_mineral','utility_panel_ochre'],b
+              assert b['material_profile_sha256']=='e8dd0c33b9b2aea108194af57a8fe8de39c7e67bb86109af6dbf3895f22c010b',b
+              assert b['receiving_policy']=='EXACT_SOURCE_OWNED_CLOSED_OUTWARD_TOPOLOGY_REBIND_NO_MATERIAL_RETUNE',b
+              i=int(sample['index'])
+              for context in changed:
+                  new=root/'rendered-successor'/f'building-material-{context}-{i:02d}.png'
+                  old=root/'parent/rendered'/f'building-material-{context}-{i:02d}.png'
+                  assert new.stat().st_size>2000 and old.stat().st_size>2000,(new,old)
+                  nd=hashlib.sha256(new.read_bytes()).hexdigest(); od=hashlib.sha256(old.read_bytes()).hexdigest()
+                  hashes[context].append(nd)
+                  if nd!=od: changed[context]+=1
+                  counters[context].add(tuple(sorted(sample['contexts'][context]['runtime'].items())))
+          assert changed['path_eye']>0 and changed['elevated_oblique']>0,changed
+          report={
+              'schema':'axm.environment-current-world-building-source-successor-target-host/v0.1',
+              'status':'PASS_CURRENT_WORLD_BUILDING_SOURCE_SUCCESSOR_TARGET_HOST',
+              'receiving_head':p['receiving_head'],
+              'composition_digest':p['composition_digest'],
+              'building_source_head':p['building_source_head'],
+              'building_source_revision':p['building_source_revision'],
+              'building_box_topology_revision':p['building_box_topology_revision'],
+              'building_material_profile_sha256':p['building_material_profile_sha256'],
+              'historical_source_head':p['historical_building_source_head'],
+              'historical_vs_successor_changed_frame_counts':changed,
+              'successor_frame_sha256':hashes,
+              'runtime_counter_sets_diagnostic_only':{k:[dict(v) for v in sorted(rows)] for k,rows in counters.items()},
+              'checks':{
+                  'all_17_samples_reach_target_host':True,
+                  'all_34_successor_frames_retained':all(len(v)==17 for v in hashes.values()),
+                  'five_surface_material_identity_preserved':True,
+                  'source_successor_receiving_policy_reaches_target_host':True,
+                  'historical_vs_successor_visual_delta_observed_both_cameras':all(v>0 for v in changed.values()),
+              },
+              'truth_boundary':'Target-host PASS proves only that Godot 4.7.2 GL Compatibility consumed the exact current-world source-successor payload, retained all 34 fixed-camera frames, preserved the five current material identities, and produced a visible delta from retained historical-source current-world frames. Runtime counters are diagnostics only. This does not establish final visual hierarchy, final normals/tangents/UVs, physical material correctness, target-device performance, gameplay, CANON or mastery.'
+          }
+          (root/'target_host.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(report,indent=2,sort_keys=True))
+          PY
+
+      - name: Retain exact Environment source-successor evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-current-world-building-source-successor-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_current_world_building_source_successor_001/exact-head.txt
+            evidence/environment_current_world_building_source_successor_001/parent.zip
+            evidence/environment_current_world_building_source_successor_001/parent/exact-head.txt
+            evidence/environment_current_world_building_source_successor_001/parent/combined_material.json
+            evidence/environment_current_world_building_source_successor_001/parent/rendered/building-material-*.png
+            evidence/environment_current_world_building_source_successor_001/building-material/building_material_payload.json
+            evidence/environment_current_world_building_source_successor_001/building-material/build_receipt.json
+            evidence/environment_current_world_building_source_successor_001/successor_current_world.json
+            evidence/environment_current_world_building_source_successor_001/successor_observer.json
+            evidence/environment_current_world_building_source_successor_001/successor_runtime.json
+            evidence/environment_current_world_building_source_successor_001/target_host.json
+            evidence/environment_current_world_building_source_successor_001/rendered-successor/*.png
+          if-no-files-found: warn
+          retention-days: 30
