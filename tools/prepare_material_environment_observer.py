@@ -68,7 +68,7 @@ def patch(source: Path, output: Path) -> None:
     if observed != EXPECTED_ENVIRONMENT_OBSERVER_BLOB_SHA:
         raise SystemExit(f"Environment observer identity drift: {observed}")
 
-    receipt_anchor = 'const RECEIPT := "res://environment-runtime-receipt.json"\n'
+    receipt_anchor = 'const RECEIPT := "res://environment-eye-level-runtime-receipt.json"\n'
     receipt_replacement = 'const RECEIPT := "res://material-environment-runtime-receipt.json"\n'
     if text.count(receipt_anchor) != 1:
         raise SystemExit("receipt path anchor drift")
