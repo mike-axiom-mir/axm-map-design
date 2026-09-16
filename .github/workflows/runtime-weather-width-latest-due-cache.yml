@@ -1,0 +1,232 @@
+name: Runtime Weather latest-due cache A/B evidence
+
+on:
+  push:
+    branches: [studio/runtime-weather-width-latest-due-cache-001]
+    paths:
+      - "tools/environment_weather_width_latest_due_cache.py"
+      - "environment-proof/atmosphere_current_world_weather_width_latest_due_cache_observe.gd"
+      - ".github/workflows/runtime-weather-width-latest-due-cache.yml"
+  pull_request:
+    paths:
+      - "tools/environment_weather_width_latest_due_cache.py"
+      - "environment-proof/atmosphere_current_world_weather_width_latest_due_cache_observe.gd"
+      - ".github/workflows/runtime-weather-width-latest-due-cache.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-latest-due-cache-ab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact Runtime head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Runtime head and VFX latest-due parent
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e e95910c8c5c45cd8d51be3b259825cf85064efc2^{commit}
+          git merge-base --is-ancestor e95910c8c5c45cd8d51be3b259825cf85064efc2 HEAD
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile Runtime and inherited VFX tooling
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/environment_weather_width_current_world.py \
+            tools/environment_weather_width_coalesced.py \
+            tools/environment_weather_width_latest_due_cache.py
+
+      - name: Download exact retained VFX latest-due baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-source-width-latest-due-001-e95910c8c5c45cd8d51be3b259825cf85064efc2
+          path: .vfx-latest-due
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35130300983
+
+      - name: Verify exact retained VFX latest-due baseline identity
+        run: |
+          set -euo pipefail
+          test "$(cat .vfx-latest-due/exact-head.txt | tr -d '\n\r')" = "e95910c8c5c45cd8d51be3b259825cf85064efc2"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.vfx-latest-due')
+          report=json.loads((root/'target_host.json').read_text())
+          assert report['state']=='PASS_LATEST_DUE_EXACT_SOURCE_STATE_PRESENTATION_FALLBACK', report
+          assert report['receiving_head']=='e95910c8c5c45cd8d51be3b259825cf85064efc2', report
+          assert report['presentation_policy']=='LATEST_DUE_EXACT_SOURCE_STATE_NO_INTERPOLATION', report
+          print(json.dumps({'state':report['state'],'context_metrics':report['context_metrics']},indent=2))
+          PY
+
+      - name: Download exact retained PR22 Weather-variant parent evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-variant-current-world-001-e482d003853e52fc835f1797ddfb6506a50083ef
+          path: .parent-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35086299949
+
+      - name: Verify retained PR22 parent identity
+        run: |
+          set -euo pipefail
+          test "$(cat .parent-evidence/exact-head.txt | tr -d '\n\r')" = "e482d003853e52fc835f1797ddfb6506a50083ef"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.parent-evidence')
+          parent=json.loads((root/'current_world_weather_variant.json').read_text())
+          target=json.loads((root/'target_host.json').read_text())
+          assert parent['status']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_REBIND_STRUCTURE', parent
+          assert parent['receiving_head']=='e482d003853e52fc835f1797ddfb6506a50083ef', parent
+          assert parent['weather_variant_head']=='05b26c4e82bbe0a4de0ee7bee34179efc58b9719', parent
+          assert parent['weather_variant_seed']==44021, parent
+          assert target['state']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_LIVE_TARGET_HOST', target
+          PY
+
+      - name: Checkout exact Weather source variation family
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: 05b26c4e82bbe0a4de0ee7bee34179efc58b9719
+          path: .weather-variant
+          fetch-depth: 1
+
+      - name: Build exact Runtime-head source-width payload
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_latest_due_cache_001
+          mkdir -p "$out" environment-proof/generated environment-proof/latest-due-cache-frames
+          cp exact-head.txt "$out/exact-head.txt"
+          cp .parent-evidence/current_world_weather_variant.json "$out/parent_variant.json"
+          cp .vfx-latest-due/target_host.json "$out/vfx_latest_due_baseline.json"
+          python tools/environment_weather_width_current_world.py build \
+            --parent "$out/parent_variant.json" \
+            --weather-variant-root .weather-variant \
+            --output "$out/current_world_weather_width.json"
+          cp "$out/current_world_weather_width.json" environment-proof/generated/current_world_weather_width.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/runtime_weather_width_latest_due_cache_001')
+          data=json.loads((root/'current_world_weather_width.json').read_text())
+          exact=(root/'exact-head.txt').read_text().strip()
+          assert data['status']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_STRUCTURE', data
+          assert all(data['checks'].values()), data
+          assert data['receiving_head']==exact, (data['receiving_head'], exact)
+          assert len(data['states'])==17, data
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run latest-due rebuild versus prebuilt-cache A/B in Godot
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_latest_due_cache_001
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_weather_width_latest_due_cache_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          cp environment-proof/atmosphere-current-world-weather-width-latest-due-cache-runtime.json "$out/runtime.json" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact Runtime latest-due cache comparison
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_latest_due_cache_001
+          python tools/environment_weather_width_latest_due_cache.py \
+            --payload "$out/current_world_weather_width.json" \
+            --receipt "$out/runtime.json" \
+            --vfx-baseline "$out/vfx_latest_due_baseline.json" \
+            --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('evidence/runtime_weather_width_latest_due_cache_001/target_host.json').read_text())
+          assert report['state']=='PASS_LATEST_DUE_PREBUILT_CACHE_RUNTIME_CHARACTERIZED', report
+          assert all(report['checks'].values()), report
+          print(json.dumps({
+              'state':report['state'],
+              'decision':report['decision'],
+              'contexts':report['contexts'],
+              'total_dropped_states_rebuild':report['total_dropped_states_rebuild'],
+              'total_dropped_states_cached_swap':report['total_dropped_states_cached_swap'],
+          },indent=2))
+          PY
+
+      - name: Exercise fail-closed cached source-identity control
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_latest_due_cache_001
+          python tools/environment_weather_width_latest_due_cache.py \
+            --payload "$out/current_world_weather_width.json" \
+            --receipt "$out/runtime.json" \
+            --vfx-baseline "$out/vfx_latest_due_baseline.json" \
+            --negative-control \
+            --output "$out/negative_control.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('evidence/runtime_weather_width_latest_due_cache_001/negative_control.json').read_text())
+          assert report['state']=='FAIL', report
+          assert report['checks']['both_modes_preserve_exact_source_latest_due_semantics'] is False, report
+          PY
+
+      - name: Retain exact A/B frames and diagnostics
+        if: always()
+        run: |
+          out=evidence/runtime_weather_width_latest_due_cache_001
+          mkdir -p "$out/frames"
+          cp environment-proof/latest-due-cache-frames/*.png "$out/frames/" 2>/dev/null || true
+          cp environment-proof/atmosphere-current-world-weather-width-latest-due-cache-runtime.json "$out/runtime.json" 2>/dev/null || true
+
+      - name: Upload exact Runtime latest-due cache evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-weather-width-latest-due-cache-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/runtime_weather_width_latest_due_cache_001
+          if-no-files-found: warn
+          retention-days: 30
