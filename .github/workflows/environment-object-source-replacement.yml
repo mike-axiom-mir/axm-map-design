@@ -1,0 +1,276 @@
+name: Environment Object source replacement evidence
+
+on:
+  push:
+    branches: [studio/environment-object-source-replacement-001]
+    paths:
+      - "examples/environment_object_source_replacement_001.json"
+      - "tools/environment_object_source_replacement.py"
+      - "tests/test_environment_object_source_replacement.py"
+      - "docs/ENVIRONMENT_OBJECT_SOURCE_REPLACEMENT_001.md"
+      - ".github/workflows/environment-object-source-replacement.yml"
+  pull_request:
+    paths:
+      - "examples/environment_object_source_replacement_001.json"
+      - "tools/environment_object_source_replacement.py"
+      - "tests/test_environment_object_source_replacement.py"
+      - "docs/ENVIRONMENT_OBJECT_SOURCE_REPLACEMENT_001.md"
+      - ".github/workflows/environment-object-source-replacement.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-object-source-receiving-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Bind exact receiving head
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
+          OBSERVED="$(git rev-parse HEAD)"
+          test "$OBSERVED" = "$EXPECTED"
+          printf '%s\n' "$OBSERVED" > exact-head.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact historical rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          path: .nature-rear-historical
+
+      - name: Checkout exact migrated rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          path: .nature-rear-migrated
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout exact Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building
+
+      - name: Checkout exact Object source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: d3fa10a270faae7925811f44f03381fe5c5d0215
+          path: .object
+
+      - name: Compile and test exact receiving contract
+        env:
+          AXM_BASE_NATURE_ROOT: ${{ github.workspace }}/.nature-base
+          AXM_COMPACT_NATURE_ROOT: ${{ github.workspace }}/.nature-east
+          AXM_WEATHER_ROOT: ${{ github.workspace }}/.weather
+          AXM_BUILDING_ROOT: ${{ github.workspace }}/.building
+          AXM_REAR_NATURE_ROOT: ${{ github.workspace }}/.nature-rear-historical
+          AXM_MIGRATED_REAR_NATURE_ROOT: ${{ github.workspace }}/.nature-rear-migrated
+          AXM_OBJECT_ROOT: ${{ github.workspace }}/.object
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          AXM_OBJECT_HEAD: d3fa10a270faae7925811f44f03381fe5c5d0215
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_object_source_replacement -v
+          python -m unittest tests.test_environment_rear_tree_normal_culling -v
+
+      - name: Build exact baseline and Object candidate payloads
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          AXM_OBJECT_HEAD: d3fa10a270faae7925811f44f03381fe5c5d0215
+        run: |
+          python tools/environment_object_source_replacement.py \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --building-root .building \
+            --historical-rear-root .nature-rear-historical \
+            --migrated-rear-root .nature-rear-migrated \
+            --object-root .object \
+            --output evidence/environment_object_source_replacement_001
+          cp exact-head.txt evidence/environment_object_source_replacement_001/exact-head.txt
+
+      - name: Validate exact structural evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_object_source_replacement_001')
+          e=json.loads((root/'object_receiving_evidence.json').read_text())
+          b=json.loads((root/'baseline_scene_runtime.json').read_text())
+          c=json.loads((root/'candidate_scene_runtime.json').read_text())
+          exact=(root/'exact-head.txt').read_text().strip()
+          assert e['status']=='PASS_WEST_OBJECT_SOURCE_REPLACEMENT_STRUCTURE',e
+          assert all(e['checks'].values()),e
+          assert e['receiving_head']==c['receiving_head']==exact,(e,c,exact)
+          assert b['environment_rear_tree_culling_review']==c['environment_rear_tree_culling_review'],(b,c)
+          assert e['object_source']['source_sha256']=='49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a',e
+          assert e['object_source']['obj_sha256']=='3e01ef3bf4935ee6aee7c56c03dc0b7f54c308e5ac2eb6a7583252a366901106',e
+          assert e['object_source']['vertices']==468,e
+          assert e['object_source']['triangles']==812,e
+          assert e['spacing_conflicts']==[],e
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact migrated-rear baseline with west Object proxy
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_object_source_replacement_001/baseline_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_object_source_replacement_001/baseline_runtime_receipt.json
+          cp environment-proof/path_eye.png evidence/environment_object_source_replacement_001/baseline_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_object_source_replacement_001/baseline_elevated_oblique.png
+
+      - name: Render exact Object source candidate
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_object_source_replacement_001/candidate_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_object_source_replacement_001/candidate_runtime_receipt.json
+          cp environment-proof/path_eye.png evidence/environment_object_source_replacement_001/candidate_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_object_source_replacement_001/candidate_elevated_oblique.png
+
+      - name: Validate target-host receiving identity and render relationship
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_object_source_replacement_001')
+          e=json.loads((root/'object_receiving_evidence.json').read_text())
+          b=json.loads((root/'baseline_runtime_receipt.json').read_text())
+          c=json.loads((root/'candidate_runtime_receipt.json').read_text())
+          assert b['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',b
+          assert c['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',c
+          source_id='source:object:modular-equipment-case-001'
+          rear_target=e['preserved_context']['rear_tree_culling_target']
+          for context in ('path_eye','elevated_oblique'):
+              brow=b['contexts'][context]
+              crow=c['contexts'][context]
+              assert brow['state']=='PASS' and crow['state']=='PASS',(context,brow,crow)
+              assert brow['proxy_count']==crow['proxy_count']+1,(context,brow,crow)
+              object_rows=[row for row in crow['additional_source_meshes'] if row['asset_id']==source_id]
+              assert len(object_rows)==1,(context,crow)
+              assert object_rows[0]['vertices']==468 and object_rows[0]['triangles']==812,(context,object_rows[0])
+              assert object_rows[0]['proof_culling']=='CULL_DISABLED',(context,object_rows[0])
+              rear_rows=[row for row in crow['additional_source_meshes'] if row['asset_id']==rear_target]
+              assert len(rear_rows)==1 and rear_rows[0]['proof_culling']=='CULL_BACK',(context,rear_rows)
+          names=(
+              'baseline_path_eye.png','candidate_path_eye.png',
+              'baseline_elevated_oblique.png','candidate_elevated_oblique.png'
+          )
+          hashes={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in names}
+          relations={
+              'path_eye':'BYTE_DIFFERENT' if hashes['baseline_path_eye.png']!=hashes['candidate_path_eye.png'] else 'BYTE_IDENTICAL',
+              'elevated_oblique':'BYTE_DIFFERENT' if hashes['baseline_elevated_oblique.png']!=hashes['candidate_elevated_oblique.png'] else 'BYTE_IDENTICAL',
+          }
+          assert 'BYTE_DIFFERENT' in relations.values(),relations
+          comparison={
+              'schema':'axm.environment-object-source-replacement-render-comparison/v0.1',
+              'state':'PASS_TARGET_HOST_OBJECT_SOURCE_REPLACEMENT_AB_READY',
+              'relations':relations,
+              'hashes':hashes,
+              'target_proxy':'proxy:object-crate-west',
+              'candidate_source':source_id,
+              'rear_tree_culling_preserved':'CULL_BACK_TARGET_ONLY',
+              'truth_boundary':'Capture success and hash relations prove exact receiving visibility/attribution only. They do not establish Object materials, animation, runtime cost, collision/gameplay, final dressing quality or Art Direction acceptance.'
+          }
+          (root/'render_hashes.json').write_text(json.dumps(comparison,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(comparison,indent=2))
+          PY
+
+      - name: Upload exact Object receiving evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-source-replacement-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_object_source_replacement_001/exact-head.txt
+            evidence/environment_object_source_replacement_001/object_receiving_evidence.json
+            evidence/environment_object_source_replacement_001/baseline_scene_runtime.json
+            evidence/environment_object_source_replacement_001/candidate_scene_runtime.json
+            evidence/environment_object_source_replacement_001/baseline_runtime_receipt.json
+            evidence/environment_object_source_replacement_001/candidate_runtime_receipt.json
+            evidence/environment_object_source_replacement_001/render_hashes.json
+            evidence/environment_object_source_replacement_001/baseline_path_eye.png
+            evidence/environment_object_source_replacement_001/candidate_path_eye.png
+            evidence/environment_object_source_replacement_001/baseline_elevated_oblique.png
+            evidence/environment_object_source_replacement_001/candidate_elevated_oblique.png
+          if-no-files-found: warn
+          retention-days: 30
