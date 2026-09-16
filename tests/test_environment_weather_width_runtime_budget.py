@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import copy
+import struct
 import tempfile
 import unittest
 from pathlib import Path
-
-from PIL import Image
 
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -20,6 +19,11 @@ from tools.environment_weather_width_runtime_budget import (  # noqa: E402
     STATUS,
     characterize,
 )
+
+
+def write_minimal_png(path: Path, marker: int) -> None:
+    header = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + struct.pack(">II", 1100, 720)
+    path.write_bytes(header + bytes([marker]))
 
 
 def fixtures(root: Path):
@@ -38,11 +42,8 @@ def fixtures(root: Path):
                 "control": {"runtime": copy.deepcopy(EXPECTED_CONTROL[context])},
                 "candidate": {"runtime": copy.deepcopy(EXPECTED_CANDIDATE[context])},
             }
-            control = Image.new("RGB", (1100, 720), (1, 2, 3))
-            candidate = Image.new("RGB", (1100, 720), (1, 2, 3))
-            candidate.putpixel((index + 1, index + 1), (5, 6, 7))
-            control.save(root / f"atmosphere-width-control-{context}-{index:02d}.png")
-            candidate.save(root / f"atmosphere-width-candidate-{context}-{index:02d}.png")
+            write_minimal_png(root / f"atmosphere-width-control-{context}-{index:02d}.png", 1)
+            write_minimal_png(root / f"atmosphere-width-candidate-{context}-{index:02d}.png", 2)
         samples.append({"contexts": contexts})
     runtime = {
         "state": "PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_LIVE_OBSERVATION",
@@ -102,7 +103,7 @@ class RuntimeWeatherWidthBudgetTests(unittest.TestCase):
                     dst.write_bytes(src.read_bytes())
             result = characterize(payload, runtime, target, Path(tmp))
             self.assertEqual(result["state"], "FAIL")
-            self.assertFalse(result["checks"]["path_eye_all_visual_pairs_differ"])
+            self.assertFalse(result["checks"]["path_eye_all_retained_pairs_byte_different"])
 
 
 if __name__ == "__main__":
