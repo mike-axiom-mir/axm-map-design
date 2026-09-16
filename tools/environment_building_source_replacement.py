@@ -165,7 +165,11 @@ def build_payloads(
     pavilion_path = building_root / replacement_cfg["pavilion_source_path"]
     panel_path = building_root / replacement_cfg["panel_source_path"]
     building = _load_building_module(building_root)
-    pavilion, panel, fits, obj_lines, mins, maxs, source_path_gap, negatives = building.build()
+    built = building.build()
+    if not isinstance(built, (tuple, list)) or len(built) < 8:
+        raise ValueError("Building source evaluator must retain the stable 8-field receiving prefix")
+    pavilion, panel, fits, obj_lines, mins, maxs, source_path_gap, negatives = built[:8]
+    producer_extension_output_count = len(built) - 8
 
     local_mesh = _parse_obj(obj_lines)
     world_mesh, world_bounds = _world_mesh(local_mesh, target)
@@ -258,6 +262,7 @@ def build_payloads(
         "building_source_slot_size_matches_target": source_slot_size == replacement_cfg["expected_reserved_slot_size_m"] == target_size,
         "building_source_slot_position_matches_target": source_slot_position == replacement_cfg["expected_reserved_slot_position_m"] == target_position,
         "placement_policy_is_exact": replacement_cfg["placement_policy"] == PLACEMENT_POLICY,
+        "source_build_stable_prefix_available": len(built) >= 8,
         "source_build_succeeds_with_two_receivers": len(fits) == int(replacement_cfg["expected_receiver_count"]),
         "source_negative_controls_remain_rejected": all(str(value).startswith("REJECTED") for value in negatives.values()),
         "source_vertex_count_matches": len(local_mesh["vertices"]) == int(replacement_cfg["expected_vertices"]),
@@ -297,6 +302,7 @@ def build_payloads(
             "triangles": len(local_mesh["triangles"]),
             "component_boxes": len(pavilion["components"]),
             "receiver_count": len(fits),
+            "producer_extension_output_count": producer_extension_output_count,
             "local_bounds_m": {"min": mins, "max": maxs, "size": [maxs[i] - mins[i] for i in range(3)]},
             "source_path_gap_m": float(source_path_gap),
             "world_path_gap_m": source_world_path_gap,
