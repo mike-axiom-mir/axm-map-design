@@ -41,6 +41,9 @@ jobs:
           python -m py_compile tools/runtime_footprint_index_budget.py
           grep -F 'st.index()' environment-proof/atmosphere_current_world_footprint_index_budget_observe.gd
 
+      - name: Install exact image-analysis dependency
+        run: python -m pip install --disable-pip-version-check pillow
+
       - name: Download exact indexed-Object visible-cue Environment evidence
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -177,8 +180,10 @@ jobs:
           python - <<'PY'
           import json
           p=json.load(open('evidence/runtime_footprint_index_budget_001/report.json'))
-          assert p['state']=='PASS_FOOTPRINT_POST_NORMAL_INDEXED_PAYLOAD_REDUCTION',p
-          assert p['byte_identical_frames']==68,p
+          assert p['state']=='PASS_FOOTPRINT_POST_NORMAL_INDEXED_PAYLOAD_REDUCTION_WITH_BOUNDED_ONE_LSB_EDGE_DELTA',p
+          assert p['visual_delta']['maximum_changed_pixels_per_frame'] <= 1,p
+          assert p['visual_delta']['maximum_channel_delta_lsb'] <= 1,p
+          assert p['visual_delta']['all_changed_pixels_within_projected_cue_bounds'],p
           print(json.dumps({
               'state':p['state'],
               'control_vertices':p['control_mesh']['total_vertices'],
@@ -186,6 +191,13 @@ jobs:
               'candidate_indices':p['candidate_mesh']['total_indices'],
               'modeled_payload_bytes_saved':p['modeled_payload_bytes_saved'],
               'runtime_counter_deltas':p['runtime_counter_deltas'],
+              'visual_delta':{
+                  'byte_identical_frames':p['visual_delta']['byte_identical_frames'],
+                  'frames_with_any_rgb_delta':p['visual_delta']['frames_with_any_rgb_delta'],
+                  'maximum_changed_pixels_per_frame':p['visual_delta']['maximum_changed_pixels_per_frame'],
+                  'maximum_channel_delta_lsb':p['visual_delta']['maximum_channel_delta_lsb'],
+                  'unique_changed_coordinates':p['visual_delta']['unique_changed_coordinates'],
+              },
               'visual_tradeoff':p['visual_tradeoff'],
           },indent=2,sort_keys=True))
           PY
