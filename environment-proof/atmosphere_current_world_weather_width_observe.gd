@@ -85,7 +85,7 @@ func fill_weather_width_ribbons(lines:Array,camera:Camera3D)->Dictionary:
 
         var measured_a:=camera.unproject_position(a_minus).distance_to(camera.unproject_position(a_plus))
         var measured_b:=camera.unproject_position(b_minus).distance_to(camera.unproject_position(b_plus))
-        maximum_width_residual=maxf(maximum_width_residual,absf(measured_a-width_px),absf(measured_b-width_px))
+        maximum_width_residual=maxf(maximum_width_residual,maxf(absf(measured_a-width_px),absf(measured_b-width_px)))
         measured_width_count+=1
 
         var vertex_color:=Color(1.0,1.0,1.0,opacity)
