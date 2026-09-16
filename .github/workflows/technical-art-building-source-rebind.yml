@@ -7,6 +7,7 @@ on:
       - "examples/technical_art_building_source_replacement_001.json"
       - "examples/technical_art_building_source_rebind_001.json"
       - "tools/environment_building_source_replacement.py"
+      - "tools/environment_building_material_receiving.py"
       - "tools/technical_art_building_source_rebind.py"
       - "docs/TECHNICAL_ART_BUILDING_SOURCE_REBIND_001.md"
       - ".github/workflows/technical-art-building-source-rebind.yml"
@@ -15,6 +16,7 @@ on:
       - "examples/technical_art_building_source_replacement_001.json"
       - "examples/technical_art_building_source_rebind_001.json"
       - "tools/environment_building_source_replacement.py"
+      - "tools/environment_building_material_receiving.py"
       - "tools/technical_art_building_source_rebind.py"
       - "docs/TECHNICAL_ART_BUILDING_SOURCE_REBIND_001.md"
       - ".github/workflows/technical-art-building-source-rebind.yml"
@@ -42,7 +44,6 @@ jobs:
           git cat-file -e 0e2d571af4fd5772e9d48da013dc245914654660^{commit}
           git merge-base --is-ancestor 0e2d571af4fd5772e9d48da013dc245914654660 HEAD
           git diff --exit-code 0e2d571af4fd5772e9d48da013dc245914654660 -- \
-            tools/environment_building_material_receiving.py \
             tools/prepare_material_environment_observer.py \
             material-environment-proof/compare.gd \
             material-environment-proof/project.godot
