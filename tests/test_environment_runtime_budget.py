@@ -46,7 +46,11 @@ class EnvironmentRuntimeBudgetTests(unittest.TestCase):
             },
             "scene": scene,
             "variants": {name: {} for name in runtime_budget.VARIANTS},
-            "runtime_contract": {},
+            "runtime_contract": {
+                "weather_authored_streaks": runtime_budget.WEATHER_AUTHORED_STREAKS,
+                "weather_expected_draw_delta": runtime_budget.WEATHER_EXPECTED_DRAW_DELTA,
+                "weather_expected_renderer_primitive_delta": runtime_budget.WEATHER_EXPECTED_RENDERER_PRIMITIVE_DELTA,
+            },
             "truth_boundary": "fixture",
         }
         payload["payload_digest"] = runtime_budget.digest(payload)
@@ -75,12 +79,12 @@ class EnvironmentRuntimeBudgetTests(unittest.TestCase):
             "contexts": contexts,
         }
 
-    def test_payload_evidence_preserves_exact_proxy_source_and_weather_scope(self) -> None:
+    def test_payload_evidence_preserves_exact_proxy_source_weather_and_counter_scope(self) -> None:
         report = runtime_budget.evaluate_payload(self.payload())
         self.assertEqual(report["status"], "PASS")
         self.assertTrue(all(report["checks"].values()))
 
-    def test_aggregate_accepts_one_surface_weather_delta(self) -> None:
+    def test_aggregate_accepts_measured_one_surface_weather_delta(self) -> None:
         payload = self.payload()
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -89,15 +93,15 @@ class EnvironmentRuntimeBudgetTests(unittest.TestCase):
             rows = {
                 "proxy_baseline": self.runtime_receipt(payload, "proxy_baseline", 9, 120),
                 "source_sapling_only": self.runtime_receipt(payload, "source_sapling_only", 9, 678),
-                "source_sapling_weather": self.runtime_receipt(payload, "source_sapling_weather", 10, 714),
+                "source_sapling_weather": self.runtime_receipt(payload, "source_sapling_weather", 10, 822),
             }
             for variant, row in rows.items():
                 (root / f"runtime-budget-{variant}.json").write_text(json.dumps(row), encoding="utf-8")
             report = runtime_budget.aggregate(payload_path, root, root / "aggregate.json")
             self.assertEqual(report["status"], "PASS")
-            self.assertEqual(report["weather_batch_gate"], "PASS_EXACT_ONE_DRAW_CALL_36_PRIMITIVES_BOTH_CAMERAS")
+            self.assertEqual(report["weather_batch_gate"], "PASS_EXACT_ONE_DRAW_CALL_144_RENDERER_PRIMITIVES_FOR_36_LINES_BOTH_CAMERAS")
             self.assertEqual(report["deltas"]["path_eye"]["weather_vs_source_sapling_only"]["draw_calls_in_frame"], 1)
-            self.assertEqual(report["deltas"]["path_eye"]["weather_vs_source_sapling_only"]["primitives_in_frame"], 36)
+            self.assertEqual(report["deltas"]["path_eye"]["weather_vs_source_sapling_only"]["primitives_in_frame"], 144)
 
     def test_aggregate_holds_when_weather_expands_to_multiple_draws(self) -> None:
         payload = self.payload()
@@ -108,7 +112,24 @@ class EnvironmentRuntimeBudgetTests(unittest.TestCase):
             rows = {
                 "proxy_baseline": self.runtime_receipt(payload, "proxy_baseline", 9, 120),
                 "source_sapling_only": self.runtime_receipt(payload, "source_sapling_only", 9, 678),
-                "source_sapling_weather": self.runtime_receipt(payload, "source_sapling_weather", 11, 714),
+                "source_sapling_weather": self.runtime_receipt(payload, "source_sapling_weather", 11, 822),
+            }
+            for variant, row in rows.items():
+                (root / f"runtime-budget-{variant}.json").write_text(json.dumps(row), encoding="utf-8")
+            report = runtime_budget.aggregate(payload_path, root, root / "aggregate.json")
+            self.assertEqual(report["status"], "FAIL")
+            self.assertEqual(report["weather_batch_gate"], "HOLD_WEATHER_BATCH_RUNTIME_DELTA")
+
+    def test_aggregate_holds_when_renderer_primitive_counter_drifts(self) -> None:
+        payload = self.payload()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            payload_path = root / "payload.json"
+            payload_path.write_text(json.dumps(payload), encoding="utf-8")
+            rows = {
+                "proxy_baseline": self.runtime_receipt(payload, "proxy_baseline", 9, 120),
+                "source_sapling_only": self.runtime_receipt(payload, "source_sapling_only", 9, 678),
+                "source_sapling_weather": self.runtime_receipt(payload, "source_sapling_weather", 10, 714),
             }
             for variant, row in rows.items():
                 (root / f"runtime-budget-{variant}.json").write_text(json.dumps(row), encoding="utf-8")
