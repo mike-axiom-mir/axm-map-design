@@ -126,7 +126,7 @@ def build_report(building_root: str | Path, building_head: str, receiving_head: 
         root / "tools" / "build_service_pavilion_header_segmentation.py",
         "axm_building_header_segmentation",
     )
-    header = header_module.build(exact_head=building_head)
+    _header_base, _header_candidate, header = header_module.build(exact_head=building_head)
 
     fail_closed = {}
     bad_schema = copy.deepcopy(named)
