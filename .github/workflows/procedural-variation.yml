@@ -30,3 +30,12 @@ jobs:
         with:
           name: environment-variation-001-evidence
           path: evidence/environment_variation_001/
+      - name: Build source-aware multi-seed procedural evidence
+        if: matrix.python-version == '3.11'
+        run: python tools/environment_source_aware_variation.py
+      - name: Upload source-aware procedural variation evidence
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-source-aware-variation-001-evidence
+          path: evidence/environment_source_aware_variation_001/
