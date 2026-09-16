@@ -190,6 +190,8 @@ def verify_target_host(payload: dict[str, Any], receipt: dict[str, Any], image_r
     samples = receipt.get("samples", [])
     control_hashes: dict[str, set[str]] = {context: set() for context in CONTEXTS}
     candidate_hashes: dict[str, set[str]] = {context: set() for context in CONTEXTS}
+    control_frame_counts: dict[str, int] = {context: 0 for context in CONTEXTS}
+    candidate_frame_counts: dict[str, int] = {context: 0 for context in CONTEXTS}
     control_counter_sets: dict[str, set[tuple[int, int, int]]] = {context: set() for context in CONTEXTS}
     candidate_counter_sets: dict[str, set[tuple[int, int, int]]] = {context: set() for context in CONTEXTS}
     weather_ids: set[tuple[int, int, int]] = set()
@@ -214,15 +216,16 @@ def verify_target_host(payload: dict[str, Any], receipt: dict[str, Any], image_r
             weather_ids.add((int(candidate_weather.get("node_instance_id", -1)), int(candidate_weather.get("mesh_instance_id", -1)), int(candidate_weather.get("material_instance_id", -1))))
             max_width_residual = max(max_width_residual, float(candidate_weather.get("maximum_projected_width_residual_px", 999.0)))
             measured_width_count += int(candidate_weather.get("measured_width_count", 0))
-            for mode_name, mode, hash_sets, counter_sets in (
-                ("control", control, control_hashes, control_counter_sets),
-                ("candidate", candidate, candidate_hashes, candidate_counter_sets),
+            for mode_name, mode, hash_sets, frame_counts, counter_sets in (
+                ("control", control, control_hashes, control_frame_counts, control_counter_sets),
+                ("candidate", candidate, candidate_hashes, candidate_frame_counts, candidate_counter_sets),
             ):
                 shot = mode.get("capture", {})
                 path = root / Path(str(shot.get("path", ""))).name
                 if not path.exists():
                     all_frames = False
                     continue
+                frame_counts[context] += 1
                 sha = hashlib.sha256(path.read_bytes()).hexdigest()
                 hash_sets[context].add(sha)
                 stats = mode.get("runtime", {})
@@ -241,7 +244,7 @@ def verify_target_host(payload: dict[str, Any], receipt: dict[str, Any], image_r
         "exact_receiving_head_matches": receipt.get("receiving_head") == payload.get("receiving_head"),
         "exact_parent_variant_head_matches": receipt.get("parent_variant_head") == EXPECTED_PARENT_VARIANT_HEAD,
         "seventeen_live_samples_retained": len(samples) == 17,
-        "all_68_control_candidate_frames_retained": all_frames and sum(len(v) for v in control_hashes.values()) == 34 and sum(len(v) for v in candidate_hashes.values()) == 34,
+        "all_68_control_candidate_frames_retained": all_frames and sum(control_frame_counts.values()) == 34 and sum(candidate_frame_counts.values()) == 34,
         "all_control_candidate_pairs_visibly_different_by_bytes": all_pairwise_different,
         "candidate_source_width_projection_within_tolerance": max_width_residual <= WIDTH_RESIDUAL_TOL_PX and measured_width_count == 17 * 2 * 36,
         "one_weather_resource_identity_stable": len(weather_ids) == 1 and next(iter(weather_ids), (-1, -1, -1))[0] > 0,
@@ -258,6 +261,10 @@ def verify_target_host(payload: dict[str, Any], receipt: dict[str, Any], image_r
         "checks": checks,
         "maximum_projected_width_residual_px": max_width_residual,
         "measured_width_count": measured_width_count,
+        "control_frame_counts": control_frame_counts,
+        "candidate_frame_counts": candidate_frame_counts,
+        "control_unique_frame_hash_counts": {key: len(values) for key, values in control_hashes.items()},
+        "candidate_unique_frame_hash_counts": {key: len(values) for key, values in candidate_hashes.items()},
         "control_runtime_counter_sets": {key: sorted([list(row) for row in values]) for key, values in control_counter_sets.items()},
         "candidate_runtime_counter_sets": {key: sorted([list(row) for row in values]) for key, values in candidate_counter_sets.items()},
         "truth_boundary": (
