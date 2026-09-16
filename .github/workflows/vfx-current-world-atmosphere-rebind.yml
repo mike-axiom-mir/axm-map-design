@@ -1,0 +1,232 @@
+name: VFX current-world dense atmosphere rebind evidence
+
+on:
+  push:
+    branches: [studio/vfx-current-world-atmosphere-rebind-001]
+    paths:
+      - "tools/environment_atmosphere_current_world_rebind.py"
+      - "environment-proof/atmosphere_current_world_rebind_observe.gd"
+      - ".github/workflows/vfx-current-world-atmosphere-rebind.yml"
+      - "docs/ENVIRONMENT_ATMOSPHERE_CURRENT_WORLD_REBIND_001.md"
+  pull_request:
+    paths:
+      - "tools/environment_atmosphere_current_world_rebind.py"
+      - "environment-proof/atmosphere_current_world_rebind_observe.gd"
+      - ".github/workflows/vfx-current-world-atmosphere-rebind.yml"
+      - "docs/ENVIRONMENT_ATMOSPHERE_CURRENT_WORLD_REBIND_001.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-current-world-atmosphere-rebind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact VFX receiving head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact receiving identity
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e f548f98959bf6769716a6d7c87bac69f9f548389^{commit}
+          git merge-base --is-ancestor f548f98959bf6769716a6d7c87bac69f9f548389 HEAD
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact dense VFX donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 6e386d513c0b2e821a89fb066b2e3ab58a0d6868
+          path: .vfx-donor
+          fetch-depth: 1
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact accepted Nature visual response
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cee14f5b3feea78b0adcd044bad2ea3c97657fc6
+          path: .nature-response
+
+      - name: Checkout exact historical rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          path: .nature-rear-historical
+
+      - name: Checkout exact migrated rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          path: .nature-rear-migrated
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout exact Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building
+
+      - name: Verify exact donor heads and compile
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-donor rev-parse HEAD)" = "6e386d513c0b2e821a89fb066b2e3ab58a0d6868"
+          test "$(git -C .nature-response rev-parse HEAD)" = "cee14f5b3feea78b0adcd044bad2ea3c97657fc6"
+          test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
+          test "$(git -C .nature-rear-migrated rev-parse HEAD)" = "4ddbe66e5c02d22407ef773d5346a2fe6f349a2d"
+          python -m py_compile tools/environment_atmosphere_current_world_rebind.py
+
+      - name: Re-run exact current Environment structural prerequisite
+        env:
+          AXM_BASE_NATURE_ROOT: ${{ github.workspace }}/.nature-base
+          AXM_COMPACT_NATURE_ROOT: ${{ github.workspace }}/.nature-east
+          AXM_WEATHER_ROOT: ${{ github.workspace }}/.weather
+          AXM_BUILDING_ROOT: ${{ github.workspace }}/.building
+          AXM_REAR_NATURE_ROOT: ${{ github.workspace }}/.nature-rear-historical
+          AXM_MIGRATED_REAR_NATURE_ROOT: ${{ github.workspace }}/.nature-rear-migrated
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+        run: |
+          python -m unittest tests.test_environment_rear_tree_normal_culling -v
+
+      - name: Build exact current-world 17-state atmosphere payload
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+        run: |
+          set -euo pipefail
+          out=evidence/environment_atmosphere_current_world_rebind_001
+          mkdir -p "$out" environment-proof/generated
+          python tools/environment_atmosphere_current_world_rebind.py build \
+            --vfx-donor-root .vfx-donor \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --nature-response-root .nature-response \
+            --weather-root .weather \
+            --building-root .building \
+            --historical-rear-root .nature-rear-historical \
+            --migrated-rear-root .nature-rear-migrated \
+            --output "$out/current_world_atmosphere_rebind.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          cp "$out/current_world_atmosphere_rebind.json" environment-proof/generated/current_world_atmosphere_rebind.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_atmosphere_current_world_rebind_001')
+          data=json.loads((root/'current_world_atmosphere_rebind.json').read_text())
+          exact=(root/'exact-head.txt').read_text().strip()
+          assert data['status']=='PASS_CURRENT_WORLD_DENSE_ATMOSPHERE_REBIND_STRUCTURE', data
+          assert all(data['checks'].values()), data
+          assert data['receiving_head']==exact, (data['receiving_head'],exact)
+          assert data['environment_donor_head']=='f548f98959bf6769716a6d7c87bac69f9f548389', data
+          assert data['dense_vfx_donor_head']=='6e386d513c0b2e821a89fb066b2e3ab58a0d6868', data
+          assert data['dense_vfx_sequence_digest']=='f7f2cad01184e8651bcc722b755a2f3c2292ca13e81c7399579d7f42e0c19b30', data
+          assert len(data['states'])==17, data
+          print(json.dumps({'status':data['status'],'rebind_digest':data['rebind_digest'],'source_opacity':data['source_opacity']},indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run all 17 rebound states in one current-world proof-host process
+        run: |
+          set -euo pipefail
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_rebind_observe.gd
+
+      - name: Verify exact target-host rebind
+        run: |
+          set -euo pipefail
+          out=evidence/environment_atmosphere_current_world_rebind_001
+          cp environment-proof/atmosphere-current-world-rebind-runtime.json "$out/runtime.json"
+          python tools/environment_atmosphere_current_world_rebind.py verify \
+            --payload "$out/current_world_atmosphere_rebind.json" \
+            --receipt "$out/runtime.json" \
+            --image-root environment-proof \
+            --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_atmosphere_current_world_rebind_001')
+          target=json.loads((root/'target_host.json').read_text())
+          assert target['state']=='PASS_CURRENT_WORLD_DENSE_ATMOSPHERE_LIVE_TARGET_HOST', target
+          assert all(target['checks'].values()), target
+          print(json.dumps({'state':target['state'],'runtime_counter_sets':target['runtime_counter_sets']},indent=2))
+          PY
+
+      - name: Retain exact current-world atmosphere frames
+        if: always()
+        run: |
+          mkdir -p evidence/environment_atmosphere_current_world_rebind_001/rendered
+          cp environment-proof/atmosphere-current-*.png evidence/environment_atmosphere_current_world_rebind_001/rendered/ 2>/dev/null || true
+
+      - name: Upload exact current-world atmosphere rebind evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-atmosphere-current-world-rebind-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_atmosphere_current_world_rebind_001/exact-head.txt
+            evidence/environment_atmosphere_current_world_rebind_001/current_world_atmosphere_rebind.json
+            evidence/environment_atmosphere_current_world_rebind_001/runtime.json
+            evidence/environment_atmosphere_current_world_rebind_001/target_host.json
+            evidence/environment_atmosphere_current_world_rebind_001/rendered/*.png
+          if-no-files-found: warn
+          retention-days: 30
