@@ -12,7 +12,7 @@
   },
   "replacement": {
     "target_asset_id": "proxy:nature-tree-east-b",
-    "expected_proxy_size_m": [1.6, 1.6, 4.0],
+    "source_declared_envelope_m": [1.6, 1.6, 4.0],
     "repository": "mike-axiom-mir/axm-nature-design",
     "pull_request": 6,
     "head": "64116d63fc76daa1623b5fd5046a4e6074100bda",
@@ -34,5 +34,5 @@
     "keep_other_items": true,
     "materials": "EXISTING_PROOF_MATERIALS_ONLY_NOT_LOOKDEV_ACCEPTANCE"
   },
-  "truth_boundary": "This study tests whether one exact source-owned compact Nature body can replace the remaining east-foreground Nature proxy in the existing seed-29 Environment receiving scene without hidden scaling, path/spacing regression, or unrelated scene mutation, and retains fixed-camera proof renders for comparison. It does not establish Art Director or Visual Observer acceptance, botanical correctness, deformation/wind behavior, final materials/lighting, collision/navigation/gameplay, runtime performance, CANON, production readiness, or Environment/Nature mastery."
+  "truth_boundary": "This study tests whether one exact source-owned compact Nature body can replace the remaining east-foreground Nature proxy in the existing seed-29 Environment receiving scene without hidden scaling, path/spacing regression, or unrelated scene mutation, and retains fixed-camera proof renders for comparison. The Nature source declares a stricter 1.6 x 1.6 x 4.0 m fit envelope; the actual seed-29 proxy is allowed to be larger because Procedural Design owns its retained variation. It does not establish Art Director or Visual Observer acceptance, botanical correctness, deformation/wind behavior, final materials/lighting, collision/navigation/gameplay, runtime performance, CANON, production readiness, or Environment/Nature mastery."
 }
