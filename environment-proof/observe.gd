@@ -47,6 +47,16 @@ func material_for(kind:String)->StandardMaterial3D:
         material.albedo_color=Color(0.45,0.45,0.45,1.0)
     return material
 
+func source_material_for(kind:String)->StandardMaterial3D:
+    var material:=StandardMaterial3D.new()
+    material.roughness=0.82
+    if kind=="nature-source":
+        material.albedo_color=Color(0.20,0.43,0.20,1.0)
+    else:
+        material.albedo_color=Color(0.45,0.45,0.45,1.0)
+    material.cull_mode=BaseMaterial3D.CULL_DISABLED
+    return material
+
 func add_proxy(root3d:Node3D,item:Dictionary)->void:
     var node:=MeshInstance3D.new()
     node.name=String(item.get("asset_id","proxy"))
@@ -78,10 +88,9 @@ func add_path(root3d:Node3D,data:Dictionary)->void:
     node.material_override=material
     root3d.add_child(node)
 
-func add_sapling(root3d:Node3D,data:Dictionary)->Dictionary:
-    var sapling=data["sapling"] as Dictionary
-    var vertices=sapling["vertices_source_xyz_m"] as Array
-    var triangles=sapling["triangles"] as Array
+func add_source_mesh(root3d:Node3D,source:Dictionary,fallback_name:String)->Dictionary:
+    var vertices=source["vertices_source_xyz_m"] as Array
+    var triangles=source["triangles"] as Array
     var st:=SurfaceTool.new()
     st.begin(Mesh.PRIMITIVE_TRIANGLES)
     for tri in triangles:
@@ -92,15 +101,29 @@ func add_sapling(root3d:Node3D,data:Dictionary)->Dictionary:
     st.generate_normals()
     var mesh:=st.commit()
     var node:=MeshInstance3D.new()
-    node.name=String(sapling.get("asset_id","source-sapling"))
+    node.name=String(source.get("asset_id",fallback_name))
     node.mesh=mesh
-    var material:=StandardMaterial3D.new()
-    material.albedo_color=Color(0.20,0.43,0.20,1.0)
-    material.roughness=0.82
-    material.cull_mode=BaseMaterial3D.CULL_DISABLED
-    node.material_override=material
+    node.material_override=source_material_for(String(source.get("kind","nature-source")))
     root3d.add_child(node)
-    return {"vertices":vertices.size(),"triangles":triangles.size(),"proof_culling":String(sapling.get("proof_render_culling",""))}
+    return {
+        "asset_id":String(source.get("asset_id",fallback_name)),
+        "vertices":vertices.size(),
+        "triangles":triangles.size(),
+        "proof_culling":String(source.get("proof_render_culling",""))
+    }
+
+func add_sapling(root3d:Node3D,data:Dictionary)->Dictionary:
+    var sapling=data["sapling"] as Dictionary
+    var source=Dictionary(sapling.duplicate(true))
+    source["kind"]="nature-source"
+    return add_source_mesh(root3d,source,"source-sapling")
+
+func add_additional_source_meshes(root3d:Node3D,data:Dictionary)->Array:
+    var results:Array=[]
+    var sources=data.get("additional_source_meshes",[]) as Array
+    for source in sources:
+        results.append(add_source_mesh(root3d,source as Dictionary,"source-mesh"))
+    return results
 
 func add_weather(root3d:Node3D,data:Dictionary)->Dictionary:
     var lines=data["weather_lines"] as Array
@@ -157,6 +180,7 @@ func make_viewport(context:String,data:Dictionary)->Dictionary:
         add_proxy(root3d,item as Dictionary)
     add_path(root3d,data)
     var sapling_stats:=add_sapling(root3d,data)
+    var additional_source_stats:=add_additional_source_meshes(root3d,data)
     var weather_stats:=add_weather(root3d,data)
     var camera:=Camera3D.new()
     camera.near=0.05
@@ -166,7 +190,7 @@ func make_viewport(context:String,data:Dictionary)->Dictionary:
     var camera_data=(data["cameras"] as Dictionary)[context] as Dictionary
     camera.fov=float(camera_data["fov_deg"])
     camera.look_at_from_position(gvec(camera_data["position_source_xyz_m"] as Array),gvec(camera_data["target_source_xyz_m"] as Array),Vector3.UP)
-    return {"viewport":viewport,"sapling":sapling_stats,"weather":weather_stats,"camera":camera_data}
+    return {"viewport":viewport,"sapling":sapling_stats,"additional_source_meshes":additional_source_stats,"weather":weather_stats,"camera":camera_data}
 
 func capture_context(context:String,data:Dictionary)->Dictionary:
     var setup:=make_viewport(context,data)
@@ -184,6 +208,7 @@ func capture_context(context:String,data:Dictionary)->Dictionary:
         "capture":{"width":image.get_width(),"height":image.get_height(),"bytes":FileAccess.get_file_as_bytes(path).size()},
         "camera":setup["camera"],
         "sapling":setup["sapling"],
+        "additional_source_meshes":setup["additional_source_meshes"],
         "weather":setup["weather"],
         "proxy_count":(data["items"] as Array).size()
     }
@@ -211,6 +236,8 @@ func _initialize()->void:
     receipt["contexts"]=contexts
     receipt["source_integration"]=data["source_integration"]
     receipt["weather_presentation"]=data["weather_presentation"]
+    if data.has("environment_replacement"):
+        receipt["environment_replacement"]=data["environment_replacement"]
     write_receipt()
     print("AXM ENVIRONMENT EYE LEVEL ",JSON.stringify(receipt))
     quit(0)
