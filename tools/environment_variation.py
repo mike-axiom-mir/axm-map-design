@@ -10,6 +10,7 @@ import environment_composition as composition
 FAMILY_SCHEMA = "axm.environment-variation-family/v0.1"
 RECEIPT_SCHEMA = "axm.environment-variation-receipt/v0.1"
 SUMMARY_SCHEMA = "axm.environment-variation-sweep/v0.1"
+FAILURE_CONTROL_SCHEMA = "axm.environment-variation-failure-control/v0.1"
 VARIADIC_KINDS = {"nature-proxy", "object-proxy"}
 
 
@@ -169,6 +170,38 @@ def generate_sweep(base, family, seeds):
     }, variants
 
 
+def build_retained_failure_control(base, family):
+    impossible = copy.deepcopy(family)
+    impossible["max_attempts"] = 3
+    for rule in impossible["rules"]:
+        rule["xy_jitter_m"] = [0.0, 0.0]
+        rule["uniform_scale"] = [2.0, 2.0]
+        rule["rotation_deg"] = [0.0, 0.0]
+
+    result = generate_variant(base, impossible, 11)
+    control = {
+        "schema": FAILURE_CONTROL_SCHEMA,
+        "control_id": "impossible-double-scale-001",
+        "purpose": "Retain the bounded rejection path used by the source-owned procedural family.",
+        "expected_status": "HOLD",
+        "observed_status": result["status"],
+        "seed": 11,
+        "attempts_exhausted": result["receipt"].get("attempts_exhausted"),
+        "last_evidence_status": result["evidence"].get("status") if result["evidence"] else None,
+        "base_source_digest": composition.digest(base),
+        "failure_family_digest": composition.digest(impossible),
+        "receipt": result["receipt"],
+        "truth_boundary": "SYNTHETIC_NEGATIVE_CONTROL_ONLY_NOT_A_RETAINED_ASSET_VARIANT",
+    }
+    if not (
+        control["observed_status"] == "HOLD"
+        and control["attempts_exhausted"] == 3
+        and control["last_evidence_status"] == "FAIL"
+    ):
+        raise RuntimeError("bounded failure control did not fail closed as required")
+    return control
+
+
 def build_family(base_source, family_source, output_dir):
     base = composition.load_study(base_source)
     family = load_family(family_source)
@@ -176,6 +209,7 @@ def build_family(base_source, family_source, output_dir):
     if not isinstance(seeds, list):
         raise ValueError("family evidence_seeds must be a list")
     summary, variants = generate_sweep(base, family, seeds)
+    failure_control = build_retained_failure_control(base, family)
 
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
@@ -195,6 +229,20 @@ def build_family(base_source, family_source, output_dir):
                 encoding="utf-8",
             )
 
+    failure_path = output / "negative-control-impossible-double-scale.json"
+    failure_path.write_text(
+        json.dumps(failure_control, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    summary["retained_failure_control"] = {
+        "control_id": failure_control["control_id"],
+        "path": failure_path.name,
+        "observed_status": failure_control["observed_status"],
+        "attempts_exhausted": failure_control["attempts_exhausted"],
+        "last_evidence_status": failure_control["last_evidence_status"],
+        "failure_family_digest": failure_control["failure_family_digest"],
+    }
+
     (output / "summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -210,4 +258,11 @@ if __name__ == "__main__":
         root / "evidence/environment_variation_001",
     )
     print(json.dumps(report, indent=2, sort_keys=True))
-    raise SystemExit(0 if report["status"] == "PASS" and report["unique_study_digest_count"] == report["variant_count"] else 1)
+    failure = report.get("retained_failure_control", {})
+    ok = (
+        report["status"] == "PASS"
+        and report["unique_study_digest_count"] == report["variant_count"]
+        and failure.get("observed_status") == "HOLD"
+        and failure.get("last_evidence_status") == "FAIL"
+    )
+    raise SystemExit(0 if ok else 1)
