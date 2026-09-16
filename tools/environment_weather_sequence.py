@@ -87,8 +87,8 @@ def _motion_metrics(states: list[dict], visual_wind_xy, visual_speed: float) -> 
     for before, after in zip(states, states[1:]):
         dt = float(after["time_s"]) - float(before["time_s"])
         expected = visual_speed * dt
-        before_rows = before["weather_lines"]
-        after_rows = after["weather_lines"]
+        before_rows = before["scene"]["weather_lines"]
+        after_rows = after["scene"]["weather_lines"]
         if [r["id"] for r in before_rows] != [r["id"] for r in after_rows]:
             identity_errors.append("particle identity/order drift")
             continue
