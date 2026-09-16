@@ -15,20 +15,22 @@ func _footprint_review_mode()->String:
     return mode
 
 func add_object_readability_dressing(root3d:Node3D,data:Dictionary)->Dictionary:
+    var child_count_before:=root3d.get_child_count()
     var result:=super.add_object_readability_dressing(root3d,data)
     var mode:=_footprint_review_mode()
     if result.is_empty() or mode=="INVALID":
         return result
-    var found:=false
-    for child in root3d.get_children():
-        if String(child.name)==FOOTPRINT_REVIEW_ASSET_ID:
-            found=true
-            if child is GeometryInstance3D:
-                (child as GeometryInstance3D).visible=(mode==FOOTPRINT_CANDIDATE_VISIBLE)
-            else:
-                fail("Object footprint review node is not GeometryInstance3D")
-    if not found:
-        fail("Object footprint review dressing node missing")
+    if String(result.get("asset_id",""))!=FOOTPRINT_REVIEW_ASSET_ID:
+        fail("Object footprint review returned dressing identity drift")
+        return result
+    if root3d.get_child_count()!=child_count_before+1:
+        fail("Object footprint review expected exactly one emitted dressing child")
+        return result
+    var emitted:=root3d.get_child(root3d.get_child_count()-1)
+    if not (emitted is GeometryInstance3D):
+        fail("Object footprint review emitted child is not GeometryInstance3D")
+        return result
+    (emitted as GeometryInstance3D).visible=(mode==FOOTPRINT_CANDIDATE_VISIBLE)
     result["review_visibility_mode"]=mode
     result["review_visibility_only"]=true
     return result
