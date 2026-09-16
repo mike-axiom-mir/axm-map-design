@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   exact-current-world-weather-source-width:
@@ -43,63 +44,42 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Checkout exact parent Weather-variant receiving implementation
-        uses: actions/checkout@v4
+      - name: Download exact retained PR22 Weather-variant evidence
+        uses: actions/download-artifact@v4
         with:
+          name: environment-weather-variant-current-world-001-e482d003853e52fc835f1797ddfb6506a50083ef
+          path: .parent-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: mike-axiom-mir/axm-map-design
-          ref: e482d003853e52fc835f1797ddfb6506a50083ef
-          path: .variant-parent
-          fetch-depth: 1
+          run-id: 35086299949
 
-      - name: Checkout exact dense VFX donor
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-map-design
-          ref: 6e386d513c0b2e821a89fb066b2e3ab58a0d6868
-          path: .vfx-donor
-          fetch-depth: 1
-
-      - name: Checkout exact baseline Nature source
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-nature-design
-          ref: fbc202449981f2bac153951c561ed0ed6120c936
-          path: .nature-base
-
-      - name: Checkout exact compact Nature source
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-nature-design
-          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
-          path: .nature-east
-
-      - name: Checkout exact accepted Nature visual response
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-nature-design
-          ref: cee14f5b3feea78b0adcd044bad2ea3c97657fc6
-          path: .nature-response
-
-      - name: Checkout exact historical rear Nature source
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-nature-design
-          ref: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
-          path: .nature-rear-historical
-
-      - name: Checkout exact migrated rear Nature source
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-nature-design
-          ref: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
-          path: .nature-rear-migrated
-
-      - name: Checkout exact baseline Weather source
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-weather-design
-          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
-          path: .weather-base
+      - name: Verify retained parent evidence identity and live-host PASS
+        run: |
+          set -euo pipefail
+          test "$(cat .parent-evidence/exact-head.txt | tr -d '\n\r')" = "e482d003853e52fc835f1797ddfb6506a50083ef"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.parent-evidence')
+          parent=json.loads((root/'current_world_weather_variant.json').read_text())
+          target=json.loads((root/'target_host.json').read_text())
+          assert parent['schema']=='axm.environment-current-world-weather-variant-evidence/v0.1', parent
+          assert parent['status']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_REBIND_STRUCTURE', parent
+          assert all(parent['checks'].values()), parent
+          assert parent['receiving_head']=='e482d003853e52fc835f1797ddfb6506a50083ef', parent
+          assert parent['weather_variant_head']=='05b26c4e82bbe0a4de0ee7bee34179efc58b9719', parent
+          assert parent['weather_variant_seed']==44021, parent
+          assert parent['weather_variant_layout_digest']=='7ed55e93ea9445345016685320716006bc52960b33784cb620ca5670a74cc26f', parent
+          assert len(parent['states'])==17, parent
+          assert target['state']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_LIVE_TARGET_HOST', target
+          assert all(target['checks'].values()), target
+          print(json.dumps({
+              'parent_status':parent['status'],
+              'parent_head':parent['receiving_head'],
+              'parent_variant_rebind_digest':parent['variant_rebind_digest'],
+              'parent_target_host_state':target['state'],
+          },indent=2))
+          PY
 
       - name: Checkout exact Weather variation family
         uses: actions/checkout@v4
@@ -107,58 +87,23 @@ jobs:
           repository: mike-axiom-mir/axm-weather-design
           ref: 05b26c4e82bbe0a4de0ee7bee34179efc58b9719
           path: .weather-variant
+          fetch-depth: 1
 
-      - name: Checkout exact Building source
-        uses: actions/checkout@v4
-        with:
-          repository: mike-axiom-mir/axm-building-design
-          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
-          path: .building
-
-      - name: Verify exact donor heads and compile receiving tooling
+      - name: Verify exact Weather source and compile receiving tooling
         run: |
           set -euo pipefail
-          test "$(git -C .variant-parent rev-parse HEAD)" = "e482d003853e52fc835f1797ddfb6506a50083ef"
-          test "$(git -C .vfx-donor rev-parse HEAD)" = "6e386d513c0b2e821a89fb066b2e3ab58a0d6868"
-          test "$(git -C .weather-base rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
           test "$(git -C .weather-variant rev-parse HEAD)" = "05b26c4e82bbe0a4de0ee7bee34179efc58b9719"
           python -m py_compile tools/environment_weather_width_current_world.py
 
-      - name: Rebuild exact parent Weather variant at exact parent head
-        env:
-          AXM_RECEIVING_HEAD: e482d003853e52fc835f1797ddfb6506a50083ef
-          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
-          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
-          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
-        run: |
-          set -euo pipefail
-          mkdir -p evidence/environment_weather_source_width_current_world_001 environment-proof/generated
-          python .variant-parent/tools/environment_weather_variant_current_world.py build \
-            --vfx-donor-root .vfx-donor \
-            --base-nature-root .nature-base \
-            --compact-nature-root .nature-east \
-            --nature-response-root .nature-response \
-            --weather-base-root .weather-base \
-            --weather-variant-root .weather-variant \
-            --building-root .building \
-            --historical-rear-root .nature-rear-historical \
-            --migrated-rear-root .nature-rear-migrated \
-            --output evidence/environment_weather_source_width_current_world_001/parent_variant.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          data=json.loads(Path('evidence/environment_weather_source_width_current_world_001/parent_variant.json').read_text())
-          assert data['status']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_REBIND_STRUCTURE', data
-          assert all(data['checks'].values()), data
-          assert data['receiving_head']=='e482d003853e52fc835f1797ddfb6506a50083ef', data['receiving_head']
-          PY
-
-      - name: Bind exact source-authored Weather width profile into all 17 states
+      - name: Bind exact source-authored Weather width profile into all 17 retained states
         env:
           AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           out=evidence/environment_weather_source_width_current_world_001
+          mkdir -p "$out" environment-proof/generated
+          cp .parent-evidence/current_world_weather_variant.json "$out/parent_variant.json"
+          cp .parent-evidence/target_host.json "$out/parent_target_host.json"
           python tools/environment_weather_width_current_world.py build \
             --parent "$out/parent_variant.json" \
             --weather-variant-root .weather-variant \
@@ -177,7 +122,11 @@ jobs:
           assert data['source_width_summary']['count']==36, data
           assert 1.0 <= data['source_width_summary']['minimum_px'] <= data['source_width_summary']['maximum_px'] <= 2.4, data
           assert len(data['states'])==17, data
-          print(json.dumps({'status':data['status'],'source_width_summary':data['source_width_summary'],'binding_digest':data['weather_width_binding_digest']},indent=2))
+          print(json.dumps({
+              'status':data['status'],
+              'source_width_summary':data['source_width_summary'],
+              'binding_digest':data['weather_width_binding_digest'],
+          },indent=2))
           PY
 
       - name: Exercise fail-closed parent identity control
@@ -251,6 +200,7 @@ jobs:
           print(json.dumps({
               'state':target['state'],
               'maximum_projected_width_residual_px':target['maximum_projected_width_residual_px'],
+              'measured_width_count':target['measured_width_count'],
               'control_runtime_counter_sets':target['control_runtime_counter_sets'],
               'candidate_runtime_counter_sets':target['candidate_runtime_counter_sets'],
           },indent=2))
@@ -270,6 +220,7 @@ jobs:
           path: |
             evidence/environment_weather_source_width_current_world_001/exact-head.txt
             evidence/environment_weather_source_width_current_world_001/parent_variant.json
+            evidence/environment_weather_source_width_current_world_001/parent_target_host.json
             evidence/environment_weather_source_width_current_world_001/current_world_weather_width.json
             evidence/environment_weather_source_width_current_world_001/runtime.json
             evidence/environment_weather_source_width_current_world_001/target_host.json
