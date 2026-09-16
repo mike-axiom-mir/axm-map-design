@@ -17,8 +17,14 @@ import environment_real_slice as real_slice
 class EnvironmentRealSliceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.nature_root = Path(os.environ["AXM_NATURE_ROOT"])
-        cls.weather_root = Path(os.environ["AXM_WEATHER_ROOT"])
+        nature_root = os.environ.get("AXM_NATURE_ROOT")
+        weather_root = os.environ.get("AXM_WEATHER_ROOT")
+        if not nature_root or not weather_root:
+            raise unittest.SkipTest(
+                "cross-repo dependencies are supplied by the dedicated environment-real-slice workflow"
+            )
+        cls.nature_root = Path(nature_root)
+        cls.weather_root = Path(weather_root)
         cls.manifest_path = ROOT / "examples/environment_real_slice_001.json"
         cls.manifest = real_slice.load_manifest(cls.manifest_path)
 
