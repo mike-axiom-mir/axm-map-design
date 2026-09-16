@@ -1,0 +1,128 @@
+name: Runtime Building material submission budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-building-material-submission-budget-001]
+    paths:
+      - "tools/environment_building_material_runtime_budget.py"
+      - "tests/test_environment_building_material_runtime_budget.py"
+      - "docs/RUNTIME_BUILDING_MATERIAL_SUBMISSION_BUDGET_001.md"
+      - ".github/workflows/runtime-building-material-submission-budget.yml"
+  pull_request:
+    paths:
+      - "tools/environment_building_material_runtime_budget.py"
+      - "tests/test_environment_building_material_runtime_budget.py"
+      - "docs/RUNTIME_BUILDING_MATERIAL_SUBMISSION_BUDGET_001.md"
+      - ".github/workflows/runtime-building-material-submission-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --disable-pip-version-check pillow==11.3.0
+      - run: python -m unittest discover -s tests -p 'test_environment_building_material_runtime_budget.py' -v
+
+  exact-budget:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Runtime head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment donor and prove Runtime changed no visual producer
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5^{commit}
+          git merge-base --is-ancestor 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5 HEAD
+          git diff --exit-code 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5 -- \
+            tools/environment_building_material_current_world.py \
+            environment-proof/atmosphere_current_world_weather_variant_building_material_observe.gd \
+            .github/workflows/environment-current-world-building-material.yml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --disable-pip-version-check pillow==11.3.0
+
+      - name: Download exact retained Environment parent artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_URL: https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10447016718/zip
+          ARTIFACT_SHA256: aeda6e564ae8ac99906c61ac56a692792c4227f2539b0c453e66914b9d15f1ff
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/runtime_building_material_submission_budget_001/parent
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$ARTIFACT_URL" \
+            --output evidence/runtime_building_material_submission_budget_001/parent.zip
+          echo "$ARTIFACT_SHA256  evidence/runtime_building_material_submission_budget_001/parent.zip" | sha256sum --check --strict
+          unzip -q evidence/runtime_building_material_submission_budget_001/parent.zip \
+            -d evidence/runtime_building_material_submission_budget_001/parent
+          test "$(cat evidence/runtime_building_material_submission_budget_001/parent/exact-head.txt)" = 48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5
+
+      - name: Derive exact submission budget from retained target-host evidence
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_material_submission_budget_001
+          python tools/environment_building_material_runtime_budget.py \
+            --control-runtime "$out/parent/control_runtime.json" \
+            --candidate-runtime "$out/parent/candidate_runtime.json" \
+            --target-host "$out/parent/target_host.json" \
+            --render-root "$out/parent/rendered" \
+            --output "$out/runtime_budget.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('evidence/runtime_building_material_submission_budget_001/runtime_budget.json')
+          d=json.loads(p.read_text())
+          assert d['state']=='PASS_EXACT_BUILDING_FIVE_SURFACE_SUBMISSION_COST_CHARACTERIZED', d
+          assert all(d['checks'].values()), d
+          assert d['contexts']['path_eye']['delta']=={
+              'draw_calls':12,'objects':12,'primitives':0,'buffer_bytes':0,'texture_bytes':0
+          }, d['contexts']['path_eye']
+          assert d['contexts']['elevated_oblique']['delta']=={
+              'draw_calls':12,'objects':12,'primitives':0,'buffer_bytes':0,'texture_bytes':0
+          }, d['contexts']['elevated_oblique']
+          print(json.dumps({
+              'state': d['state'],
+              'budget_decision': d['budget_decision'],
+              'contexts': d['contexts'],
+          }, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload exact Runtime material-submission evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-building-material-submission-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/runtime_building_material_submission_budget_001/exact-head.txt
+            evidence/runtime_building_material_submission_budget_001/runtime_budget.json
+            evidence/runtime_building_material_submission_budget_001/parent/control_runtime.json
+            evidence/runtime_building_material_submission_budget_001/parent/candidate_runtime.json
+            evidence/runtime_building_material_submission_budget_001/parent/target_host.json
+          if-no-files-found: warn
+          retention-days: 30
