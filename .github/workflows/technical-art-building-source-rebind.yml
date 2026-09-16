@@ -6,6 +6,7 @@ on:
     paths:
       - "examples/technical_art_building_source_replacement_001.json"
       - "examples/technical_art_building_source_rebind_001.json"
+      - "tools/environment_building_source_replacement.py"
       - "tools/technical_art_building_source_rebind.py"
       - "docs/TECHNICAL_ART_BUILDING_SOURCE_REBIND_001.md"
       - ".github/workflows/technical-art-building-source-rebind.yml"
@@ -13,6 +14,7 @@ on:
     paths:
       - "examples/technical_art_building_source_replacement_001.json"
       - "examples/technical_art_building_source_rebind_001.json"
+      - "tools/environment_building_source_replacement.py"
       - "tools/technical_art_building_source_rebind.py"
       - "docs/TECHNICAL_ART_BUILDING_SOURCE_REBIND_001.md"
       - ".github/workflows/technical-art-building-source-rebind.yml"
@@ -32,7 +34,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
-      - name: Bind exact PR14 parent and compile Technical Art contract
+      - name: Bind exact PR14 parent and compile Technical Art contracts
         run: |
           set -euo pipefail
           git rev-parse HEAD > exact-head.txt
@@ -41,11 +43,13 @@ jobs:
           git merge-base --is-ancestor 0e2d571af4fd5772e9d48da013dc245914654660 HEAD
           git diff --exit-code 0e2d571af4fd5772e9d48da013dc245914654660 -- \
             tools/environment_building_material_receiving.py \
-            tools/environment_building_source_replacement.py \
             tools/prepare_material_environment_observer.py \
             material-environment-proof/compare.gd \
             material-environment-proof/project.godot
-          python -m py_compile tools/technical_art_building_source_rebind.py tools/environment_building_material_receiving.py
+          python -m py_compile \
+            tools/environment_building_source_replacement.py \
+            tools/environment_building_material_receiving.py \
+            tools/technical_art_building_source_rebind.py
 
       - name: Set up Python
         uses: actions/setup-python@v5
