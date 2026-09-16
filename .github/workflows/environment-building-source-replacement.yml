@@ -1,0 +1,237 @@
+name: Environment Building source replacement evidence
+
+on:
+  push:
+    branches: [studio/environment-building-source-replacement-001]
+    paths:
+      - "examples/environment_building_source_replacement_001.json"
+      - "tools/environment_building_source_replacement.py"
+      - "tests/test_environment_building_source_replacement.py"
+      - "docs/ENVIRONMENT_BUILDING_SOURCE_REPLACEMENT_001.md"
+      - ".github/workflows/environment-building-source-replacement.yml"
+      - "environment-proof/**"
+  pull_request:
+    paths:
+      - "examples/environment_building_source_replacement_001.json"
+      - "tools/environment_building_source_replacement.py"
+      - "tests/test_environment_building_source_replacement.py"
+      - "docs/ENVIRONMENT_BUILDING_SOURCE_REPLACEMENT_001.md"
+      - ".github/workflows/environment-building-source-replacement.yml"
+      - "environment-proof/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-building-source-replacement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Environment lane
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout exact Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building
+
+      - name: Compile and test bounded Building replacement
+        env:
+          AXM_BASE_NATURE_ROOT: ${{ github.workspace }}/.nature-base
+          AXM_COMPACT_NATURE_ROOT: ${{ github.workspace }}/.nature-east
+          AXM_WEATHER_ROOT: ${{ github.workspace }}/.weather
+          AXM_BUILDING_ROOT: ${{ github.workspace }}/.building
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_building_source_replacement -v
+
+      - name: Rebuild exact baseline and Building candidate
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+        run: |
+          python tools/environment_building_source_replacement.py \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --building-root .building \
+            --output evidence/environment_building_source_replacement_001
+
+      - name: Validate exact structural evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_source_replacement_001')
+          e=json.loads((root/'replacement_evidence.json').read_text())
+          b=json.loads((root/'baseline_scene_runtime.json').read_text())
+          c=json.loads((root/'candidate_scene_runtime.json').read_text())
+          assert e['status']=='PASS_BUILDING_SOURCE_REPLACEMENT_STRUCTURE',e
+          assert all(e['checks'].values()),e
+          assert e['receiving_head']==c['receiving_head'],(e,c)
+          assert e['baseline_scene_digest']==b['scene_digest'],(e,b)
+          assert e['candidate_scene_digest']==c['scene_digest'],(e,c)
+          assert any(row['asset_id']=='proxy:building-pavilion' for row in b['items']),b
+          assert not any(row['asset_id']=='proxy:building-pavilion' for row in c['items']),c
+          assert len(b['additional_source_meshes'])==1,b
+          assert len(c['additional_source_meshes'])==2,c
+          assert c['additional_source_meshes'][0]==b['additional_source_meshes'][0],(b,c)
+          source=c['additional_source_meshes'][1]
+          assert source['asset_id']=='source:building:service-pavilion-001',source
+          assert len(source['vertices_source_xyz_m'])==152,source
+          assert len(source['triangles'])==228,source
+          assert source['pavilion_source_sha256']=='852038d2288ead9a0ee271e09f1a7f7207ec8fd74668e0c52e739e9a224f87d7',source
+          assert source['panel_source_sha256']=='df59fa135abc89f8c85317db1d6b9ce3d03920efc91271de61bfb6289a24c253',source
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact accepted-scene baseline
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_building_source_replacement_001/baseline_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_building_source_replacement_001/baseline_runtime_receipt.json
+          cp environment-proof/path_eye.png evidence/environment_building_source_replacement_001/baseline_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_building_source_replacement_001/baseline_elevated_oblique.png
+
+      - name: Render exact Building candidate
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_building_source_replacement_001/candidate_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_building_source_replacement_001/candidate_runtime_receipt.json
+          cp environment-proof/path_eye.png evidence/environment_building_source_replacement_001/candidate_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_building_source_replacement_001/candidate_elevated_oblique.png
+
+      - name: Validate target-host evidence and retain render relations
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_source_replacement_001')
+          e=json.loads((root/'replacement_evidence.json').read_text())
+          b=json.loads((root/'baseline_runtime_receipt.json').read_text())
+          c=json.loads((root/'candidate_runtime_receipt.json').read_text())
+          assert b['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',b
+          assert c['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',c
+          assert b['scene_digest']==e['baseline_scene_digest'],(b,e)
+          assert c['scene_digest']==e['candidate_scene_digest'],(c,e)
+          for context in ('path_eye','elevated_oblique'):
+              brow=b['contexts'][context]
+              crow=c['contexts'][context]
+              assert brow['state']=='PASS',(context,brow)
+              assert crow['state']=='PASS',(context,crow)
+              assert len(brow['additional_source_meshes'])==1,(context,brow)
+              assert len(crow['additional_source_meshes'])==2,(context,crow)
+              building=[row for row in crow['additional_source_meshes'] if row['asset_id']=='source:building:service-pavilion-001']
+              assert len(building)==1,(context,crow)
+              assert building[0]['vertices']==152,(context,building[0])
+              assert building[0]['triangles']==228,(context,building[0])
+          hashes={
+              name:hashlib.sha256((root/name).read_bytes()).hexdigest()
+              for name in (
+                  'baseline_path_eye.png','candidate_path_eye.png',
+                  'baseline_elevated_oblique.png','candidate_elevated_oblique.png'
+              )
+          }
+          relations={
+              'path_eye':'BYTE_DIFFERENT' if hashes['baseline_path_eye.png']!=hashes['candidate_path_eye.png'] else 'BYTE_IDENTICAL',
+              'elevated_oblique':'BYTE_DIFFERENT' if hashes['baseline_elevated_oblique.png']!=hashes['candidate_elevated_oblique.png'] else 'BYTE_IDENTICAL',
+          }
+          assert relations['path_eye']=='BYTE_DIFFERENT',relations
+          assert 'BYTE_DIFFERENT' in relations.values(),relations
+          comparison={
+              'schema':'axm.environment-building-render-comparison/v0.1',
+              'relations':relations,
+              'hashes':hashes,
+              'truth_boundary':'Hash difference confirms that this exact proxy-to-source replacement reaches the retained target-host image. It is not aesthetic acceptance.'
+          }
+          (root/'render_hashes.json').write_text(json.dumps(comparison,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(comparison,indent=2))
+          PY
+
+      - name: Upload exact Building replacement evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-source-replacement-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_building_source_replacement_001/replacement_evidence.json
+            evidence/environment_building_source_replacement_001/baseline_scene_runtime.json
+            evidence/environment_building_source_replacement_001/candidate_scene_runtime.json
+            evidence/environment_building_source_replacement_001/baseline_runtime_receipt.json
+            evidence/environment_building_source_replacement_001/candidate_runtime_receipt.json
+            evidence/environment_building_source_replacement_001/render_hashes.json
+            evidence/environment_building_source_replacement_001/baseline_path_eye.png
+            evidence/environment_building_source_replacement_001/candidate_path_eye.png
+            evidence/environment_building_source_replacement_001/baseline_elevated_oblique.png
+            evidence/environment_building_source_replacement_001/candidate_elevated_oblique.png
+          if-no-files-found: warn
+          retention-days: 30

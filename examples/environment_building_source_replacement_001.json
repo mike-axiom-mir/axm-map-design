@@ -1,0 +1,45 @@
+{
+  "schema": "axm.environment-building-source-replacement/v0.1",
+  "study_id": "environment-building-source-replacement-001",
+  "baseline_environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 4,
+    "exact_head": "cdac7d1316631b3b130d5e558de2aee462a21d40",
+    "east_tree_manifest": "examples/environment_east_tree_replacement_001.json",
+    "seed": 29,
+    "cameras": ["path_eye", "elevated_oblique"],
+    "relationship": "PRESERVE_ACCEPTED_EAST_TREE_SCENE_AND_REPLACE_ONE_BUILDING_PROXY_ONLY"
+  },
+  "replacement": {
+    "target_asset_id": "proxy:building-pavilion",
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pull_request": 2,
+    "head": "4faa769b406bf3ad0ba9489a77141c27f122ce51",
+    "pavilion_source_path": "assets/service_pavilion_001.json",
+    "panel_source_path": "assets/utility_access_panel_001.json",
+    "expected_pavilion_asset_id": "service-pavilion-001",
+    "expected_panel_asset_id": "utility-access-panel-001",
+    "expected_pavilion_source_sha256": "852038d2288ead9a0ee271e09f1a7f7207ec8fd74668e0c52e739e9a224f87d7",
+    "expected_panel_source_sha256": "df59fa135abc89f8c85317db1d6b9ce3d03920efc91271de61bfb6289a24c253",
+    "expected_vertices": 152,
+    "expected_triangles": 228,
+    "expected_receiver_count": 2,
+    "expected_reserved_slot_size_m": [8.0, 2.4, 3.6],
+    "expected_reserved_slot_position_m": [0.0, 7.2, 1.8],
+    "placement_policy": "PRESERVE_TARGET_CENTER_XY__GROUND_SOURCE_MIN_Z__NO_SOURCE_SCALE__NO_EXTRA_ROTATION",
+    "truth_state": "SOURCE_OWNED_CANDIDATE_NOT_FINAL"
+  },
+  "comparison_policy": {
+    "isolate_delta": "BUILDING_PROXY_TO_EXACT_BUILDING_SOURCE_ONLY",
+    "keep_west_sapling": true,
+    "keep_accepted_east_tree": true,
+    "keep_weather": true,
+    "keep_object_proxies": true,
+    "keep_other_nature_proxies": true,
+    "keep_cameras": true,
+    "keep_path": true,
+    "materials": "EXISTING_ENVIRONMENT_PROOF_MATERIALS_ONLY_NOT_BUILDING_LOOKDEV_ACCEPTANCE",
+    "building_materials_pr3_consumed": false
+  },
+  "truth_boundary": "This study tests whether the exact source-owned Building PR #2 pavilion plus its two exact service panels can replace only proxy:building-pavilion in the already-accepted seed-29 Environment scene while preserving Nature, Weather, path, cameras and unrelated scene content. It proves bounded composition and target-host visibility only. It does not establish Building Materials PR #3 acceptance, architecture/engineering, navigation/collision, gameplay, target-device runtime budgets, final Art Direction, CANON, production readiness or Environment/Building mastery."
+}
