@@ -1,0 +1,62 @@
+{
+  "schema": "axm.environment-rear-tree-normal-culling-review/v0.1",
+  "study_id": "environment-rear-tree-normal-culling-001",
+  "base_environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 15,
+    "exact_head": "03e956475158a59d70cca08b73be23c141e4cb1f",
+    "rear_replacement_manifest": "examples/environment_rear_tree_source_replacement_001.json",
+    "relationship": "PRESERVE_EXACT_REAR_SOURCE_COMPOSITION_AND_CHANGE_ONLY_REAR_TREE_SOURCE_LINEAGE_PLUS_TRIANGLE_WINDING"
+  },
+  "target": {
+    "asset_id": "source:nature:east-rear-tree-neutral-001",
+    "proxy_asset_id": "proxy:nature-tree-east-a",
+    "source_path": "examples/east_rear_tree_neutral_001.json",
+    "expected_study_id": "east-rear-tree-neutral-001",
+    "expected_source_digest": "0adf2cde8cfc355ec21b6fb06c6759b753300164b5f72ba029dc1b8c6d2ef307",
+    "expected_vertices": 390,
+    "expected_triangles": 570,
+    "expected_changed_triangle_rows": 260
+  },
+  "historical_source": {
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "pull_request": 8,
+    "head": "a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12",
+    "mesh_digest": "d7fc5deaa1c12d1d8c7d7b6dc95bf1e8544ce26140ee2e4a7d2c67a2c4133e48",
+    "topology_state": "HISTORICAL_ORGANIC_GENERATOR"
+  },
+  "migrated_source": {
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "pull_request": 9,
+    "head": "4ddbe66e5c02d22407ef773d5346a2fe6f349a2d",
+    "mesh_digest": "aa9d450a78fef722672ea9af0f9aca98b4c1a0ca3705661784f5f61f3e9b6a31",
+    "topology_state": "NATURE_SOURCE_GENERATOR_TAPERED_CAP_WINDING_MIGRATED"
+  },
+  "culling_review": {
+    "target_asset_id": "source:nature:east-rear-tree-neutral-001",
+    "target_cull_mode": "BACK",
+    "other_source_mesh_cull_mode": "DISABLED",
+    "relationship": "HISTORICAL_VS_MIGRATED_REAR_TREE_UNDER_IDENTICAL_TARGET_ONLY_BACKFACE_CULLING",
+    "renderer": "Godot 4.7.2 GL Compatibility",
+    "cameras": ["path_eye", "elevated_oblique"]
+  },
+  "comparison_policy": {
+    "keep_seed": true,
+    "keep_building_source": true,
+    "keep_west_sapling": true,
+    "keep_compact_east_tree": true,
+    "keep_weather": true,
+    "keep_object_proxies": true,
+    "keep_remaining_nature_proxies": true,
+    "keep_path": true,
+    "keep_cameras": true,
+    "keep_environment_lighting": true,
+    "keep_neutral_proof_materials": true,
+    "consume_building_materials_pr14": false,
+    "consume_runtime_pr17": false,
+    "consume_vfx_pr16": false,
+    "change_rear_vertices": false,
+    "change_rear_triangle_membership": false
+  },
+  "truth_boundary": "This study answers the Visual QA handoff after Nature PR #9 migrated the already-proven tapered-cap winding repair into source generation. It rebuilds the exact Map PR #15 multi-asset scene, then compares the historical PR #8 rear-tree mesh with the source-generated PR #9 rear-tree mesh under the same target-only backface-culling state while every unrelated Map, Building, Nature, Weather, Object, path, camera, lighting and proof-material dependency remains fixed. Other source Nature meshes remain culling-disabled so their historical topology cannot confound this rear-tree comparison. A PASS can establish only that the migrated rear-tree source reaches the exact receiving scene and changes the retained target-host image under the declared culling review without changing its vertices or triangle membership. It does not establish global outward-normal correctness, final leaf/backface representation, final vegetation materials, deformation/wind quality, target-device runtime budgets, collision/navigation/gameplay, CANON, production readiness or Environment/Nature mastery."
+}
