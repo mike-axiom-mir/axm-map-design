@@ -57,27 +57,27 @@ func run_context_coalesced(camera:Camera3D,states:Array,context:String)->Diction
         return {"state":"FAIL_WARMUP_WEATHER","detail":warm_weather}
     await RenderingServer.frame_post_draw
 
-    var clock_start_us:=Time.get_ticks_usec()
+    var clock_start_us:int=Time.get_ticks_usec()
     var samples=[]
     var dropped=[]
-    var previous_index=-1
+    var previous_index:int=-1
 
     while previous_index<states.size()-1:
-        var elapsed_us:=Time.get_ticks_usec()-clock_start_us
-        var selected_index:=latest_due_index(elapsed_us,states.size())
+        var elapsed_us:int=Time.get_ticks_usec()-clock_start_us
+        var selected_index:int=latest_due_index(elapsed_us,states.size())
         if selected_index<=previous_index:
-            var next_index:=previous_index+1
-            var next_tick_us:=clock_start_us+next_index*SOURCE_INTERVAL_US
-            var remaining_us:=next_tick_us-Time.get_ticks_usec()
+            var next_index:int=previous_index+1
+            var next_tick_us:int=clock_start_us+next_index*SOURCE_INTERVAL_US
+            var remaining_us:int=next_tick_us-Time.get_ticks_usec()
             if remaining_us>0:
                 await create_timer(float(remaining_us)/1000000.0).timeout
             continue
 
         var row=states[selected_index] as Dictionary
         var scene=row["scene"] as Dictionary
-        var selection_tick_us:=Time.get_ticks_usec()
-        var selection_elapsed_us:=selection_tick_us-clock_start_us
-        var due_at_selection:=latest_due_index(selection_elapsed_us,states.size())
+        var selection_tick_us:int=Time.get_ticks_usec()
+        var selection_elapsed_us:int=selection_tick_us-clock_start_us
+        var due_at_selection:int=latest_due_index(selection_elapsed_us,states.size())
         if due_at_selection!=selected_index:
             # Scheduler movement can only advance the newest due state. Re-enter
             # the loop instead of presenting a knowingly stale source state.
@@ -96,9 +96,9 @@ func run_context_coalesced(camera:Camera3D,states:Array,context:String)->Diction
         if float(weather_update.get("maximum_projected_width_residual_px",999.0))>WIDTH_RESIDUAL_TOL_PX:
             return {"state":"FAIL_WIDTH_RESIDUAL","index":selected_index,"detail":weather_update}
 
-        var submit_tick_us:=Time.get_ticks_usec()
+        var submit_tick_us:int=Time.get_ticks_usec()
         await RenderingServer.frame_post_draw
-        var draw_tick_us:=Time.get_ticks_usec()
+        var draw_tick_us:int=Time.get_ticks_usec()
         var frame=capture_frame(camera,context,selected_index)
         if frame.get("state")!="PASS_CAPTURED_FRAME":
             return {"state":"FAIL_FRAME_CAPTURE","index":selected_index,"detail":frame}
