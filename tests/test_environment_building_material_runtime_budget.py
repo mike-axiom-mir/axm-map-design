@@ -1,4 +1,3 @@
-import copy
 import importlib.util
 import unittest
 from pathlib import Path
@@ -46,7 +45,7 @@ def fixture():
         candidate_samples.append(sample(index, runtime(32, 32, 5992), runtime(39, 39, 7750)))
 
     control = {
-        "receiving_head": M.EXPECTED_ENVIRONMENT_HEAD,
+        "receiving_head": M.EXPECTED_CONTROL_HEAD,
         "proof_runtime": "Godot 4.7.2 GL Compatibility",
         "samples": control_samples,
         "static_source_meshes": [{
