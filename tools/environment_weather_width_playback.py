@@ -19,6 +19,8 @@ SOURCE_INTERVAL_S = 0.03125
 SOURCE_INTERVAL_MS = 31.25
 DEADLINE_EPSILON_MS = 0.5
 TARGET_REAR_ASSET_ID = "source:nature:east-rear-tree-neutral-001"
+VIEWPORT_UPDATE_POLICY = "UPDATE_ONCE_PER_SOURCE_STATE"
+SUBMIT_SEMANTICS = "AFTER_STATE_GEOMETRY_UPDATE_BEFORE_ONE_SHOT_VIEWPORT_DRAW_REQUEST"
 
 
 def _load(path: str | Path) -> dict[str, Any]:
@@ -45,6 +47,7 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
     all_submit_deadlines = True
     all_draw_deadlines = True
     all_widths = True
+    all_context_policies = True
     weather_ids: set[tuple[int, int, int]] = set()
     sapling_ids: set[tuple[int, int, int]] = set()
     measured_width_count = 0
@@ -74,6 +77,10 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
             and all(abs(a - b) <= 1e-9 for a, b in zip(scheduled_times, expected_times))
             and abs(float(block.get("interval_s", -1.0)) - SOURCE_INTERVAL_S) <= 1e-9
             and int(block.get("interval_us", -1)) == 31250
+        )
+        context_policy_exact = (
+            block.get("viewport_update_policy") == VIEWPORT_UPDATE_POLICY
+            and block.get("submit_semantics") == SUBMIT_SEMANTICS
         )
         monotonic = _strictly_non_decreasing(submit_times) and _strictly_non_decreasing(draw_times)
         submit_before_draw = len(samples) == 17 and all(submit <= draw for submit, draw in zip(submit_times, draw_times))
@@ -105,6 +112,7 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
 
         all_exact_samples = all_exact_samples and exact_samples
         all_schedule_exact = all_schedule_exact and schedule_exact
+        all_context_policies = all_context_policies and context_policy_exact
         all_monotonic = all_monotonic and monotonic
         all_submit_before_draw = all_submit_before_draw and submit_before_draw
         all_submit_deadlines = all_submit_deadlines and submit_deadline
@@ -116,6 +124,8 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
             "maximum_draw_lateness_ms": max(draw_lateness, default=None),
             "final_draw_time_s": draw_times[-1] if draw_times else None,
             "near_clipped_endpoint_count": near_clips,
+            "viewport_update_policy": block.get("viewport_update_policy"),
+            "submit_semantics": block.get("submit_semantics"),
         }
 
     rear_modes = {
@@ -132,6 +142,11 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         "both_fixed_contexts_observed": set(receipt_contexts) == set(CONTEXTS),
         "all_17_exact_source_states_presented_per_context": all_exact_samples,
         "exact_0p03125_source_schedule_preserved": all_schedule_exact,
+        "one_shot_viewport_policy_and_post_geometry_submit_semantics_exact": (
+            receipt.get("viewport_update_policy") == VIEWPORT_UPDATE_POLICY
+            and receipt.get("submit_semantics") == SUBMIT_SEMANTICS
+            and all_context_policies
+        ),
         "submit_and_post_draw_times_monotonic": all_monotonic and all_submit_before_draw,
         "all_state_submissions_within_one_source_interval": all_submit_deadlines,
         "all_post_draw_observations_within_one_source_interval": all_draw_deadlines,
@@ -148,7 +163,9 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         "receiving_head": payload.get("receiving_head"),
         "parent_variant_head": width.EXPECTED_PARENT_VARIANT_HEAD,
         "source_interval_s": SOURCE_INTERVAL_S,
-        "deadline_policy": "EACH_SUBMIT_AND_POST_DRAW_MUST_COMPLETE_WITHIN_ONE_0P03125_SECOND_SOURCE_INTERVAL_OF_ITS_EXACT_SOURCE_TIME",
+        "viewport_update_policy": VIEWPORT_UPDATE_POLICY,
+        "submit_semantics": SUBMIT_SEMANTICS,
+        "deadline_policy": "EACH_POST_GEOMETRY_SUBMIT_AND_ITS_ONE_SHOT_POST_DRAW_MUST_COMPLETE_WITHIN_ONE_0P03125_SECOND_SOURCE_INTERVAL_OF_ITS_EXACT_SOURCE_TIME",
         "deadline_epsilon_ms": DEADLINE_EPSILON_MS,
         "checks": checks,
         "context_metrics": context_metrics,
@@ -156,8 +173,8 @@ def verify_playback(payload: dict[str, Any], receipt: dict[str, Any]) -> dict[st
         "measured_width_count": measured_width_count,
         "near_clip_totals": near_clip_totals,
         "truth_boundary": (
-            "PASS proves only that the exact 17 already-authored Weather-width + sapling states were submitted in order at their exact 0.03125 s source-evaluation schedule and each was followed by a Godot post-draw observation within one source interval in both fixed 1100x720 cameras. "
-            "No interpolated states are invented. This is not a frame-time benchmark, target-device performance certification, physical-weather simulation, gameplay/controller authority, arbitrary-camera guarantee, final Art Direction acceptance, CANON, production readiness, or VFX mastery."
+            "PASS proves only that the exact 17 already-authored Weather-width + sapling states were materialized and submitted in order at their exact 0.03125 s source-evaluation schedule, with exactly one proof SubViewport draw requested per source state, and each was followed by a Godot post-draw observation within one source interval in both fixed 1100x720 cameras. "
+            "The submit timestamp is taken after source-state geometry update, not at scheduler wake. No interpolated states are invented. This is not a frame-time benchmark, target-device performance certification, physical-weather simulation, gameplay/controller authority, arbitrary-camera guarantee, final Art Direction acceptance, CANON, production readiness, or VFX mastery."
         ),
     }
 
