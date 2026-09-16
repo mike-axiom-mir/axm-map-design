@@ -33,7 +33,9 @@ class ObjectEnvironmentContractTests(unittest.TestCase):
         replacement = manifest["replacement"]
         policy = manifest["comparison_policy"]
         self.assertEqual(replacement["target_asset_id"], "proxy:object-crate-west")
-        self.assertEqual(replacement["expected_reserved_rotation_deg"], 18.0)
+        self.assertEqual(replacement["expected_reserved_position_m"], [-3.458072, 4.303392, 0.567315])
+        self.assertEqual(replacement["expected_reserved_size_m"], [1.13463, 1.13463, 1.13463])
+        self.assertEqual(replacement["expected_reserved_rotation_deg"], -4.626112)
         self.assertEqual(replacement["placement_policy"], object_env.PLACEMENT_POLICY)
         self.assertEqual(policy["isolate_delta"], "WEST_OBJECT_PROXY_TO_EXACT_OBJECT_SOURCE_ONLY")
         self.assertFalse(policy["consume_object_materials_pr6"])
@@ -89,7 +91,9 @@ class ObjectEnvironmentContractTests(unittest.TestCase):
         self.assertEqual(report["object_source"]["triangles"], 812)
         self.assertEqual(report["spacing_conflicts"], [])
         self.assertEqual(len(candidate["additional_source_meshes"]), len(baseline["additional_source_meshes"]) + 1)
-        self.assertEqual(candidate["environment_object_replacement"]["reserved_proxy_rotation_deg"], 18.0)
+        self.assertEqual(candidate["environment_object_replacement"]["reserved_proxy_position_m"], [-3.458072, 4.303392, 0.567315])
+        self.assertEqual(candidate["environment_object_replacement"]["reserved_proxy_size_m"], [1.13463, 1.13463, 1.13463])
+        self.assertEqual(candidate["environment_object_replacement"]["reserved_proxy_rotation_deg"], -4.626112)
         self.assertEqual(
             candidate["environment_rear_tree_culling_review"],
             baseline["environment_rear_tree_culling_review"],
