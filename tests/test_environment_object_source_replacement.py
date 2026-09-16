@@ -83,8 +83,8 @@ class ObjectEnvironmentContractTests(unittest.TestCase):
             os.environ["AXM_MIGRATED_REAR_NATURE_ROOT"],
             os.environ["AXM_OBJECT_ROOT"],
         )
-        self.assertEqual(report["status"], object_env.STATUS)
-        self.assertTrue(all(report["checks"].values()), json.dumps(report, indent=2))
+        self.assertTrue(all(report["checks"].values()), json.dumps(report, indent=2, sort_keys=True))
+        self.assertEqual(report["status"], object_env.STATUS, json.dumps(report, indent=2, sort_keys=True))
         self.assertEqual(report["object_source"]["vertices"], 468)
         self.assertEqual(report["object_source"]["triangles"], 812)
         self.assertEqual(report["spacing_conflicts"], [])
