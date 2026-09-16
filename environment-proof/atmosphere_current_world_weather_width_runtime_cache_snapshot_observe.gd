@@ -3,8 +3,9 @@ extends "res://atmosphere_current_world_weather_width_runtime_cache_observe.gd"
 # Repair layer for the Runtime cache experiment.
 # ImmediateMesh.duplicate(true) does not preserve the generated surfaces in the
 # Godot 4.7.2 proof host used by this lane. Snapshot every live generated
-# surface into a standalone ArrayMesh instead, preserving primitive type and
-# material, and fail closed if any expected surface disappears.
+# surface into a standalone ArrayMesh instead. Both exact mutable sources in
+# this proof are triangle surfaces; preserve their material and fail closed if
+# any expected surface disappears.
 
 func snapshot_live_mesh(source:Mesh,label:String)->Dictionary:
     if source==null:
@@ -17,7 +18,7 @@ func snapshot_live_mesh(source:Mesh,label:String)->Dictionary:
         var arrays:Array=source.surface_get_arrays(surface_index)
         if arrays.is_empty():
             return {"state":"FAIL_SNAPSHOT_EMPTY_ARRAYS","label":label,"surface_index":surface_index}
-        snapshot.add_surface_from_arrays(source.surface_get_primitive_type(surface_index),arrays)
+        snapshot.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
         var material:Material=source.surface_get_material(surface_index)
         if material!=null:
             snapshot.surface_set_material(surface_index,material)
