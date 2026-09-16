@@ -1,0 +1,331 @@
+name: Technical Art Building source rebind evidence
+
+on:
+  push:
+    branches: [studio/technical-art-building-source-rebind-001]
+    paths:
+      - "examples/technical_art_building_source_replacement_001.json"
+      - "examples/technical_art_building_source_rebind_001.json"
+      - "tools/technical_art_building_source_rebind.py"
+      - "docs/TECHNICAL_ART_BUILDING_SOURCE_REBIND_001.md"
+      - ".github/workflows/technical-art-building-source-rebind.yml"
+  pull_request:
+    paths:
+      - "examples/technical_art_building_source_replacement_001.json"
+      - "examples/technical_art_building_source_rebind_001.json"
+      - "tools/technical_art_building_source_rebind.py"
+      - "docs/TECHNICAL_ART_BUILDING_SOURCE_REBIND_001.md"
+      - ".github/workflows/technical-art-building-source-rebind.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-building-source-rebind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact Technical Art head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact PR14 parent and compile Technical Art contract
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 0e2d571af4fd5772e9d48da013dc245914654660^{commit}
+          git merge-base --is-ancestor 0e2d571af4fd5772e9d48da013dc245914654660 HEAD
+          git diff --exit-code 0e2d571af4fd5772e9d48da013dc245914654660 -- \
+            tools/environment_building_material_receiving.py \
+            tools/environment_building_source_replacement.py \
+            tools/prepare_material_environment_observer.py \
+            material-environment-proof/compare.gd \
+            material-environment-proof/project.godot
+          python -m py_compile tools/technical_art_building_source_rebind.py tools/environment_building_material_receiving.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout historical Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building-source-historical
+          fetch-depth: 1
+
+      - name: Checkout historical Building Materials donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+          path: .building-materials-historical
+          fetch-depth: 1
+
+      - name: Checkout source-owned Building topology successor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 57f66b1245812f0c3d402232a046b86c0b5c72d8
+          path: .building-source-successor
+          fetch-depth: 1
+
+      - name: Checkout successor-bound Building Materials donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ca92ef79d65a2ba287b7a76464bedceb6a31a1b6
+          path: .building-materials-successor
+          fetch-depth: 1
+
+      - name: Verify exact donor heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-source-historical rev-parse HEAD)" = 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          test "$(git -C .building-materials-historical rev-parse HEAD)" = b08f683f1c3f75c474fb347e1d1990c1c4426a33
+          test "$(git -C .building-source-successor rev-parse HEAD)" = 57f66b1245812f0c3d402232a046b86c0b5c72d8
+          test "$(git -C .building-materials-successor rev-parse HEAD)" = ca92ef79d65a2ba287b7a76464bedceb6a31a1b6
+
+      - name: Rebuild exact historical PR14 receiving contract
+        env:
+          AXM_RECEIVING_HEAD: 0e2d571af4fd5772e9d48da013dc245914654660
+          AXM_RECEIVING_BASE_HEAD: c72838eb4b40ee7903a3c3e326a1bf77fa08bee5
+          AXM_BUILDING_SOURCE_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_BUILDING_MATERIAL_HEAD: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+        run: |
+          set -euo pipefail
+          rm -rf evidence/technical_art_building_source_rebind_001
+          mkdir -p evidence/technical_art_building_source_rebind_001/historical
+          python tools/environment_building_material_receiving.py \
+            --manifest examples/environment_building_material_receiving_001.json \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --building-source-root .building-source-historical \
+            --building-material-root .building-materials-historical \
+            --output evidence/technical_art_building_source_rebind_001/historical
+
+      - name: Rebuild exact successor receiving contract
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_RECEIVING_BASE_HEAD: 0e2d571af4fd5772e9d48da013dc245914654660
+          AXM_BUILDING_SOURCE_HEAD: 57f66b1245812f0c3d402232a046b86c0b5c72d8
+          AXM_BUILDING_MATERIAL_HEAD: ca92ef79d65a2ba287b7a76464bedceb6a31a1b6
+        run: |
+          set -euo pipefail
+          mkdir -p evidence/technical_art_building_source_rebind_001/successor
+          python tools/environment_building_material_receiving.py \
+            --manifest examples/technical_art_building_source_rebind_001.json \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --building-source-root .building-source-successor \
+            --building-material-root .building-materials-successor \
+            --output evidence/technical_art_building_source_rebind_001/successor
+
+      - name: Prove historical to successor identity boundary
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_source_rebind_001
+          python tools/technical_art_building_source_rebind.py \
+            --historical-report "$out/historical/material_transfer_evidence.json" \
+            --historical-candidate "$out/historical/candidate_scene_runtime.json" \
+            --successor-report "$out/successor/material_transfer_evidence.json" \
+            --successor-candidate "$out/successor/candidate_scene_runtime.json" \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/technical_art_rebind_report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+
+      - name: Exercise fail-closed Technical Art controls
+        run: |
+          python - <<'PY'
+          import copy, importlib.util, json
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location('ta','tools/technical_art_building_source_rebind.py')
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          root=Path('evidence/technical_art_building_source_rebind_001')
+          hr=json.loads((root/'historical/material_transfer_evidence.json').read_text())
+          hc=json.loads((root/'historical/candidate_scene_runtime.json').read_text())
+          sr=json.loads((root/'successor/material_transfer_evidence.json').read_text())
+          sc=json.loads((root/'successor/candidate_scene_runtime.json').read_text())
+          cases=[]
+          wrong_head=copy.deepcopy(sr); wrong_head['building_source_head']='0'*40; cases.append(('successor source-head drift',hr,hc,wrong_head,sc))
+          wrong_material=copy.deepcopy(sr); wrong_material['material_profile_sha256']='0'*64; cases.append(('material-profile drift',hr,hc,wrong_material,sc))
+          stale_topology=copy.deepcopy(sc)
+          for dst,src in zip(stale_topology['building_material_receiving']['surfaces'],hc['building_material_receiving']['surfaces']): dst['triangles']=copy.deepcopy(src['triangles'])
+          cases.append(('stale historical topology',hr,hc,sr,stale_topology))
+          unrelated=copy.deepcopy(sc); unrelated['technical_art_unrelated_drift']=True; cases.append(('unrelated receiving drift',hr,hc,sr,unrelated))
+          for label,a,b,c,d in cases:
+              try: m.build_report(a,b,c,d,'NEGATIVE-CONTROL')
+              except ValueError: print('PASS_NEGATIVE_CONTROL',label)
+              else: raise AssertionError(label)
+          PY
+
+      - name: Derive target observer from established PR14 host
+        run: |
+          rm -f material-environment-proof/observe.gd
+          python tools/prepare_material_environment_observer.py \
+            --source environment-proof/observe.gd \
+            --output material-environment-proof/observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact successor neutral control
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_source_rebind_001
+          rm -rf material-environment-proof/generated
+          mkdir -p material-environment-proof/generated
+          cp "$out/successor/neutral_scene_runtime.json" material-environment-proof/generated/scene_runtime.json
+          rm -f material-environment-proof/material-environment-runtime-receipt.json material-environment-proof/path_eye.png material-environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path material-environment-proof --script observe.gd
+          cp material-environment-proof/material-environment-runtime-receipt.json "$out/successor_neutral_runtime_receipt.json"
+          cp material-environment-proof/path_eye.png "$out/successor_neutral_path_eye.png"
+          cp material-environment-proof/elevated_oblique.png "$out/successor_neutral_elevated_oblique.png"
+
+      - name: Render exact successor five-surface candidate
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_source_rebind_001
+          rm -rf material-environment-proof/generated
+          mkdir -p material-environment-proof/generated
+          cp "$out/successor/candidate_scene_runtime.json" material-environment-proof/generated/scene_runtime.json
+          rm -f material-environment-proof/material-environment-runtime-receipt.json material-environment-proof/path_eye.png material-environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path material-environment-proof --script observe.gd
+          cp material-environment-proof/material-environment-runtime-receipt.json "$out/successor_candidate_runtime_receipt.json"
+          cp material-environment-proof/path_eye.png "$out/successor_candidate_path_eye.png"
+          cp material-environment-proof/elevated_oblique.png "$out/successor_candidate_elevated_oblique.png"
+
+      - name: Compare exact successor target-host images
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_source_rebind_001
+          cp "$out/successor_neutral_path_eye.png" material-environment-proof/neutral_path_eye.png
+          cp "$out/successor_candidate_path_eye.png" material-environment-proof/candidate_path_eye.png
+          cp "$out/successor_neutral_elevated_oblique.png" material-environment-proof/neutral_elevated_oblique.png
+          cp "$out/successor_candidate_elevated_oblique.png" material-environment-proof/candidate_elevated_oblique.png
+          rm -f material-environment-proof/material-environment-image-comparison.json
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --headless --rendering-method gl_compatibility \
+            --path material-environment-proof --script compare.gd
+          cp material-environment-proof/material-environment-image-comparison.json "$out/successor_image_comparison.json"
+
+      - name: Validate exact successor target-host handoff
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/technical_art_building_source_rebind_001')
+          e=json.loads((root/'successor/material_transfer_evidence.json').read_text())
+          r=json.loads((root/'technical_art_rebind_report.json').read_text())
+          n=json.loads((root/'successor_neutral_runtime_receipt.json').read_text())
+          c=json.loads((root/'successor_candidate_runtime_receipt.json').read_text())
+          p=json.loads((root/'successor_image_comparison.json').read_text())
+          assert r['status']=='PASS_MAP_BUILDING_SOURCE_OWNED_TOPOLOGY_REBIND_STRUCTURE',r
+          assert all(r['checks'].values()),r
+          assert e['building_source_head']=='57f66b1245812f0c3d402232a046b86c0b5c72d8',e
+          assert e['building_material_head']=='ca92ef79d65a2ba287b7a76464bedceb6a31a1b6',e
+          assert n['state']=='PASS_TARGET_HOST_BUILDING_MATERIAL_RECEIVING_READY',n
+          assert c['state']=='PASS_TARGET_HOST_BUILDING_MATERIAL_RECEIVING_READY',c
+          assert n['scene_digest']==e['baseline_scene_digest'],(n,e)
+          assert c['scene_digest']==e['candidate_scene_digest'],(c,e)
+          assert p['state']=='PASS_VISIBLE_BUILDING_SURFACE_DELTA',p
+          for context in ('path_eye','elevated_oblique'):
+              nr=n['contexts'][context]['building_material_receiving']
+              cr=c['contexts'][context]['building_material_receiving']
+              assert nr['vertices']==cr['vertices']==152,(context,nr,cr)
+              assert nr['triangles']==cr['triangles']==228,(context,nr,cr)
+              assert nr['surface_count']==cr['surface_count']==5,(context,nr,cr)
+              assert nr['surface_roles']==cr['surface_roles'],(context,nr,cr)
+              assert p['contexts'][context]['changed_pixels']>0,(context,p)
+          target={
+              'schema':'axm.technical-art-building-source-map-rebind-target-receipt/v0.1',
+              'state':'PASS_MAP_BUILDING_SOURCE_OWNED_TOPOLOGY_REBIND_TARGET_HOST',
+              'receiving_head':r['receiving_head'],
+              'building_source_head':e['building_source_head'],
+              'building_material_head':e['building_material_head'],
+              'pavilion_source_sha256':e['pavilion_source_sha256'],
+              'material_profile_sha256':e['material_profile_sha256'],
+              'baseline_scene_digest':e['baseline_scene_digest'],
+              'candidate_scene_digest':e['candidate_scene_digest'],
+              'renderer':'Godot 4.7.2-stable GL Compatibility',
+              'contexts':p['contexts'],
+              'truth_boundary':'Direct target-host PASS is bounded to the exact successor scene digests and two fixed PR14 cameras. It does not establish current-world PR24 adoption, final visual acceptance, runtime budgets or gameplay.'
+          }
+          (root/'technical_art_target_receipt.json').write_text(json.dumps(target,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(target,indent=2,sort_keys=True))
+          PY
+          sha256sum evidence/technical_art_building_source_rebind_001/*.png > evidence/technical_art_building_source_rebind_001/render-sha256.txt
+
+      - name: Upload exact Technical Art Building source rebind evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-building-source-rebind-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/technical_art_building_source_rebind_001/historical/material_transfer_evidence.json
+            evidence/technical_art_building_source_rebind_001/historical/candidate_scene_runtime.json
+            evidence/technical_art_building_source_rebind_001/successor/material_transfer_evidence.json
+            evidence/technical_art_building_source_rebind_001/successor/neutral_scene_runtime.json
+            evidence/technical_art_building_source_rebind_001/successor/candidate_scene_runtime.json
+            evidence/technical_art_building_source_rebind_001/technical_art_rebind_report.json
+            evidence/technical_art_building_source_rebind_001/technical_art_target_receipt.json
+            evidence/technical_art_building_source_rebind_001/successor_neutral_runtime_receipt.json
+            evidence/technical_art_building_source_rebind_001/successor_candidate_runtime_receipt.json
+            evidence/technical_art_building_source_rebind_001/successor_image_comparison.json
+            evidence/technical_art_building_source_rebind_001/render-sha256.txt
+            evidence/technical_art_building_source_rebind_001/exact-head.txt
+            evidence/technical_art_building_source_rebind_001/*.png
+          if-no-files-found: warn
+          retention-days: 30
