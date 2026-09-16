@@ -1,0 +1,253 @@
+name: Materials Building receiving-scene lookdev evidence
+
+on:
+  push:
+    branches: [studio/materials-building-receiving-lookdev-001]
+    paths:
+      - "examples/environment_building_material_receiving_001.json"
+      - "tools/environment_building_material_receiving.py"
+      - "tools/prepare_material_environment_observer.py"
+      - "tests/test_environment_building_material_receiving.py"
+      - "docs/MATERIALS_BUILDING_RECEIVING_LOOKDEV_001.md"
+      - "material-environment-proof/**"
+      - ".github/workflows/environment-building-material-receiving.yml"
+  pull_request:
+    paths:
+      - "examples/environment_building_material_receiving_001.json"
+      - "tools/environment_building_material_receiving.py"
+      - "tools/prepare_material_environment_observer.py"
+      - "tests/test_environment_building_material_receiving.py"
+      - "docs/MATERIALS_BUILDING_RECEIVING_LOOKDEV_001.md"
+      - "material-environment-proof/**"
+      - ".github/workflows/environment-building-material-receiving.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-building-material-receiving:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact Materials lane head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout exact Building structural source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building-source
+
+      - name: Checkout exact Building Materials candidate
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+          path: .building-materials
+
+      - name: Compile and test exact receiving-material contract
+        env:
+          AXM_BASE_NATURE_ROOT: ${{ github.workspace }}/.nature-base
+          AXM_COMPACT_NATURE_ROOT: ${{ github.workspace }}/.nature-east
+          AXM_WEATHER_ROOT: ${{ github.workspace }}/.weather
+          AXM_BUILDING_SOURCE_ROOT: ${{ github.workspace }}/.building-source
+          AXM_BUILDING_MATERIAL_ROOT: ${{ github.workspace }}/.building-materials
+          AXM_RECEIVING_BASE_HEAD: c72838eb4b40ee7903a3c3e326a1bf77fa08bee5
+          AXM_BUILDING_SOURCE_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_BUILDING_MATERIAL_HEAD: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_building_source_replacement tests.test_environment_building_material_receiving -v
+
+      - name: Build exact neutral and candidate scene payloads
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_RECEIVING_BASE_HEAD: c72838eb4b40ee7903a3c3e326a1bf77fa08bee5
+          AXM_BUILDING_SOURCE_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_BUILDING_MATERIAL_HEAD: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+        run: |
+          rm -rf evidence/environment_building_material_receiving_001
+          python tools/environment_building_material_receiving.py \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --building-source-root .building-source \
+            --building-material-root .building-materials \
+            --output evidence/environment_building_material_receiving_001
+          printf '%s\n' '${{ github.event.pull_request.head.sha || github.sha }}' > evidence/environment_building_material_receiving_001/exact-head.txt
+
+      - name: Validate exact structural evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_material_receiving_001')
+          e=json.loads((root/'material_transfer_evidence.json').read_text())
+          b=json.loads((root/'neutral_scene_runtime.json').read_text())
+          c=json.loads((root/'candidate_scene_runtime.json').read_text())
+          assert e['status']=='PASS_RECEIVING_SCENE_BUILDING_MATERIAL_TRANSFER_STRUCTURE',e
+          assert all(e['checks'].values()),e
+          assert b['building_material_receiving']['mode']=='baseline',b
+          assert c['building_material_receiving']['mode']=='candidate',c
+          assert len(b['building_material_receiving']['vertices_source_xyz_m'])==152,b
+          assert len(c['building_material_receiving']['vertices_source_xyz_m'])==152,c
+          assert sum(len(row['triangles']) for row in b['building_material_receiving']['surfaces'])==228,b
+          assert sum(len(row['triangles']) for row in c['building_material_receiving']['surfaces'])==228,c
+          assert [row['triangles'] for row in b['building_material_receiving']['surfaces']]==[row['triangles'] for row in c['building_material_receiving']['surfaces']],(b,c)
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Derive Materials observer from exact Environment host
+        run: |
+          rm -f material-environment-proof/observe.gd
+          python tools/prepare_material_environment_observer.py \
+            --source environment-proof/observe.gd \
+            --output material-environment-proof/observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact neutral Building surface control
+        run: |
+          set -euo pipefail
+          rm -rf material-environment-proof/generated
+          mkdir -p material-environment-proof/generated
+          cp evidence/environment_building_material_receiving_001/neutral_scene_runtime.json material-environment-proof/generated/scene_runtime.json
+          rm -f material-environment-proof/material-environment-runtime-receipt.json material-environment-proof/path_eye.png material-environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path material-environment-proof \
+            --script observe.gd
+          cp material-environment-proof/material-environment-runtime-receipt.json evidence/environment_building_material_receiving_001/neutral_runtime_receipt.json
+          cp material-environment-proof/path_eye.png evidence/environment_building_material_receiving_001/neutral_path_eye.png
+          cp material-environment-proof/elevated_oblique.png evidence/environment_building_material_receiving_001/neutral_elevated_oblique.png
+
+      - name: Render exact Building Materials candidate
+        run: |
+          set -euo pipefail
+          rm -rf material-environment-proof/generated
+          mkdir -p material-environment-proof/generated
+          cp evidence/environment_building_material_receiving_001/candidate_scene_runtime.json material-environment-proof/generated/scene_runtime.json
+          rm -f material-environment-proof/material-environment-runtime-receipt.json material-environment-proof/path_eye.png material-environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path material-environment-proof \
+            --script observe.gd
+          cp material-environment-proof/material-environment-runtime-receipt.json evidence/environment_building_material_receiving_001/candidate_runtime_receipt.json
+          cp material-environment-proof/path_eye.png evidence/environment_building_material_receiving_001/candidate_path_eye.png
+          cp material-environment-proof/elevated_oblique.png evidence/environment_building_material_receiving_001/candidate_elevated_oblique.png
+
+      - name: Compare exact target-host images
+        run: |
+          set -euo pipefail
+          cp evidence/environment_building_material_receiving_001/neutral_path_eye.png material-environment-proof/neutral_path_eye.png
+          cp evidence/environment_building_material_receiving_001/candidate_path_eye.png material-environment-proof/candidate_path_eye.png
+          cp evidence/environment_building_material_receiving_001/neutral_elevated_oblique.png material-environment-proof/neutral_elevated_oblique.png
+          cp evidence/environment_building_material_receiving_001/candidate_elevated_oblique.png material-environment-proof/candidate_elevated_oblique.png
+          rm -f material-environment-proof/material-environment-image-comparison.json
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --headless \
+            --rendering-method gl_compatibility \
+            --path material-environment-proof \
+            --script compare.gd
+          cp material-environment-proof/material-environment-image-comparison.json evidence/environment_building_material_receiving_001/image_comparison.json
+
+      - name: Validate receiving-scene material render evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_material_receiving_001')
+          e=json.loads((root/'material_transfer_evidence.json').read_text())
+          neutral=json.loads((root/'neutral_runtime_receipt.json').read_text())
+          candidate=json.loads((root/'candidate_runtime_receipt.json').read_text())
+          comparison=json.loads((root/'image_comparison.json').read_text())
+          assert neutral['state']=='PASS_TARGET_HOST_BUILDING_MATERIAL_RECEIVING_READY',neutral
+          assert candidate['state']=='PASS_TARGET_HOST_BUILDING_MATERIAL_RECEIVING_READY',candidate
+          assert neutral['scene_digest']==e['baseline_scene_digest'],(neutral,e)
+          assert candidate['scene_digest']==e['candidate_scene_digest'],(candidate,e)
+          assert comparison['state']=='PASS_VISIBLE_BUILDING_SURFACE_DELTA',comparison
+          for context in ('path_eye','elevated_oblique'):
+              n=neutral['contexts'][context]['building_material_receiving']
+              c=candidate['contexts'][context]['building_material_receiving']
+              assert n['vertices']==c['vertices']==152,(context,n,c)
+              assert n['triangles']==c['triangles']==228,(context,n,c)
+              assert n['surface_count']==c['surface_count']==5,(context,n,c)
+              assert n['surface_roles']==c['surface_roles'],(context,n,c)
+              assert comparison['contexts'][context]['changed_pixels']>0,(context,comparison)
+          print(json.dumps(comparison,indent=2))
+          PY
+          sha256sum evidence/environment_building_material_receiving_001/*.png > evidence/environment_building_material_receiving_001/render-sha256.txt
+
+      - name: Upload exact Building receiving lookdev evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-material-receiving-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_building_material_receiving_001/material_transfer_evidence.json
+            evidence/environment_building_material_receiving_001/building_material_profile_001.json
+            evidence/environment_building_material_receiving_001/neutral_scene_runtime.json
+            evidence/environment_building_material_receiving_001/candidate_scene_runtime.json
+            evidence/environment_building_material_receiving_001/neutral_runtime_receipt.json
+            evidence/environment_building_material_receiving_001/candidate_runtime_receipt.json
+            evidence/environment_building_material_receiving_001/image_comparison.json
+            evidence/environment_building_material_receiving_001/render-sha256.txt
+            evidence/environment_building_material_receiving_001/exact-head.txt
+            evidence/environment_building_material_receiving_001/neutral_path_eye.png
+            evidence/environment_building_material_receiving_001/candidate_path_eye.png
+            evidence/environment_building_material_receiving_001/neutral_elevated_oblique.png
+            evidence/environment_building_material_receiving_001/candidate_elevated_oblique.png
+          if-no-files-found: warn
+          retention-days: 30
