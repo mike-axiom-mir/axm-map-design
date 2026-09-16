@@ -1,0 +1,192 @@
+name: Runtime Weather temporal exposure budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-weather-temporal-exposure-budget-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_weather_width_temporal_exposure_runtime_budget_observe.gd"
+      - "tools/environment_weather_width_temporal_exposure_runtime_budget.py"
+      - "docs/RUNTIME_WEATHER_TEMPORAL_EXPOSURE_BUDGET_001.md"
+      - ".github/workflows/runtime-weather-temporal-exposure-budget.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_weather_width_temporal_exposure_runtime_budget_observe.gd"
+      - "tools/environment_weather_width_temporal_exposure_runtime_budget.py"
+      - "docs/RUNTIME_WEATHER_TEMPORAL_EXPOSURE_BUDGET_001.md"
+      - ".github/workflows/runtime-weather-temporal-exposure-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  runtime-temporal-exposure-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact Runtime head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Runtime and VFX source identity
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 92cfe5d0dc7e254c1c3e19c5fc168298dea3493a^{commit}
+          git merge-base --is-ancestor 92cfe5d0dc7e254c1c3e19c5fc168298dea3493a HEAD
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile Runtime verifier
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/environment_weather_width_temporal_exposure_runtime_budget.py
+
+      - name: Download exact retained VFX temporal-exposure evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-source-width-temporal-exposure-001-92cfe5d0dc7e254c1c3e19c5fc168298dea3493a
+          path: .vfx-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35141844166
+
+      - name: Verify and stage exact VFX parent payload
+        run: |
+          set -euo pipefail
+          test "$(cat .vfx-evidence/exact-head.txt | tr -d '\n\r')" = "92cfe5d0dc7e254c1c3e19c5fc168298dea3493a"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.vfx-evidence')
+          payload=json.loads((root/'current_world_weather_width.json').read_text())
+          target=json.loads((root/'target_host.json').read_text())
+          assert payload['status']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_STRUCTURE', payload
+          assert payload['receiving_head']=='92cfe5d0dc7e254c1c3e19c5fc168298dea3493a', payload
+          assert all(payload['checks'].values()), payload
+          assert target['state']=='PASS_BOUNDED_TEMPORAL_EXPOSURE_VISUAL_CANDIDATE', target
+          assert target['receiving_head']=='92cfe5d0dc7e254c1c3e19c5fc168298dea3493a', target
+          assert all(target['checks'].values()), target
+          PY
+          mkdir -p environment-proof/generated evidence/runtime_weather_temporal_exposure_budget_001
+          cp .vfx-evidence/current_world_weather_width.json environment-proof/generated/current_world_weather_width.json
+          cp .vfx-evidence/current_world_weather_width.json evidence/runtime_weather_temporal_exposure_budget_001/current_world_weather_width.json
+          cp .vfx-evidence/target_host.json evidence/runtime_weather_temporal_exposure_budget_001/vfx_target_host.json
+          cp exact-head.txt evidence/runtime_weather_temporal_exposure_budget_001/exact-head.txt
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Observe 36-ribbon single-tap control without image readback
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_temporal_exposure_budget_001
+          env AXM_RUNTIME_MODE=single_tap_control \
+            xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_weather_width_temporal_exposure_runtime_budget_observe.gd \
+            2>&1 | tee "$out/control-godot.log"
+          cp environment-proof/temporal-exposure-budget-single_tap_control-runtime.json "$out/control-runtime.json"
+
+      - name: Observe 72-ribbon two-tap candidate without image readback
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_temporal_exposure_budget_001
+          env AXM_RUNTIME_MODE=two_tap_temporal_exposure \
+            xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_weather_width_temporal_exposure_runtime_budget_observe.gd \
+            2>&1 | tee "$out/candidate-godot.log"
+          cp environment-proof/temporal-exposure-budget-two_tap_temporal_exposure-runtime.json "$out/candidate-runtime.json"
+
+      - name: Characterize exact two-tap Runtime cost
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_temporal_exposure_budget_001
+          python tools/environment_weather_width_temporal_exposure_runtime_budget.py \
+            --payload "$out/current_world_weather_width.json" \
+            --parent-target "$out/vfx_target_host.json" \
+            --control "$out/control-runtime.json" \
+            --candidate "$out/candidate-runtime.json" \
+            --exact-head "$out/exact-head.txt" \
+            --output "$out/runtime_budget.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('evidence/runtime_weather_temporal_exposure_budget_001/runtime_budget.json').read_text())
+          assert report['state']=='PASS_TWO_TAP_TEMPORAL_EXPOSURE_RUNTIME_COST_CHARACTERIZED', report
+          assert all(report['checks'].values()), report
+          print(json.dumps({
+              'state':report['state'],
+              'decision':report['decision'],
+              'contexts':report['contexts'],
+          },indent=2))
+          PY
+
+      - name: Exercise deliberate presentation-count drift control
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.environment_weather_width_temporal_exposure_runtime_budget import exercise_presentation_count_negative_control
+          root=Path('evidence/runtime_weather_temporal_exposure_budget_001')
+          result=exercise_presentation_count_negative_control(
+              json.loads((root/'current_world_weather_width.json').read_text()),
+              json.loads((root/'vfx_target_host.json').read_text()),
+              json.loads((root/'control-runtime.json').read_text()),
+              json.loads((root/'candidate-runtime.json').read_text()),
+              (root/'exact-head.txt').read_text().strip(),
+          )
+          assert result['state']=='FAIL', result
+          assert result['checks']['path_eye_candidate_context_exact'] is False, result
+          print('PASS_FAIL_CLOSED_PRESENTATION_COUNT_DRIFT')
+          PY
+
+      - name: Upload exact Runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-weather-temporal-exposure-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/runtime_weather_temporal_exposure_budget_001/exact-head.txt
+            evidence/runtime_weather_temporal_exposure_budget_001/current_world_weather_width.json
+            evidence/runtime_weather_temporal_exposure_budget_001/vfx_target_host.json
+            evidence/runtime_weather_temporal_exposure_budget_001/control-godot.log
+            evidence/runtime_weather_temporal_exposure_budget_001/candidate-godot.log
+            evidence/runtime_weather_temporal_exposure_budget_001/control-runtime.json
+            evidence/runtime_weather_temporal_exposure_budget_001/candidate-runtime.json
+            evidence/runtime_weather_temporal_exposure_budget_001/runtime_budget.json
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
