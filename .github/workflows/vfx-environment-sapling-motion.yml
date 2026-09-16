@@ -1,0 +1,207 @@
+name: VFX environment sapling motion evidence
+
+on:
+  push:
+    branches: [studio/vfx-environment-sapling-motion-001]
+    paths:
+      - "tools/environment_sapling_motion.py"
+      - "tests/test_environment_sapling_motion.py"
+      - "vfx-proof/**"
+      - "docs/ENVIRONMENT_SAPLING_MOTION_001.md"
+      - ".github/workflows/vfx-environment-sapling-motion.yml"
+      - "tools/environment_eye_level.py"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  pull_request:
+    paths:
+      - "tools/environment_sapling_motion.py"
+      - "tests/test_environment_sapling_motion.py"
+      - "vfx-proof/**"
+      - "docs/ENVIRONMENT_SAPLING_MOTION_001.md"
+      - ".github/workflows/vfx-environment-sapling-motion.yml"
+      - "tools/environment_eye_level.py"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-neutral-peak-scene-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout VFX receiving lane
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-source
+
+      - name: Checkout exact accepted Nature VFX candidate
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cee14f5b3feea78b0adcd044bad2ea3c97657fc6
+          path: .nature-vfx
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Verify exact dependency heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature-source rev-parse HEAD)" = "fbc202449981f2bac153951c561ed0ed6120c936"
+          test "$(git -C .nature-vfx rev-parse HEAD)" = "cee14f5b3feea78b0adcd044bad2ea3c97657fc6"
+          test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
+
+      - name: Compile and test receiving-scene motion contract
+        env:
+          AXM_NATURE_SOURCE_ROOT: .nature-source
+          AXM_NATURE_VFX_ROOT: .nature-vfx
+          AXM_WEATHER_ROOT: .weather
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_sapling_motion -v
+
+      - name: Build exact neutral and peak scene payloads
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python tools/environment_sapling_motion.py \
+            --nature-source-root .nature-source \
+            --nature-vfx-root .nature-vfx \
+            --weather-root .weather \
+            --output evidence/environment_sapling_motion_001
+
+      - name: Validate exact motion evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_sapling_motion_001')
+          e=json.loads((root/'motion_evidence.json').read_text())
+          n=json.loads((root/'neutral_scene_runtime.json').read_text())
+          p=json.loads((root/'peak_scene_runtime.json').read_text())
+          assert e['status']=='PASS',e
+          assert all(e['checks'].values()),e
+          assert abs(e['max_scene_vertex_displacement_m']-0.18)<=1e-7,e
+          assert n['items']==p['items'],e
+          assert n['weather_lines']==p['weather_lines'],e
+          assert n['cameras']==p['cameras'],e
+          assert n['sapling']['triangles']==p['sapling']['triangles'],e
+          assert n['sapling']['motion_state']=='neutral',n['sapling']
+          assert p['sapling']['motion_state']=='peak',p['sapling']
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Stage exact scene states into proof host
+        run: |
+          rm -rf vfx-proof/generated
+          mkdir -p vfx-proof/generated
+          cp evidence/environment_sapling_motion_001/neutral_scene_runtime.json vfx-proof/generated/
+          cp evidence/environment_sapling_motion_001/peak_scene_runtime.json vfx-proof/generated/
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact neutral and peak from fixed cameras
+        run: |
+          set -euo pipefail
+          rm -f vfx-proof/environment-sapling-motion-runtime-receipt.json vfx-proof/neutral_*.png vfx-proof/peak_*.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path vfx-proof \
+            --script observe_motion.gd
+
+      - name: Validate target-host bounded captures
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          proof=Path('vfx-proof')
+          receipt=json.loads((proof/'environment-sapling-motion-runtime-receipt.json').read_text())
+          evidence=json.loads(Path('evidence/environment_sapling_motion_001/motion_evidence.json').read_text())
+          assert receipt['state']=='PASS_TARGET_HOST_NEUTRAL_PEAK_CAPTURE_READY',receipt
+          assert receipt['promotion_effect']=='NONE',receipt
+          assert set(receipt['states'])=={'neutral','peak'},receipt
+          for state in ('neutral','peak'):
+            row=receipt['states'][state]
+            expected=evidence[f'{state}_scene_digest']
+            assert row['scene_digest']==expected,(state,row,evidence)
+            assert set(row['contexts'])=={'path_eye','elevated_oblique'},row
+            for context,capture in row['contexts'].items():
+              assert capture['state']=='PASS',(state,context,capture)
+              assert capture['capture']['bytes']>3000,(state,context,capture)
+              assert capture['sapling']['vertices']==390,capture
+              assert capture['sapling']['triangles']==570,capture
+              assert capture['sapling']['motion_state']==state,capture
+              assert capture['weather']['streaks']==36,capture
+          files={}
+          for state in ('neutral','peak'):
+            for context in ('path_eye','elevated_oblique'):
+              path=proof/f'{state}_{context}.png'
+              data=path.read_bytes()
+              files[path.name]={'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+          summary={
+            'schema':'axm.environment-sapling-motion-render-evidence/v0.1',
+            'state':'PASS_RETAINED_NEUTRAL_PEAK_RENDERS',
+            'receiving_head':evidence['receiving_head'],
+            'motion_evidence_sha256':hashlib.sha256(Path('evidence/environment_sapling_motion_001/motion_evidence.json').read_bytes()).hexdigest(),
+            'runtime_receipt_sha256':hashlib.sha256((proof/'environment-sapling-motion-runtime-receipt.json').read_bytes()).hexdigest(),
+            'files':files,
+            'truth_boundary':'Retained PNG identity proves only exact bounded render outputs; visual acceptance still requires direct observation and does not imply continuous playback, physical wind, final materials, final environment art, performance, gameplay, CANON, or mastery.'
+          }
+          (Path('evidence/environment_sapling_motion_001')/'render_evidence.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2))
+          PY
+
+      - name: Upload exact receiving-scene motion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-sapling-motion-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_sapling_motion_001/neutral_scene_runtime.json
+            evidence/environment_sapling_motion_001/peak_scene_runtime.json
+            evidence/environment_sapling_motion_001/motion_evidence.json
+            evidence/environment_sapling_motion_001/render_evidence.json
+            vfx-proof/environment-sapling-motion-runtime-receipt.json
+            vfx-proof/neutral_path_eye.png
+            vfx-proof/neutral_elevated_oblique.png
+            vfx-proof/peak_path_eye.png
+            vfx-proof/peak_elevated_oblique.png
+          if-no-files-found: warn
+          retention-days: 30
