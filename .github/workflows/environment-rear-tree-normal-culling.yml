@@ -1,0 +1,263 @@
+name: Environment rear-tree normal-culling receiving evidence
+
+on:
+  push:
+    branches: [studio/environment-rear-tree-normal-culling-001]
+    paths:
+      - "examples/environment_rear_tree_normal_culling_001.json"
+      - "tools/environment_rear_tree_normal_culling.py"
+      - "tests/test_environment_rear_tree_normal_culling.py"
+      - "docs/ENVIRONMENT_REAR_TREE_NORMAL_CULLING_001.md"
+      - ".github/workflows/environment-rear-tree-normal-culling.yml"
+      - "environment-proof/**"
+  pull_request:
+    paths:
+      - "examples/environment_rear_tree_normal_culling_001.json"
+      - "tools/environment_rear_tree_normal_culling.py"
+      - "tests/test_environment_rear_tree_normal_culling.py"
+      - "docs/ENVIRONMENT_REAR_TREE_NORMAL_CULLING_001.md"
+      - ".github/workflows/environment-rear-tree-normal-culling.yml"
+      - "environment-proof/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-rear-tree-receiving-culling-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Bind exact receiving head
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
+          OBSERVED="$(git rev-parse HEAD)"
+          test "$OBSERVED" = "$EXPECTED"
+          printf '%s\n' "$OBSERVED" > exact-head.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact historical rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          path: .nature-rear-historical
+
+      - name: Checkout exact migrated rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          path: .nature-rear-migrated
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout exact Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building
+
+      - name: Compile and test isolated receiving contract
+        env:
+          AXM_BASE_NATURE_ROOT: ${{ github.workspace }}/.nature-base
+          AXM_COMPACT_NATURE_ROOT: ${{ github.workspace }}/.nature-east
+          AXM_WEATHER_ROOT: ${{ github.workspace }}/.weather
+          AXM_BUILDING_ROOT: ${{ github.workspace }}/.building
+          AXM_REAR_NATURE_ROOT: ${{ github.workspace }}/.nature-rear-historical
+          AXM_MIGRATED_REAR_NATURE_ROOT: ${{ github.workspace }}/.nature-rear-migrated
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_rear_tree_normal_culling -v
+          python -m unittest tests.test_environment_rear_tree_source_replacement -v
+
+      - name: Build exact historical and migrated receiving payloads
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+        run: |
+          python tools/environment_rear_tree_normal_culling.py \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --building-root .building \
+            --historical-rear-root .nature-rear-historical \
+            --migrated-rear-root .nature-rear-migrated \
+            --output evidence/environment_rear_tree_normal_culling_001
+          cp exact-head.txt evidence/environment_rear_tree_normal_culling_001/exact-head.txt
+
+      - name: Validate exact structural evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_rear_tree_normal_culling_001')
+          e=json.loads((root/'migration_receiving_evidence.json').read_text())
+          h=json.loads((root/'historical_scene_runtime.json').read_text())
+          m=json.loads((root/'migrated_scene_runtime.json').read_text())
+          exact=(root/'exact-head.txt').read_text().strip()
+          assert e['status']=='PASS_REAR_TREE_MIGRATED_SOURCE_RECEIVING_CULLING_STRUCTURE_READY',e
+          assert all(e['checks'].values()),e
+          assert e['receiving_head']==h['receiving_head']==m['receiving_head']==exact,(e,h,m,exact)
+          assert e['topology_delta']['changed_triangle_rows']==260,e
+          assert e['topology_delta']['vertices_changed'] is False,e
+          assert e['topology_delta']['triangle_membership_changed'] is False,e
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render historical rear source under target-only backface culling
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_rear_tree_normal_culling_001/historical_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_rear_tree_normal_culling_001/historical_runtime_receipt.json
+          cp environment-proof/path_eye.png evidence/environment_rear_tree_normal_culling_001/historical_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_rear_tree_normal_culling_001/historical_elevated_oblique.png
+
+      - name: Render migrated rear source under identical target-only backface culling
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_rear_tree_normal_culling_001/migrated_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_rear_tree_normal_culling_001/migrated_runtime_receipt.json
+          cp environment-proof/path_eye.png evidence/environment_rear_tree_normal_culling_001/migrated_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_rear_tree_normal_culling_001/migrated_elevated_oblique.png
+
+      - name: Validate target-host isolation and retain render relations
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_rear_tree_normal_culling_001')
+          e=json.loads((root/'migration_receiving_evidence.json').read_text())
+          h=json.loads((root/'historical_runtime_receipt.json').read_text())
+          m=json.loads((root/'migrated_runtime_receipt.json').read_text())
+          assert h['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',h
+          assert m['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',m
+          assert h['scene_digest']==e['historical']['scene_digest'],(h,e)
+          assert m['scene_digest']==e['migrated']['scene_digest'],(m,e)
+          target=e['target_asset_id']
+          for label,receipt in [('historical',h),('migrated',m)]:
+              for context in ('path_eye','elevated_oblique'):
+                  row=receipt['contexts'][context]
+                  assert row['state']=='PASS',(label,context,row)
+                  assert row['sapling']['proof_culling']=='CULL_DISABLED',(label,context,row['sapling'])
+                  targets=[x for x in row['additional_source_meshes'] if x['asset_id']==target]
+                  assert len(targets)==1,(label,context,row)
+                  assert targets[0]['proof_culling']=='CULL_BACK',(label,context,targets[0])
+                  others=[x for x in row['additional_source_meshes'] if x['asset_id']!=target]
+                  assert others and all(x['proof_culling']=='CULL_DISABLED' for x in others),(label,context,others)
+          names=(
+              'historical_path_eye.png','migrated_path_eye.png',
+              'historical_elevated_oblique.png','migrated_elevated_oblique.png'
+          )
+          hashes={name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in names}
+          relations={
+              'path_eye':'BYTE_DIFFERENT' if hashes['historical_path_eye.png']!=hashes['migrated_path_eye.png'] else 'BYTE_IDENTICAL',
+              'elevated_oblique':'BYTE_DIFFERENT' if hashes['historical_elevated_oblique.png']!=hashes['migrated_elevated_oblique.png'] else 'BYTE_IDENTICAL',
+          }
+          comparison={
+              'schema':'axm.environment-rear-tree-normal-culling-render-comparison/v0.1',
+              'state':'PASS_TARGET_HOST_REAR_TREE_NORMAL_CULLING_AB_READY',
+              'relations':relations,
+              'hashes':hashes,
+              'target_asset_id':target,
+              'target_culling':'CULL_BACK',
+              'other_source_mesh_culling':'CULL_DISABLED',
+              'truth_boundary':'Capture success and hash relations prove only that both exact source lineages reached the same isolated receiving culling review. Hash difference or equality is not by itself an aesthetic, global-normal, final leaf/backface, runtime, or adoption verdict.'
+          }
+          (root/'render_hashes.json').write_text(json.dumps(comparison,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(comparison,indent=2))
+          PY
+
+      - name: Upload exact rear-tree normal-culling receiving evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-rear-tree-normal-culling-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_rear_tree_normal_culling_001/exact-head.txt
+            evidence/environment_rear_tree_normal_culling_001/migration_receiving_evidence.json
+            evidence/environment_rear_tree_normal_culling_001/historical_scene_runtime.json
+            evidence/environment_rear_tree_normal_culling_001/migrated_scene_runtime.json
+            evidence/environment_rear_tree_normal_culling_001/historical_runtime_receipt.json
+            evidence/environment_rear_tree_normal_culling_001/migrated_runtime_receipt.json
+            evidence/environment_rear_tree_normal_culling_001/render_hashes.json
+            evidence/environment_rear_tree_normal_culling_001/historical_path_eye.png
+            evidence/environment_rear_tree_normal_culling_001/migrated_path_eye.png
+            evidence/environment_rear_tree_normal_culling_001/historical_elevated_oblique.png
+            evidence/environment_rear_tree_normal_culling_001/migrated_elevated_oblique.png
+          if-no-files-found: warn
+          retention-days: 30

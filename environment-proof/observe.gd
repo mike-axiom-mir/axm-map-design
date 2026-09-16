@@ -47,14 +47,17 @@ func material_for(kind:String)->StandardMaterial3D:
         material.albedo_color=Color(0.45,0.45,0.45,1.0)
     return material
 
-func source_material_for(kind:String)->StandardMaterial3D:
+func source_material_for(kind:String,cull_back:bool=false)->StandardMaterial3D:
     var material:=StandardMaterial3D.new()
     material.roughness=0.82
     if kind=="nature-source":
         material.albedo_color=Color(0.20,0.43,0.20,1.0)
     else:
         material.albedo_color=Color(0.45,0.45,0.45,1.0)
-    material.cull_mode=BaseMaterial3D.CULL_DISABLED
+    if cull_back:
+        material.cull_mode=BaseMaterial3D.CULL_BACK
+    else:
+        material.cull_mode=BaseMaterial3D.CULL_DISABLED
     return material
 
 func add_proxy(root3d:Node3D,item:Dictionary)->void:
@@ -88,9 +91,11 @@ func add_path(root3d:Node3D,data:Dictionary)->void:
     node.material_override=material
     root3d.add_child(node)
 
-func add_source_mesh(root3d:Node3D,source:Dictionary,fallback_name:String)->Dictionary:
+func add_source_mesh(root3d:Node3D,source:Dictionary,fallback_name:String,cull_target_asset_id:String="")->Dictionary:
     var vertices=source["vertices_source_xyz_m"] as Array
     var triangles=source["triangles"] as Array
+    var asset_id=String(source.get("asset_id",fallback_name))
+    var cull_back=asset_id==cull_target_asset_id and not cull_target_asset_id.is_empty()
     var st:=SurfaceTool.new()
     st.begin(Mesh.PRIMITIVE_TRIANGLES)
     for tri in triangles:
@@ -101,28 +106,32 @@ func add_source_mesh(root3d:Node3D,source:Dictionary,fallback_name:String)->Dict
     st.generate_normals()
     var mesh:=st.commit()
     var node:=MeshInstance3D.new()
-    node.name=String(source.get("asset_id",fallback_name))
+    node.name=asset_id
     node.mesh=mesh
-    node.material_override=source_material_for(String(source.get("kind","nature-source")))
+    node.material_override=source_material_for(String(source.get("kind","nature-source")),cull_back)
     root3d.add_child(node)
+    var observed_culling="CULL_DISABLED"
+    if cull_back:
+        observed_culling="CULL_BACK"
     return {
-        "asset_id":String(source.get("asset_id",fallback_name)),
+        "asset_id":asset_id,
         "vertices":vertices.size(),
         "triangles":triangles.size(),
-        "proof_culling":String(source.get("proof_render_culling",""))
+        "proof_culling":observed_culling,
+        "declared_source_culling":String(source.get("proof_render_culling",""))
     }
 
-func add_sapling(root3d:Node3D,data:Dictionary)->Dictionary:
+func add_sapling(root3d:Node3D,data:Dictionary,cull_target_asset_id:String="")->Dictionary:
     var sapling=data["sapling"] as Dictionary
     var source=Dictionary(sapling.duplicate(true))
     source["kind"]="nature-source"
-    return add_source_mesh(root3d,source,"source-sapling")
+    return add_source_mesh(root3d,source,"source-sapling",cull_target_asset_id)
 
-func add_additional_source_meshes(root3d:Node3D,data:Dictionary)->Array:
+func add_additional_source_meshes(root3d:Node3D,data:Dictionary,cull_target_asset_id:String="")->Array:
     var results:Array=[]
     var sources=data.get("additional_source_meshes",[]) as Array
     for source in sources:
-        results.append(add_source_mesh(root3d,source as Dictionary,"source-mesh"))
+        results.append(add_source_mesh(root3d,source as Dictionary,"source-mesh",cull_target_asset_id))
     return results
 
 func add_weather(root3d:Node3D,data:Dictionary)->Dictionary:
@@ -179,8 +188,10 @@ func make_viewport(context:String,data:Dictionary)->Dictionary:
     for item in data["items"] as Array:
         add_proxy(root3d,item as Dictionary)
     add_path(root3d,data)
-    var sapling_stats:=add_sapling(root3d,data)
-    var additional_source_stats:=add_additional_source_meshes(root3d,data)
+    var culling_review=data.get("environment_rear_tree_culling_review",{}) as Dictionary
+    var cull_target_asset_id=String(culling_review.get("target_asset_id",""))
+    var sapling_stats:=add_sapling(root3d,data,cull_target_asset_id)
+    var additional_source_stats:=add_additional_source_meshes(root3d,data,cull_target_asset_id)
     var weather_stats:=add_weather(root3d,data)
     var camera:=Camera3D.new()
     camera.near=0.05
@@ -190,7 +201,7 @@ func make_viewport(context:String,data:Dictionary)->Dictionary:
     var camera_data=(data["cameras"] as Dictionary)[context] as Dictionary
     camera.fov=float(camera_data["fov_deg"])
     camera.look_at_from_position(gvec(camera_data["position_source_xyz_m"] as Array),gvec(camera_data["target_source_xyz_m"] as Array),Vector3.UP)
-    return {"viewport":viewport,"sapling":sapling_stats,"additional_source_meshes":additional_source_stats,"weather":weather_stats,"camera":camera_data}
+    return {"viewport":viewport,"sapling":sapling_stats,"additional_source_meshes":additional_source_stats,"weather":weather_stats,"camera":camera_data,"culling_review":culling_review}
 
 func capture_context(context:String,data:Dictionary)->Dictionary:
     var setup:=make_viewport(context,data)
@@ -210,7 +221,8 @@ func capture_context(context:String,data:Dictionary)->Dictionary:
         "sapling":setup["sapling"],
         "additional_source_meshes":setup["additional_source_meshes"],
         "weather":setup["weather"],
-        "proxy_count":(data["items"] as Array).size()
+        "proxy_count":(data["items"] as Array).size(),
+        "culling_review":setup["culling_review"]
     }
     viewport.queue_free()
     for _i in range(2):
@@ -238,6 +250,8 @@ func _initialize()->void:
     receipt["weather_presentation"]=data["weather_presentation"]
     if data.has("environment_replacement"):
         receipt["environment_replacement"]=data["environment_replacement"]
+    if data.has("environment_rear_tree_culling_review"):
+        receipt["environment_rear_tree_culling_review"]=data["environment_rear_tree_culling_review"]
     write_receipt()
     print("AXM ENVIRONMENT EYE LEVEL ",JSON.stringify(receipt))
     quit(0)
