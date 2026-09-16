@@ -237,7 +237,11 @@ def build_payloads(
     profile_path = material_root / material_cfg["profile_path"]
 
     source_module, material_module = _material_modules(material_root)
-    _pav, _panel, _fits, obj_lines, _mins, _maxs, _path_gap, _negatives = source_module.build()
+    source_built = source_module.build()
+    if not isinstance(source_built, (tuple, list)) or len(source_built) < 8:
+        raise ValueError("Building source evaluator must retain the stable 8-field receiving prefix")
+    _pav, _panel, _fits, obj_lines, _mins, _maxs, _path_gap, _negatives = source_built[:8]
+    producer_extension_output_count = len(source_built) - 8
     local_mesh = env_building._parse_obj(obj_lines)
     material_payload, material_receipt = material_module.build_payload(
         material_pavilion, material_panel, profile_path
@@ -292,6 +296,7 @@ def build_payloads(
         "building_source_checkout_head_matches": observed_source_head == source_cfg["exact_head"],
         "building_material_checkout_head_matches": observed_material_head == material_cfg["exact_head"],
         "pr11_prerequisite_passes_first": exact_report["status"] == "PASS_BUILDING_SOURCE_REPLACEMENT_STRUCTURE",
+        "source_builder_stable_prefix_available": len(source_built) >= 8,
         "source_pavilion_digest_matches": _sha256(source_pavilion) == source_cfg["expected_pavilion_source_sha256"],
         "source_panel_digest_matches": _sha256(source_panel) == source_cfg["expected_panel_source_sha256"],
         "material_pavilion_digest_matches_source": _sha256(material_pavilion) == _sha256(source_pavilion),
@@ -329,12 +334,13 @@ def build_payloads(
         "receiving_base_head": receiving["exact_head"],
         "building_source_head": source_cfg["exact_head"],
         "building_material_head": material_cfg["exact_head"],
+        "producer_extension_output_count": producer_extension_output_count,
         "pavilion_source_sha256": _sha256(material_pavilion),
         "panel_source_sha256": _sha256(material_panel),
         "material_profile_sha256": _sha256(profile_path),
         "material_payload_geometry_contract_sha256": material_receipt["geometry_contract_sha256"],
         "exact_world_geometry_sha256": _canonical_digest({"vertices": exact_world_vertices, "triangles": exact_triangles}),
-        "surface_partition_sha256": _canonical_digest([{ "surface_role": row["surface_role"], "triangles": row["triangles"] } for row in baseline["building_material_receiving"]["surfaces"]]),
+        "surface_partition_sha256": _canonical_digest([{"surface_role": row["surface_role"], "triangles": row["triangles"]} for row in baseline["building_material_receiving"]["surfaces"]]),
         "baseline_scene_digest": baseline["scene_digest"],
         "candidate_scene_digest": candidate["scene_digest"],
         "placement_translation_source_xyz_m": translation,

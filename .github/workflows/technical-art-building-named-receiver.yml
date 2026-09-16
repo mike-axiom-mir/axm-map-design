@@ -1,0 +1,130 @@
+name: Technical Art Building named receiver evidence
+
+on:
+  push:
+    branches: [studio/technical-art-building-source-rebind-001]
+    paths:
+      - "tools/technical_art_building_named_receiver.py"
+      - "docs/TECHNICAL_ART_BUILDING_NAMED_RECEIVER_001.md"
+      - ".github/workflows/technical-art-building-named-receiver.yml"
+  pull_request:
+    paths:
+      - "tools/technical_art_building_named_receiver.py"
+      - "docs/TECHNICAL_ART_BUILDING_NAMED_RECEIVER_001.md"
+      - ".github/workflows/technical-art-building-named-receiver.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-named-receiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Technical Art head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact receiving head and compile adapter
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          python -m py_compile tools/technical_art_building_named_receiver.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout current exact Building producer
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 34124101e616c423c5a3ed5e122ddf09b98a1650
+          path: .building-current
+          fetch-depth: 1
+
+      - name: Checkout inspected Universal Creation state
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: f5ccd414fc1824d0f810440caee38764c946a281
+          path: .uc-current
+          fetch-depth: 1
+
+      - name: Verify exact external identities
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-current rev-parse HEAD)" = 34124101e616c423c5a3ed5e122ddf09b98a1650
+          test "$(git -C .uc-current rev-parse HEAD)" = f5ccd414fc1824d0f810440caee38764c946a281
+          test -f .building-current/tools/service_pavilion_build_result.py
+          test -f .building-current/tools/build_service_pavilion_header_segmentation.py
+
+      - name: Build exact named receiver projection
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_named_receiver_001
+          rm -rf "$out"
+          python tools/technical_art_building_named_receiver.py \
+            --building-root .building-current \
+            --building-head 34124101e616c423c5a3ed5e122ddf09b98a1650 \
+            --receiving-head "$(cat exact-head.txt)" \
+            --uc-head f5ccd414fc1824d0f810440caee38764c946a281 \
+            --output "$out"
+          cp exact-head.txt "$out/exact-head.txt"
+
+      - name: Repeat projection deterministically
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_named_receiver_001
+          repeat=evidence/technical_art_building_named_receiver_001_repeat
+          rm -rf "$repeat"
+          python tools/technical_art_building_named_receiver.py \
+            --building-root .building-current \
+            --building-head 34124101e616c423c5a3ed5e122ddf09b98a1650 \
+            --receiving-head "$(cat exact-head.txt)" \
+            --uc-head f5ccd414fc1824d0f810440caee38764c946a281 \
+            --output "$repeat" >/dev/null
+          cmp "$out/map_named_receiver_projection.json" "$repeat/map_named_receiver_projection.json"
+          cmp "$out/technical_art_named_receiver_report.json" "$repeat/technical_art_named_receiver_report.json"
+          rm -rf "$repeat"
+
+      - name: Validate retained truth boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path('evidence/technical_art_building_named_receiver_001')
+          report = json.loads((root/'technical_art_named_receiver_report.json').read_text())
+          projection = json.loads((root/'map_named_receiver_projection.json').read_text())
+          assert report['status'] == 'PASS_BUILDING_NAMED_RESULT_TO_MAP_RECEIVER_PROJECTION', report
+          assert all(report['checks'].values()), report
+          assert report['building']['exact_head'] == '34124101e616c423c5a3ed5e122ddf09b98a1650'
+          assert report['building']['build_result_schema'] == 'axm.building-build-result/v0.1'
+          assert report['map_receiver_projection']['vertices'] == 152
+          assert report['map_receiver_projection']['triangles'] == 228
+          assert report['extension_pressure']['header_segmentation_emitted_boxes'] == 23
+          assert report['extension_pressure']['header_segmentation_vertices'] == 184
+          assert report['extension_pressure']['header_segmentation_triangles'] == 276
+          assert report['extension_pressure']['map_adoption'] == 'NOT_ADOPTED_BY_THIS_PROOF'
+          assert report['universal_creation']['inspected_main_head'] == 'f5ccd414fc1824d0f810440caee38764c946a281'
+          assert report['universal_creation']['change_required'] is False
+          assert projection['producer_schema'] == 'axm.building-build-result/v0.1'
+          assert projection['topology_summary']['object_count'] == 19
+          assert projection['topology_summary']['vertex_count'] == 152
+          assert projection['topology_summary']['triangle_count'] == 228
+          assert all(str(v).startswith('REJECTED') for v in report['negative_controls'].values())
+          assert (root/'exact-head.txt').read_text().strip() == report['receiving_head']
+          print('PASS_NAMED_BUILDING_RECEIVER_RETAINED_EVIDENCE')
+          PY
+
+      - name: Retain exact evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-building-named-receiver-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/technical_art_building_named_receiver_001/
+          if-no-files-found: error
