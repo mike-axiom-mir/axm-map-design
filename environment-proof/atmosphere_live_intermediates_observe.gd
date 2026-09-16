@@ -3,12 +3,15 @@ extends SceneTree
 const PAYLOAD_PATH := "res://generated/atmosphere_live_intermediates.json"
 const CONTEXTS := ["path_eye", "elevated_oblique"]
 const SETTLE_FRAMES := 3
+const WEATHER_SOURCE_OPACITY_MODE := "SOURCE_STREAK_OPACITY_VERTEX_ALPHA"
+const WEATHER_OPACITY_FIDELITY_HEAD := "1d24506e1d5f37cad32c878a15ac6908bf096329"
 
 var receipt := {
-    "schema":"axm.environment-atmosphere-live-intermediates-observation/v0.1",
+    "schema":"axm.environment-atmosphere-live-intermediates-observation/v0.2",
     "proof_runtime":"Godot 4.7.2 GL Compatibility",
     "promotion_effect":"NONE",
-    "truth_boundary":"Same-process visual observation of 17 exact source-evaluated synchronized Weather + Nature states through stable proof-host resources. This is not physical wind, wall-clock frame pacing, renderer interpolation, target-device performance, gameplay, final Art Direction, CANON, or mastery."
+    "weather_opacity_fidelity_head":WEATHER_OPACITY_FIDELITY_HEAD,
+    "truth_boundary":"Same-process visual observation of 17 exact source-evaluated synchronized Weather + Nature states through stable proof-host resources while consuming the already-carried source-owned per-streak Weather opacity. This is not physical wind, wall-clock frame pacing, renderer interpolation, source line-width fidelity, target-device performance, gameplay, final Art Direction, CANON, or mastery."
 }
 
 var weather_node:MeshInstance3D = null
@@ -105,34 +108,57 @@ func add_environment(root3d:Node3D)->void:
 
 func make_weather()->void:
     weather_material=StandardMaterial3D.new()
-    weather_material.albedo_color=Color(0.55,0.77,1.0,0.62)
+    weather_material.albedo_color=Color(0.55,0.77,1.0,1.0)
     weather_material.emission_enabled=true
     weather_material.emission=Color(0.25,0.48,0.78,1.0)
     weather_material.emission_energy_multiplier=0.85
     weather_material.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
     weather_material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+    weather_material.vertex_color_use_as_albedo=true
     weather_mesh=ImmediateMesh.new()
     weather_node=MeshInstance3D.new()
     weather_node.name="source-weather-visual-field"
     weather_node.mesh=weather_mesh
 
 func fill_weather(lines:Array)->Dictionary:
+    if lines.is_empty():
+        return {"state":"FAIL_EMPTY_WEATHER_FIELD"}
     weather_mesh.clear_surfaces()
     weather_mesh.surface_begin(Mesh.PRIMITIVE_LINES,weather_material)
+    var opacity_min:=1.0
+    var opacity_max:=0.0
+    var opacity_sum:=0.0
     for line in lines:
         var row=line as Dictionary
+        var opacity=float(row.get("opacity",-1.0))
+        if opacity<0.0 or opacity>1.0:
+            return {"state":"FAIL_INVALID_SOURCE_STREAK_OPACITY","opacity":opacity,"streak_id":row.get("id","UNKNOWN")}
+        opacity_min=minf(opacity_min,opacity)
+        opacity_max=maxf(opacity_max,opacity)
+        opacity_sum+=opacity
         var a=row["tail_xy"] as Array
         var b=row["head_xy"] as Array
         var h=float(row["presentation_height_m"])
+        var vertex_color:=Color(1.0,1.0,1.0,opacity)
+        weather_mesh.surface_set_color(vertex_color)
         weather_mesh.surface_add_vertex(gvec([float(a[0]),float(a[1]),h]))
+        weather_mesh.surface_set_color(vertex_color)
         weather_mesh.surface_add_vertex(gvec([float(b[0]),float(b[1]),h]))
     weather_mesh.surface_end()
     return {
+        "state":"PASS_SOURCE_STREAK_OPACITY_CONSUMED",
         "node_instance_id":weather_node.get_instance_id(),
         "mesh_instance_id":weather_mesh.get_instance_id(),
         "material_instance_id":weather_material.get_instance_id(),
         "surface_count":weather_mesh.get_surface_count(),
-        "streak_count":lines.size()
+        "streak_count":lines.size(),
+        "opacity_mode":WEATHER_SOURCE_OPACITY_MODE,
+        "source_opacity_consumed":true,
+        "source_opacity_min":opacity_min,
+        "source_opacity_max":opacity_max,
+        "source_opacity_mean":opacity_sum/float(lines.size()),
+        "opacity_fidelity_provenance_head":WEATHER_OPACITY_FIDELITY_HEAD,
+        "width_policy":"SOURCE_WIDTH_PX_NOT_MAPPED_TO_3D_LINE_WIDTH_IN_THIS_PROOF"
     }
 
 func make_sapling()->void:
@@ -245,6 +271,9 @@ func _initialize()->void:
         var row=row_value as Dictionary
         var scene=row["candidate_scene"] as Dictionary
         var weather_update=fill_weather(scene["weather_lines"] as Array)
+        if weather_update.get("state")!="PASS_SOURCE_STREAK_OPACITY_CONSUMED":
+            fail("Weather source-opacity update failed at sample %s: %s" % [row["index"],JSON.stringify(weather_update)])
+            return
         var sapling_update=fill_sapling(scene["sapling"] as Dictionary)
         await settle()
         var contexts={}
@@ -271,6 +300,7 @@ func _initialize()->void:
     receipt["state"]="PASS_DENSE_INTERMEDIATE_LIVE_OBSERVATION"
     receipt["sequence_digest"]=payload["sequence_digest"]
     receipt["sampling_schedule_s"]=payload["sampling_schedule_s"]
+    receipt["weather_opacity_mode"]=WEATHER_SOURCE_OPACITY_MODE
     receipt["samples"]=samples
     receipt["godot_version"]=Engine.get_version_info()
     write_receipt()
