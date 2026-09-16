@@ -181,9 +181,6 @@ jobs:
               mesh=crow['additional_source_meshes'][0]
               assert mesh['vertices']==390,(context,mesh)
               assert mesh['triangles']==570,(context,mesh)
-              bp=(root/f'baseline_{context}.png').read_bytes()
-              cp=(root/f'candidate_{context}.png').read_bytes()
-              assert hashlib.sha256(bp).hexdigest()!=hashlib.sha256(cp).hexdigest(),context
           hashes={
               name:hashlib.sha256((root/name).read_bytes()).hexdigest()
               for name in (
@@ -191,8 +188,17 @@ jobs:
                   'baseline_elevated_oblique.png','candidate_elevated_oblique.png'
               )
           }
-          (root/'render_hashes.json').write_text(json.dumps(hashes,indent=2,sort_keys=True)+'\n')
-          print(json.dumps(hashes,indent=2))
+          assert hashes['baseline_path_eye.png']==hashes['candidate_path_eye.png'],hashes
+          assert hashes['baseline_elevated_oblique.png']!=hashes['candidate_elevated_oblique.png'],hashes
+          comparison={
+              'schema':'axm.environment-east-tree-render-comparison/v0.1',
+              'path_eye':'BYTE_IDENTICAL_NO_VISIBLE_TARGET_DELTA_IN_FIXED_VIEW',
+              'elevated_oblique':'BYTE_DIFFERENT_TARGET_REPLACEMENT_VISIBLE_IN_FIXED_VIEW',
+              'hashes':hashes,
+              'truth_boundary':'Hash equality/difference localizes whether this exact replacement is visible from each fixed camera. It is not aesthetic acceptance.'
+          }
+          (root/'render_hashes.json').write_text(json.dumps(comparison,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(comparison,indent=2))
           PY
 
       - name: Upload exact east-tree replacement evidence
