@@ -68,6 +68,12 @@ def patch(source: Path, output: Path) -> None:
     if observed != EXPECTED_ENVIRONMENT_OBSERVER_BLOB_SHA:
         raise SystemExit(f"Environment observer identity drift: {observed}")
 
+    receipt_anchor = 'const RECEIPT := "res://environment-runtime-receipt.json"\n'
+    receipt_replacement = 'const RECEIPT := "res://material-environment-runtime-receipt.json"\n'
+    if text.count(receipt_anchor) != 1:
+        raise SystemExit("receipt path anchor drift")
+    text = text.replace(receipt_anchor, receipt_replacement)
+
     weather_anchor = "func add_weather(root3d:Node3D,data:Dictionary)->Dictionary:\n"
     if text.count(weather_anchor) != 1:
         raise SystemExit("weather anchor drift")
