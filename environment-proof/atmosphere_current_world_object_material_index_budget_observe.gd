@@ -31,12 +31,6 @@ func _mesh_surface_diag(mesh:ArrayMesh)->Dictionary:
         "surfaces":surfaces
     }
 
-func _find_object_node(root3d:Node3D)->MeshInstance3D:
-    for child in root3d.get_children():
-        if child is MeshInstance3D and String(child.name)==OBJECT_ASSET_ID:
-            return child as MeshInstance3D
-    return null
-
 func _index_existing_object_mesh(node:MeshInstance3D)->Dictionary:
     var source_mesh:=node.mesh as ArrayMesh
     if source_mesh==null or source_mesh.get_surface_count()!=OBJECT_MATERIAL_IDS.size():
@@ -56,6 +50,7 @@ func _index_existing_object_mesh(node:MeshInstance3D)->Dictionary:
     return _mesh_surface_diag(indexed_mesh)
 
 func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:String)->Dictionary:
+    var child_count_before:=root3d.get_child_count()
     var result:=super.add_static_source(root3d,source,cull_target_asset_id)
     if String(result.get("asset_id",""))!=OBJECT_ASSET_ID:
         return result
@@ -64,10 +59,16 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
     if mode!=RUNTIME_CONTROL_MODE and mode!=RUNTIME_CANDIDATE_MODE:
         fail("Runtime Object indexing mode must be exact control or candidate")
         return {}
-
-    var node:=_find_object_node(root3d)
-    if node==null or not (node.mesh is ArrayMesh):
-        fail("Runtime Object indexing could not resolve exact Object receiver mesh")
+    if root3d.get_child_count()!=child_count_before+1:
+        fail("Runtime Object indexing expected exactly one emitted Object child")
+        return {}
+    var emitted:=root3d.get_child(root3d.get_child_count()-1)
+    if not (emitted is MeshInstance3D):
+        fail("Runtime Object indexing emitted child is not MeshInstance3D")
+        return {}
+    var node:=emitted as MeshInstance3D
+    if not (node.mesh is ArrayMesh):
+        fail("Runtime Object indexing emitted Object mesh is not ArrayMesh")
         return {}
 
     var before:=_mesh_surface_diag(node.mesh as ArrayMesh)
