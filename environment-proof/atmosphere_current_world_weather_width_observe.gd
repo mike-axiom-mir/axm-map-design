@@ -7,6 +7,7 @@ const WIDTH_PARENT_HEAD := "e482d003853e52fc835f1797ddfb6506a50083ef"
 const WIDTH_CONTEXTS := ["path_eye", "elevated_oblique"]
 const WIDTH_RESIDUAL_TOL_PX := 0.05
 const WIDTH_PRESENTATION_MODE := "SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBON"
+const WIDTH_NEAR_CLIP_MARGIN_M := 0.001
 
 func write_receipt()->void:
     var file:=FileAccess.open("res://atmosphere-current-world-weather-width-runtime.json",FileAccess.WRITE)
@@ -48,6 +49,9 @@ func fill_weather_width_ribbons(lines:Array,camera:Camera3D)->Dictionary:
     var opacity_sum:=0.0
     var maximum_width_residual:=0.0
     var measured_width_count:=0
+    var near_clipped_endpoint_count:=0
+    var near_clipped_streak_ids:Array[String]=[]
+    var near_depth:float=camera.near+WIDTH_NEAR_CLIP_MARGIN_M
 
     for line_value in lines:
         var row=line_value as Dictionary
@@ -61,22 +65,53 @@ func fill_weather_width_ribbons(lines:Array,camera:Camera3D)->Dictionary:
         var tail=row["tail_xy"] as Array
         var head=row["head_xy"] as Array
         var height=float(row["presentation_height_m"])
-        var a_world:=gvec([float(tail[0]),float(tail[1]),height])
-        var b_world:=gvec([float(head[0]),float(head[1]),height])
-        if camera.is_position_behind(a_world) or camera.is_position_behind(b_world):
-            return {"state":"FAIL_SOURCE_STREAK_BEHIND_CAMERA","streak_id":row.get("id","UNKNOWN")}
+        var a_world:Vector3=gvec([float(tail[0]),float(tail[1]),height])
+        var b_world:Vector3=gvec([float(head[0]),float(head[1]),height])
+        var a_depth:float=-camera.to_local(a_world).z
+        var b_depth:float=-camera.to_local(b_world).z
+        var streak_id:=String(row.get("id","UNKNOWN"))
+        if a_depth<=near_depth and b_depth<=near_depth:
+            return {
+                "state":"FAIL_SOURCE_STREAK_FULLY_BEHIND_NEAR_PLANE",
+                "streak_id":streak_id,
+                "a_depth_m":a_depth,
+                "b_depth_m":b_depth,
+                "near_depth_m":near_depth
+            }
+        if a_depth<=near_depth:
+            var a_span:float=b_depth-a_depth
+            if a_span<=0.0:
+                return {"state":"FAIL_INVALID_NEAR_CLIP_SPAN","streak_id":streak_id}
+            var a_t:float=(near_depth-a_depth)/a_span
+            a_world=a_world.lerp(b_world,a_t)
+            a_depth=-camera.to_local(a_world).z
+            near_clipped_endpoint_count+=1
+            near_clipped_streak_ids.append(streak_id)
+        if b_depth<=near_depth:
+            var b_span:float=a_depth-b_depth
+            if b_span<=0.0:
+                return {"state":"FAIL_INVALID_NEAR_CLIP_SPAN","streak_id":streak_id}
+            var b_t:float=(near_depth-b_depth)/b_span
+            b_world=b_world.lerp(a_world,b_t)
+            b_depth=-camera.to_local(b_world).z
+            near_clipped_endpoint_count+=1
+            near_clipped_streak_ids.append(streak_id)
+        if a_depth<=camera.near or b_depth<=camera.near:
+            return {
+                "state":"FAIL_NEAR_CLIP_DID_NOT_CLEAR_CAMERA_NEAR_PLANE",
+                "streak_id":streak_id,
+                "a_depth_m":a_depth,
+                "b_depth_m":b_depth,
+                "camera_near_m":camera.near
+            }
 
         var a_screen:Vector2=camera.unproject_position(a_world)
         var b_screen:Vector2=camera.unproject_position(b_world)
         var screen_delta:Vector2=b_screen-a_screen
         if screen_delta.length()<=0.000001:
-            return {"state":"FAIL_DEGENERATE_PROJECTED_STREAK","streak_id":row.get("id","UNKNOWN")}
+            return {"state":"FAIL_DEGENERATE_PROJECTED_STREAK","streak_id":streak_id}
         var screen_side:Vector2=Vector2(-screen_delta.y,screen_delta.x).normalized()
         var half_screen:Vector2=screen_side*(width_px*0.5)
-        var a_depth:float=-camera.to_local(a_world).z
-        var b_depth:float=-camera.to_local(b_world).z
-        if a_depth<=0.0 or b_depth<=0.0:
-            return {"state":"FAIL_INVALID_PROJECTED_DEPTH","streak_id":row.get("id","UNKNOWN")}
 
         var a_minus:Vector3=camera.project_position(a_screen-half_screen,a_depth)
         var a_plus:Vector3=camera.project_position(a_screen+half_screen,a_depth)
@@ -123,6 +158,9 @@ func fill_weather_width_ribbons(lines:Array,camera:Camera3D)->Dictionary:
         "source_width_max_px":width_max,
         "maximum_projected_width_residual_px":maximum_width_residual,
         "measured_width_count":measured_width_count,
+        "near_clipped_endpoint_count":near_clipped_endpoint_count,
+        "near_clipped_streak_ids":near_clipped_streak_ids,
+        "near_clip_depth_m":near_depth,
         "source_opacity_min":opacity_min,
         "source_opacity_mean":opacity_sum/float(lines.size()),
         "source_opacity_max":opacity_max,
@@ -136,7 +174,7 @@ func _initialize()->void:
         "promotion_effect":"NONE",
         "parent_variant_head":WIDTH_PARENT_HEAD,
         "presentation_mode":WIDTH_PRESENTATION_MODE,
-        "truth_boundary":"Same-process fixed-view A/B of the inherited renderer-default Weather line presentation versus camera-projected ribbon geometry carrying the exact source-authored screen-pixel widths. This proves only the two declared 1100x720 cameras and all 17 retained source states. It does not prove physical weather dimensions, arbitrary camera/resolution behavior, wall-clock playback, target-device performance, gameplay visibility, final Art Direction, CANON, or mastery."
+        "truth_boundary":"Same-process fixed-view A/B of the inherited renderer-default Weather line presentation versus camera-projected ribbon geometry carrying the exact source-authored screen-pixel widths. Streak endpoints crossing the fixed camera near plane are clipped to camera.near + 0.001 m before projection and are reported explicitly rather than silently dropped. This proves only the two declared 1100x720 cameras and all 17 retained source states. It does not prove physical weather dimensions, arbitrary camera/resolution behavior, wall-clock playback, target-device performance, gameplay visibility, final Art Direction, CANON, or mastery."
     }
     var payload:=load_payload()
     if payload.is_empty() or String(payload.get("schema",""))!=WIDTH_SCHEMA:
