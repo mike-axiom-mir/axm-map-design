@@ -1,6 +1,5 @@
 import copy
 import importlib.util
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -55,7 +54,8 @@ class EnvironmentCompositionTests(unittest.TestCase):
             self.assertIn("proxy:building-pavilion", obj_a)
             self.assertIn("proxy:nature-tree-west-a", obj_a)
             self.assertIn("proxy:object-crate-west", obj_a)
-            self.assertIn("wind context", svg_a) if "wind context" in svg_a else None
+            self.assertIn('stroke="#3a69a8"', svg_a)
+            self.assertIn('stroke-dasharray="6 4"', svg_a)
 
     def test_weather_context_must_have_direction(self):
         changed = copy.deepcopy(self.data)
