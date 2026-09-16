@@ -81,6 +81,8 @@ jobs:
           assert payload['base_variant']['seed']==29, payload
           assert len(payload['scene']['sapling']['triangles'])==570, payload
           assert len(payload['scene']['weather_lines'])==36, payload
+          assert payload['runtime_contract']['weather_expected_draw_delta']==1, payload
+          assert payload['runtime_contract']['weather_expected_renderer_primitive_delta']==144, payload
           print(json.dumps(evidence,indent=2))
           PY
 
@@ -137,7 +139,7 @@ jobs:
           row=json.loads(p.read_text())
           assert row['status']=='PASS', row
           assert row['state']=='PASS_SCOPED_FIRST_ENVIRONMENT_RUNTIME_BASELINE', row
-          assert row['weather_batch_gate']=='PASS_EXACT_ONE_DRAW_CALL_36_PRIMITIVES_BOTH_CAMERAS', row
+          assert row['weather_batch_gate']=='PASS_EXACT_ONE_DRAW_CALL_144_RENDERER_PRIMITIVES_FOR_36_LINES_BOTH_CAMERAS', row
           print(json.dumps(row,indent=2))
           PY
 
