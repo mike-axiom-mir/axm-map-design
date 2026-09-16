@@ -66,25 +66,25 @@ func fill_weather_width_ribbons(lines:Array,camera:Camera3D)->Dictionary:
         if camera.is_position_behind(a_world) or camera.is_position_behind(b_world):
             return {"state":"FAIL_SOURCE_STREAK_BEHIND_CAMERA","streak_id":row.get("id","UNKNOWN")}
 
-        var a_screen:=camera.unproject_position(a_world)
-        var b_screen:=camera.unproject_position(b_world)
-        var screen_delta:=b_screen-a_screen
+        var a_screen:Vector2=camera.unproject_position(a_world)
+        var b_screen:Vector2=camera.unproject_position(b_world)
+        var screen_delta:Vector2=b_screen-a_screen
         if screen_delta.length()<=0.000001:
             return {"state":"FAIL_DEGENERATE_PROJECTED_STREAK","streak_id":row.get("id","UNKNOWN")}
-        var screen_side:=Vector2(-screen_delta.y,screen_delta.x).normalized()
-        var half_screen:=screen_side*(width_px*0.5)
-        var a_depth:=-camera.to_local(a_world).z
-        var b_depth:=-camera.to_local(b_world).z
+        var screen_side:Vector2=Vector2(-screen_delta.y,screen_delta.x).normalized()
+        var half_screen:Vector2=screen_side*(width_px*0.5)
+        var a_depth:float=-camera.to_local(a_world).z
+        var b_depth:float=-camera.to_local(b_world).z
         if a_depth<=0.0 or b_depth<=0.0:
             return {"state":"FAIL_INVALID_PROJECTED_DEPTH","streak_id":row.get("id","UNKNOWN")}
 
-        var a_minus:=camera.project_position(a_screen-half_screen,a_depth)
-        var a_plus:=camera.project_position(a_screen+half_screen,a_depth)
-        var b_minus:=camera.project_position(b_screen-half_screen,b_depth)
-        var b_plus:=camera.project_position(b_screen+half_screen,b_depth)
+        var a_minus:Vector3=camera.project_position(a_screen-half_screen,a_depth)
+        var a_plus:Vector3=camera.project_position(a_screen+half_screen,a_depth)
+        var b_minus:Vector3=camera.project_position(b_screen-half_screen,b_depth)
+        var b_plus:Vector3=camera.project_position(b_screen+half_screen,b_depth)
 
-        var measured_a:=camera.unproject_position(a_minus).distance_to(camera.unproject_position(a_plus))
-        var measured_b:=camera.unproject_position(b_minus).distance_to(camera.unproject_position(b_plus))
+        var measured_a:float=camera.unproject_position(a_minus).distance_to(camera.unproject_position(a_plus))
+        var measured_b:float=camera.unproject_position(b_minus).distance_to(camera.unproject_position(b_plus))
         maximum_width_residual=maxf(maximum_width_residual,maxf(absf(measured_a-width_px),absf(measured_b-width_px)))
         measured_width_count+=1
 
