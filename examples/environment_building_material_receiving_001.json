@@ -1,0 +1,67 @@
+{
+  "schema": "axm.environment-building-material-receiving/v0.1",
+  "study_id": "environment-building-material-receiving-001",
+  "receiving_environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 11,
+    "exact_head": "c72838eb4b40ee7903a3c3e326a1bf77fa08bee5",
+    "manifest": "examples/environment_building_source_replacement_001.json",
+    "seed": 29,
+    "cameras": ["path_eye", "elevated_oblique"],
+    "renderer": "Godot 4.7.2 GL Compatibility",
+    "relationship": "PRESERVE_EXACT_BUILDING_SOURCE_SCENE_AND_CHANGE_BUILDING_SURFACE_RESPONSE_ONLY"
+  },
+  "building_source": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pull_request": 2,
+    "exact_head": "4faa769b406bf3ad0ba9489a77141c27f122ce51",
+    "pavilion_source_path": "assets/service_pavilion_001.json",
+    "panel_source_path": "assets/utility_access_panel_001.json",
+    "expected_pavilion_source_sha256": "852038d2288ead9a0ee271e09f1a7f7207ec8fd74668e0c52e739e9a224f87d7",
+    "expected_panel_source_sha256": "df59fa135abc89f8c85317db1d6b9ce3d03920efc91271de61bfb6289a24c253",
+    "expected_vertices": 152,
+    "expected_triangles": 228
+  },
+  "building_materials": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pull_request": 3,
+    "exact_head": "484ced313ba0337ea27eebd01c5677e72e8456af",
+    "profile_path": "lookdev/building_material_profile_001.json",
+    "builder_path": "tools/build_building_material_lookdev_evidence.py",
+    "expected_profile_sha256": "85650897cde5bceaf1eb2d389c2a61d47c3d50a2000e429cac8a7846c8c153c4",
+    "expected_material_ids": [
+      "frame_galvanized",
+      "infill_coating",
+      "roof_membrane",
+      "slab_mineral",
+      "utility_panel_ochre"
+    ]
+  },
+  "comparison_policy": {
+    "isolate_delta": "BUILDING_NEUTRAL_PROOF_TO_EXACT_FIVE_SURFACE_FAMILY_ONLY",
+    "keep_building_geometry": true,
+    "keep_building_transform": true,
+    "keep_seed": true,
+    "keep_west_sapling": true,
+    "keep_accepted_east_tree": true,
+    "keep_weather": true,
+    "keep_object_proxies": true,
+    "keep_other_nature_proxies": true,
+    "keep_cameras": true,
+    "keep_path": true,
+    "keep_lighting": true,
+    "uvs": "NOT_AUTHORED",
+    "textures": "NOT_AUTHORED",
+    "decals": "NOT_AUTHORED",
+    "weathering": "NOT_AUTHORED"
+  },
+  "art_direction_constraints": {
+    "frame": "READABLE_FIRST_MANUFACTURED_LAYER_NOT_BRIGHT_OUTLINE_HALO",
+    "infill_roof": "SUBORDINATE_WITHOUT_COLLAPSING_TO_ONE_NEAR_BLACK_MASS",
+    "slab": "QUIET_DO_NOT_COMPETE_WITH_PATH",
+    "utility_panels": "LEGIBLE_SERVICE_ACCENT_NOT_PRIMARY_PATH_ENDPOINT_FOCAL_POINT",
+    "lighting": "ONE_SHARED_SCENE_LIGHT_NO_PER_VIEW_CHEATING",
+    "service_panel_caveat": "EXISTING_TRIANGULAR_LIGHT_SHADOW_READ_MUST_NOT_BECOME_MORE_DISTRACTING_OR_FALSELY_BROKEN_LOOKING"
+  },
+  "truth_boundary": "This study transfers the exact source-owned Building Materials PR #3 scalar PBR family into the exact Map PR #11 seed-29 receiving scene and changes only Building surface response between neutral control and material candidate. A PASS proves exact source/material provenance, same receiving geometry/composition, successful pinned-target-host rendering and a visible bounded surface delta. It does not establish final Art Direction or Visual QA acceptance, UV/texture quality, physically measured material response, final lighting, target-device runtime cost, architecture/engineering, gameplay, CANON, production readiness or Materials mastery."
+}
