@@ -11,6 +11,7 @@ from PIL import Image, ImageChops
 SCHEMA = "axm.environment-building-material-runtime-budget/v0.1"
 STATUS = "PASS_EXACT_BUILDING_FIVE_SURFACE_SUBMISSION_COST_CHARACTERIZED"
 BUDGET_DECISION = "HOLD_RUNTIME_NEUTRALITY_CLAIM__FIVE_SURFACE_ADDS_12_SUBMISSION_SLOTS_IN_EXACT_PROOF_HOST"
+EXPECTED_CONTROL_HEAD = "94918f362226994e3ff5c2a1412a2bc2a8bce49b"
 EXPECTED_ENVIRONMENT_HEAD = "48bc157ad9c3ecb7ef8e9fb08fb4721ac76013c5"
 EXPECTED_PARENT_ARTIFACT_ID = 10447016718
 EXPECTED_PARENT_ARTIFACT_SHA256 = "aeda6e564ae8ac99906c61ac56a692792c4227f2539b0c453e66914b9d15f1ff"
@@ -78,8 +79,8 @@ def compare(
     target_host: dict[str, Any],
     render_root: Path,
 ) -> dict[str, Any]:
-    if control.get("receiving_head") != EXPECTED_ENVIRONMENT_HEAD:
-        raise ValueError("control runtime head drift")
+    if control.get("receiving_head") != EXPECTED_CONTROL_HEAD:
+        raise ValueError("control runtime parent head drift")
     if candidate.get("receiving_head") != EXPECTED_ENVIRONMENT_HEAD:
         raise ValueError("candidate runtime head drift")
     if target_host.get("receiving_head") != EXPECTED_ENVIRONMENT_HEAD:
@@ -100,7 +101,8 @@ def compare(
     candidate_building = _one(candidate.get("static_source_meshes", []), BUILDING_ASSET_ID)
 
     checks: dict[str, bool] = {
-        "exact_environment_head": control.get("receiving_head") == candidate.get("receiving_head") == EXPECTED_ENVIRONMENT_HEAD,
+        "exact_control_parent_head": control.get("receiving_head") == EXPECTED_CONTROL_HEAD,
+        "exact_candidate_environment_head": candidate.get("receiving_head") == target_host.get("receiving_head") == EXPECTED_ENVIRONMENT_HEAD,
         "same_pinned_proof_runtime": control.get("proof_runtime") == candidate.get("proof_runtime") == "Godot 4.7.2 GL Compatibility",
         "exact_17_state_schedule": len(control_samples) == len(candidate_samples) == 17,
         "control_building_geometry_exact": int(control_building.get("vertices", -1)) == EXPECTED_VERTICES and int(control_building.get("triangles", -1)) == EXPECTED_TRIANGLES,
@@ -163,6 +165,7 @@ def compare(
         "study_id": "environment-building-material-runtime-budget-001",
         "state": STATUS if all(checks.values()) else "FAIL",
         "budget_decision": BUDGET_DECISION,
+        "control_parent_head": EXPECTED_CONTROL_HEAD,
         "environment_head": EXPECTED_ENVIRONMENT_HEAD,
         "parent_artifact": {
             "id": EXPECTED_PARENT_ARTIFACT_ID,
@@ -191,7 +194,7 @@ def compare(
             "If the five-surface response is visually preferred, test one explicitly separate lower-submission representation against this exact candidate. Do not collapse surface semantics before Art Direction/Materials acceptance and do not infer a generic 3x-per-surface rule from this one Godot GL Compatibility scene."
         ),
         "truth_boundary": (
-            "PASS characterizes the exact retained Godot 4.7.2 GL Compatibility proof-host submission and memory counters for neutral one-surface versus exact five-surface Building receiving representations inside Environment PR24. It does not prove CPU/GPU frame time, FPS, VRAM, allocator residency, renderer-independent batching/pass decomposition, target-device budgets, final material preference, LOD/streaming policy, gameplay, CANON, production readiness, or Runtime mastery."
+            "PASS characterizes the exact retained Godot 4.7.2 GL Compatibility proof-host submission and memory counters for neutral one-surface parent versus exact five-surface Building receiving representations inside Environment PR24. The control retains its exact pre-material parent head rather than being relabelled as the candidate head. It does not prove CPU/GPU frame time, FPS, VRAM, allocator residency, renderer-independent batching/pass decomposition, target-device budgets, final material preference, LOD/streaming policy, gameplay, CANON, production readiness, or Runtime mastery."
         ),
     }
     return result
