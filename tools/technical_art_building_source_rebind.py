@@ -70,9 +70,15 @@ def _materials(scene: dict) -> list[dict]:
 
 def _strip_building_receiving(scene: dict) -> dict:
     value = copy.deepcopy(scene)
-    for key in ("scene_digest", "receiving_head", "study_id", "truth_boundary"):
+    for key in (
+        "scene_digest",
+        "receiving_head",
+        "study_id",
+        "truth_boundary",
+        "building_material_receiving",
+        "environment_building_replacement",
+    ):
         value.pop(key, None)
-    value.pop("building_material_receiving", None)
     return value
 
 
@@ -120,6 +126,8 @@ def build_report(
             historical_report.get("material_profile_sha256") == MATERIAL_PROFILE_SHA256
             and successor_report.get("material_profile_sha256") == MATERIAL_PROFILE_SHA256
         ),
+        "historical_builder_has_no_extension_outputs": historical_report.get("producer_extension_output_count") == 0,
+        "successor_builder_has_one_additive_extension_output": successor_report.get("producer_extension_output_count") == 1,
         "five_surface_material_values_preserved": historical_materials == successor_materials,
         "world_vertices_preserved_exactly": _vertices(historical_candidate) == _vertices(successor_candidate),
         "world_vertex_budget_preserved": len(_vertices(successor_candidate)) == 152,
@@ -144,6 +152,7 @@ def build_report(
             "building_source_head": HISTORICAL_SOURCE_HEAD,
             "building_material_head": HISTORICAL_MATERIAL_HEAD,
             "pavilion_source_sha256": HISTORICAL_PAVILION_SHA256,
+            "producer_extension_output_count": historical_report.get("producer_extension_output_count"),
             "exact_world_geometry_sha256": historical_report.get("exact_world_geometry_sha256"),
             "surface_partition_sha256": historical_report.get("surface_partition_sha256"),
         },
@@ -153,6 +162,7 @@ def build_report(
             "pavilion_source_sha256": SUCCESSOR_PAVILION_SHA256,
             "panel_source_sha256": PANEL_SHA256,
             "material_profile_sha256": MATERIAL_PROFILE_SHA256,
+            "producer_extension_output_count": successor_report.get("producer_extension_output_count"),
             "exact_world_geometry_sha256": successor_report.get("exact_world_geometry_sha256"),
             "surface_partition_sha256": successor_report.get("surface_partition_sha256"),
         },
@@ -172,7 +182,8 @@ def build_report(
             "universal_creation": "UNCHANGED; NO_BUILDING_DOMAIN_KNOWLEDGE_PROMOTED",
         },
         "truth_boundary": (
-            "PASS proves that the established Map seed-29 Building material receiver can be rebound from the historical "
+            "PASS proves that the established Map seed-29 Building material receiver can consume the producer's stable "
+            "eight-field receiving prefix despite one additive successor evidence output, and can be rebound from the historical "
             "Building source to the source-owned closed/outward successor while preserving world vertices, placement, "
             "five material values and unrelated receiving state, with the topology partition changing explicitly. "
             "Target-host rendering is a separate workflow observation over the exact successor scene digest."
