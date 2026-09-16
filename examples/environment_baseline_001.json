@@ -1,0 +1,20 @@
+{
+  "schema": "axm.environment-composition-study/v0.1",
+  "study_id": "environment-baseline-001",
+  "scene_size_m": [24.0, 18.0],
+  "required_asset_kinds": ["map-surface", "building-proxy", "nature-proxy", "object-proxy"],
+  "minimum_gap_m": 0.35,
+  "readable_path": {"x_min": -1.5, "x_max": 1.5, "y_min": -8.0, "y_max": 5.5},
+  "weather_context": {"wind_xy": [1.0, 0.35], "status": "CONTEXT_ONLY_NOT_SIMULATED"},
+  "truth_boundary": "This study proves deterministic proxy composition, scale/spacing/path checks, a text OBJ scene and generated top-view evidence. It does not prove department asset quality, traversal, gameplay, weather simulation, lighting, materials, collision, runtime performance, engine import, or final art direction.",
+  "items": [
+    {"asset_id": "proxy:map-ground", "kind": "map-surface", "position": [0, 0, -0.15], "size": [24, 18, 0.3], "rotation_deg": 0, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:building-pavilion", "kind": "building-proxy", "position": [0, 7.2, 1.8], "size": [8.0, 2.4, 3.6], "rotation_deg": 0, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:nature-tree-west-a", "kind": "nature-proxy", "position": [-6.5, 1.0, 2.6], "size": [2.2, 2.2, 5.2], "rotation_deg": 0, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:nature-tree-west-b", "kind": "nature-proxy", "position": [-7.4, -4.1, 2.2], "size": [1.8, 1.8, 4.4], "rotation_deg": 0, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:nature-tree-east-a", "kind": "nature-proxy", "position": [6.2, 2.5, 2.5], "size": [2.0, 2.0, 5.0], "rotation_deg": 0, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:nature-tree-east-b", "kind": "nature-proxy", "position": [7.2, -3.5, 2.0], "size": [1.6, 1.6, 4.0], "rotation_deg": 0, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:object-crate-west", "kind": "object-proxy", "position": [-3.4, 4.6, 0.55], "size": [1.1, 1.1, 1.1], "rotation_deg": 18, "evidence": "PROXY_ONLY"},
+    {"asset_id": "proxy:object-crate-east", "kind": "object-proxy", "position": [3.3, 4.4, 0.55], "size": [1.1, 1.1, 1.1], "rotation_deg": -12, "evidence": "PROXY_ONLY"}
+  ]
+}
