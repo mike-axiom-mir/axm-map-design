@@ -1,0 +1,180 @@
+name: Runtime east-tree replacement budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-east-tree-budget-001]
+    paths:
+      - "environment-proof/east_tree_runtime_observe.gd"
+      - "tools/environment_east_tree_runtime_budget.py"
+      - "tests/test_environment_east_tree_runtime_budget.py"
+      - "docs/ENVIRONMENT_EAST_TREE_RUNTIME_BUDGET_001.md"
+      - ".github/workflows/runtime-east-tree-budget.yml"
+      - "tools/environment_east_tree_replacement.py"
+      - "examples/environment_east_tree_replacement_001.json"
+  pull_request:
+    paths:
+      - "environment-proof/east_tree_runtime_observe.gd"
+      - "tools/environment_east_tree_runtime_budget.py"
+      - "tests/test_environment_east_tree_runtime_budget.py"
+      - "docs/ENVIRONMENT_EAST_TREE_RUNTIME_BUDGET_001.md"
+      - ".github/workflows/runtime-east-tree-budget.yml"
+      - "tools/environment_east_tree_replacement.py"
+      - "examples/environment_east_tree_replacement_001.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-east-tree-runtime-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Runtime lane
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Compile and test bounded Runtime contract
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_east_tree_runtime_budget -v
+
+      - name: Rebuild exact Environment baseline and candidate
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python tools/environment_east_tree_replacement.py \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather \
+            --output evidence/environment_east_tree_runtime_budget_001
+
+      - name: Validate source replacement before Runtime measurement
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_east_tree_runtime_budget_001')
+          e=json.loads((root/'replacement_evidence.json').read_text())
+          b=json.loads((root/'baseline_scene_runtime.json').read_text())
+          c=json.loads((root/'candidate_scene_runtime.json').read_text())
+          assert e['status']=='PASS_EAST_FOREGROUND_SOURCE_REPLACEMENT_STRUCTURE',e
+          assert all(e['checks'].values()),e
+          assert e['baseline_scene_digest']==b['scene_digest'],(e,b)
+          assert e['candidate_scene_digest']==c['scene_digest'],(e,c)
+          assert len(c['additional_source_meshes'])==1,c
+          source=c['additional_source_meshes'][0]
+          assert len(source['vertices_source_xyz_m'])==390,source
+          assert len(source['triangles'])==570,source
+          assert source['source_digest']=='9c87cf26f02f7adee832908652942218ec779c9029a0611aae1fb66eb0f62f54',source
+          assert source['mesh_digest']=='c7367ed5dcea6ebe39869c48fd653845b25c9a8725a2e637a1d6f2fbee1fa32f',source
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Measure exact proxy baseline in a fresh process
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_east_tree_runtime_budget_001/baseline_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/runtime-east-tree-baseline.json environment-proof/runtime-east-tree-baseline-*.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script east_tree_runtime_observe.gd \
+            -- baseline
+
+      - name: Measure exact compact-source candidate in a fresh process
+        run: |
+          set -euo pipefail
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_east_tree_runtime_budget_001/candidate_scene_runtime.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/runtime-east-tree-candidate.json environment-proof/runtime-east-tree-candidate-*.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script east_tree_runtime_observe.gd \
+            -- candidate
+
+      - name: Aggregate comparative Runtime evidence
+        run: |
+          python tools/environment_east_tree_runtime_budget.py \
+            --replacement-evidence evidence/environment_east_tree_runtime_budget_001/replacement_evidence.json \
+            --baseline-receipt environment-proof/runtime-east-tree-baseline.json \
+            --candidate-receipt environment-proof/runtime-east-tree-candidate.json \
+            --runtime-dir environment-proof \
+            --output evidence/environment_east_tree_runtime_budget_001/runtime_budget_evidence.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('evidence/environment_east_tree_runtime_budget_001/runtime_budget_evidence.json')
+          row=json.loads(p.read_text())
+          assert row['status']=='PASS_EAST_TREE_ONE_SLOT_RUNTIME_BUDGET',row
+          assert all(row['checks'].values()),row
+          print(json.dumps(row,indent=2))
+          PY
+
+      - name: Upload exact east-tree Runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-east-tree-runtime-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_east_tree_runtime_budget_001/replacement_evidence.json
+            evidence/environment_east_tree_runtime_budget_001/baseline_scene_runtime.json
+            evidence/environment_east_tree_runtime_budget_001/candidate_scene_runtime.json
+            evidence/environment_east_tree_runtime_budget_001/runtime_budget_evidence.json
+            environment-proof/runtime-east-tree-*.json
+            environment-proof/runtime-east-tree-*.png
+          if-no-files-found: warn
+          retention-days: 30
