@@ -5,7 +5,10 @@ import json
 from pathlib import Path
 from typing import Any
 
-import environment_weather_width_current_world as width
+try:
+    from . import environment_weather_width_current_world as width
+except ImportError:
+    import environment_weather_width_current_world as width
 
 SCHEMA = "axm.environment-current-world-weather-width-wall-clock-target-host/v0.1"
 STATUS = "PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_BOUNDED_WALL_CLOCK_PRESENTATION"
