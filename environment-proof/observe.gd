@@ -2,6 +2,8 @@ extends SceneTree
 
 const SCENE_PATH := "res://generated/scene_runtime.json"
 const RECEIPT := "res://environment-eye-level-runtime-receipt.json"
+const WEATHER_UNIFORM_MODE := "UNIFORM_PROOF_ALPHA_0P62"
+const WEATHER_SOURCE_OPACITY_MODE := "SOURCE_STREAK_OPACITY_VERTEX_ALPHA"
 
 var receipt := {
     "schema":"axm.environment-eye-level-runtime/v0.1",
@@ -125,30 +127,73 @@ func add_additional_source_meshes(root3d:Node3D,data:Dictionary)->Array:
         results.append(add_source_mesh(root3d,source as Dictionary,"source-mesh"))
     return results
 
+func weather_render_profile(data:Dictionary)->Dictionary:
+    var raw=data.get("weather_render_profile",{})
+    if not raw is Dictionary:
+        return {"opacity_mode":WEATHER_UNIFORM_MODE}
+    var profile=raw as Dictionary
+    return profile if not profile.is_empty() else {"opacity_mode":WEATHER_UNIFORM_MODE}
+
 func add_weather(root3d:Node3D,data:Dictionary)->Dictionary:
     var lines=data["weather_lines"] as Array
+    var profile:=weather_render_profile(data)
+    var opacity_mode=String(profile.get("opacity_mode",WEATHER_UNIFORM_MODE))
+    if opacity_mode!=WEATHER_UNIFORM_MODE and opacity_mode!=WEATHER_SOURCE_OPACITY_MODE:
+        return {"state":"FAIL_UNSUPPORTED_WEATHER_OPACITY_MODE","opacity_mode":opacity_mode}
+
+    var opacity_min:=1.0
+    var opacity_max:=0.0
+    for line in lines:
+        var row=line as Dictionary
+        var opacity=float(row.get("opacity",-1.0))
+        if opacity<0.0 or opacity>1.0:
+            return {"state":"FAIL_INVALID_SOURCE_STREAK_OPACITY","opacity_mode":opacity_mode,"opacity":opacity}
+        opacity_min=minf(opacity_min,opacity)
+        opacity_max=maxf(opacity_max,opacity)
+
     var mesh:=ImmediateMesh.new()
     var material:=StandardMaterial3D.new()
-    material.albedo_color=Color(0.55,0.77,1.0,0.62)
     material.emission_enabled=true
     material.emission=Color(0.25,0.48,0.78,1.0)
     material.emission_energy_multiplier=0.85
     material.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
     material.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED
+    if opacity_mode==WEATHER_SOURCE_OPACITY_MODE:
+        material.albedo_color=Color(0.55,0.77,1.0,1.0)
+        material.vertex_color_use_as_albedo=true
+    else:
+        material.albedo_color=Color(0.55,0.77,1.0,0.62)
+
     mesh.surface_begin(Mesh.PRIMITIVE_LINES,material)
     for line in lines:
         var row=line as Dictionary
         var a=row["tail_xy"] as Array
         var b=row["head_xy"] as Array
         var h=float(row["presentation_height_m"])
-        mesh.surface_add_vertex(gvec([float(a[0]),float(a[1]),h]))
-        mesh.surface_add_vertex(gvec([float(b[0]),float(b[1]),h]))
+        if opacity_mode==WEATHER_SOURCE_OPACITY_MODE:
+            var vertex_color:=Color(1.0,1.0,1.0,float(row["opacity"]))
+            mesh.surface_set_color(vertex_color)
+            mesh.surface_add_vertex(gvec([float(a[0]),float(a[1]),h]))
+            mesh.surface_set_color(vertex_color)
+            mesh.surface_add_vertex(gvec([float(b[0]),float(b[1]),h]))
+        else:
+            mesh.surface_add_vertex(gvec([float(a[0]),float(a[1]),h]))
+            mesh.surface_add_vertex(gvec([float(b[0]),float(b[1]),h]))
     mesh.surface_end()
     var node:=MeshInstance3D.new()
     node.name="source-weather-visual-field"
     node.mesh=mesh
     root3d.add_child(node)
-    return {"streaks":lines.size(),"presentation":data["weather_presentation"]}
+    return {
+        "state":"PASS",
+        "streaks":lines.size(),
+        "presentation":data["weather_presentation"],
+        "opacity_mode":opacity_mode,
+        "source_opacity_min":opacity_min,
+        "source_opacity_max":opacity_max,
+        "single_line_surface":mesh.get_surface_count()==1,
+        "source_opacity_consumed":opacity_mode==WEATHER_SOURCE_OPACITY_MODE
+    }
 
 func add_environment(root3d:Node3D)->void:
     var env:=Environment.new()
@@ -195,6 +240,10 @@ func make_viewport(context:String,data:Dictionary)->Dictionary:
 func capture_context(context:String,data:Dictionary)->Dictionary:
     var setup:=make_viewport(context,data)
     var viewport:=setup["viewport"] as SubViewport
+    var weather=setup["weather"] as Dictionary
+    if weather.get("state")!="PASS":
+        viewport.queue_free()
+        return {"state":"FAIL_WEATHER_RENDER_PROFILE","weather":weather}
     for _i in range(12):
         await process_frame
     var image:=viewport.get_texture().get_image()
@@ -209,7 +258,7 @@ func capture_context(context:String,data:Dictionary)->Dictionary:
         "camera":setup["camera"],
         "sapling":setup["sapling"],
         "additional_source_meshes":setup["additional_source_meshes"],
-        "weather":setup["weather"],
+        "weather":weather,
         "proxy_count":(data["items"] as Array).size()
     }
     viewport.queue_free()
@@ -226,7 +275,7 @@ func _initialize()->void:
     for context in ["path_eye","elevated_oblique"]:
         var row:=await capture_context(context,data)
         if row.get("state")!="PASS":
-            fail("environment capture failed for %s" % context)
+            fail("environment capture failed for %s: %s" % [context,JSON.stringify(row)])
             return
         contexts[context]=row
     receipt["state"]="PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY"
@@ -236,6 +285,7 @@ func _initialize()->void:
     receipt["contexts"]=contexts
     receipt["source_integration"]=data["source_integration"]
     receipt["weather_presentation"]=data["weather_presentation"]
+    receipt["weather_render_profile"]=weather_render_profile(data)
     if data.has("environment_replacement"):
         receipt["environment_replacement"]=data["environment_replacement"]
     write_receipt()

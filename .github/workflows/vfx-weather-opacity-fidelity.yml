@@ -1,0 +1,208 @@
+name: VFX Weather opacity fidelity evidence
+
+on:
+  push:
+    branches: [studio/vfx-weather-opacity-fidelity-001]
+    paths:
+      - "environment-proof/observe.gd"
+      - "environment-proof/weather_opacity_compare.gd"
+      - "tools/environment_weather_opacity_fidelity.py"
+      - "tests/test_environment_weather_opacity_fidelity.py"
+      - "docs/ENVIRONMENT_WEATHER_OPACITY_FIDELITY_001.md"
+      - ".github/workflows/vfx-weather-opacity-fidelity.yml"
+  pull_request:
+    paths:
+      - "environment-proof/observe.gd"
+      - "environment-proof/weather_opacity_compare.gd"
+      - "tools/environment_weather_opacity_fidelity.py"
+      - "tests/test_environment_weather_opacity_fidelity.py"
+      - "docs/ENVIRONMENT_WEATHER_OPACITY_FIDELITY_001.md"
+      - ".github/workflows/vfx-weather-opacity-fidelity.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-weather-opacity-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout VFX receiving lane
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Verify exact dependencies
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature rev-parse HEAD)" = "fbc202449981f2bac153951c561ed0ed6120c936"
+          test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
+
+      - name: Compile and test receiving repository
+        env:
+          AXM_NATURE_ROOT: .nature
+          AXM_WEATHER_ROOT: .weather
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest discover -s tests -v
+
+      - name: Build exact control and source-opacity candidate payloads
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python tools/environment_weather_opacity_fidelity.py \
+            --nature-root .nature \
+            --weather-root .weather \
+            --output evidence/environment_weather_opacity_fidelity_001
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_weather_opacity_fidelity_001')
+          report=json.loads((root/'comparison.json').read_text())
+          assert report['status']=='PASS',report
+          assert all(report['checks'].values()),report
+          assert report['source_weather']['streak_count']==36,report
+          assert report['source_weather']['semantics']=='VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED',report
+          assert report['source_weather']['source_opacity_min'] < report['source_weather']['source_opacity_max'],report
+          print(json.dumps(report,indent=2,sort_keys=True))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render historical uniform-alpha control
+        run: |
+          set -euo pipefail
+          mkdir -p environment-proof/generated evidence/environment_weather_opacity_fidelity_001/renders
+          cp evidence/environment_weather_opacity_fidelity_001/control_scene.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/path_eye.png environment-proof/elevated_oblique.png environment-proof/environment-eye-level-runtime-receipt.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/path_eye.png environment-proof/opacity-control-path_eye.png
+          cp environment-proof/elevated_oblique.png environment-proof/opacity-control-elevated_oblique.png
+          cp environment-proof/path_eye.png evidence/environment_weather_opacity_fidelity_001/renders/control_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_weather_opacity_fidelity_001/renders/control_elevated_oblique.png
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_weather_opacity_fidelity_001/control_runtime_receipt.json
+
+      - name: Render exact source-opacity candidate
+        run: |
+          set -euo pipefail
+          cp evidence/environment_weather_opacity_fidelity_001/candidate_scene.json environment-proof/generated/scene_runtime.json
+          rm -f environment-proof/path_eye.png environment-proof/elevated_oblique.png environment-proof/environment-eye-level-runtime-receipt.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+          cp environment-proof/path_eye.png environment-proof/opacity-candidate-path_eye.png
+          cp environment-proof/elevated_oblique.png environment-proof/opacity-candidate-elevated_oblique.png
+          cp environment-proof/path_eye.png evidence/environment_weather_opacity_fidelity_001/renders/candidate_path_eye.png
+          cp environment-proof/elevated_oblique.png evidence/environment_weather_opacity_fidelity_001/renders/candidate_elevated_oblique.png
+          cp environment-proof/environment-eye-level-runtime-receipt.json evidence/environment_weather_opacity_fidelity_001/candidate_runtime_receipt.json
+
+      - name: Compare exact retained target-host images
+        run: |
+          set -euo pipefail
+          rm -f environment-proof/weather-opacity-render-comparison.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script weather_opacity_compare.gd
+          cp environment-proof/weather-opacity-render-comparison.json evidence/environment_weather_opacity_fidelity_001/render_comparison.json
+
+      - name: Validate exact VFX fidelity gate and retain hashes
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path('evidence/environment_weather_opacity_fidelity_001')
+          pair=json.loads((root/'comparison.json').read_text())
+          control=json.loads((root/'control_runtime_receipt.json').read_text())
+          candidate=json.loads((root/'candidate_runtime_receipt.json').read_text())
+          render=json.loads((root/'render_comparison.json').read_text())
+          assert pair['status']=='PASS',pair
+          assert pair['receiving_head']==os.environ['AXM_RECEIVING_HEAD'],pair
+          assert control['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',control
+          assert candidate['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',candidate
+          for context in ('path_eye','elevated_oblique'):
+              cw=control['contexts'][context]['weather']
+              nw=candidate['contexts'][context]['weather']
+              assert cw['opacity_mode']=='UNIFORM_PROOF_ALPHA_0P62',(context,cw)
+              assert cw['source_opacity_consumed'] is False,(context,cw)
+              assert nw['opacity_mode']=='SOURCE_STREAK_OPACITY_VERTEX_ALPHA',(context,nw)
+              assert nw['source_opacity_consumed'] is True,(context,nw)
+              assert cw['streaks']==nw['streaks']==36,(context,cw,nw)
+              assert cw['single_line_surface'] is True and nw['single_line_surface'] is True,(context,cw,nw)
+              assert abs(nw['source_opacity_min']-pair['source_weather']['source_opacity_min']) < 1e-12,(context,nw,pair)
+              assert abs(nw['source_opacity_max']-pair['source_weather']['source_opacity_max']) < 1e-12,(context,nw,pair)
+          assert render['state']=='PASS_VISIBLE_SOURCE_OPACITY_DELTA',render
+          assert all(render['contexts'][c]['changed_pixels']>0 for c in ('path_eye','elevated_oblique')),render
+          hashes={}
+          for path in sorted((root/'renders').glob('*.png')):
+              hashes[path.name]=hashlib.sha256(path.read_bytes()).hexdigest()
+          assert hashes['control_path_eye.png']!=hashes['candidate_path_eye.png'],hashes
+          assert hashes['control_elevated_oblique.png']!=hashes['candidate_elevated_oblique.png'],hashes
+          (root/'render_hashes.json').write_text(json.dumps(hashes,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'render_comparison':render,'render_hashes':hashes},indent=2,sort_keys=True))
+          PY
+
+      - name: Upload exact Weather opacity fidelity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-weather-opacity-fidelity-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_weather_opacity_fidelity_001/control_scene.json
+            evidence/environment_weather_opacity_fidelity_001/candidate_scene.json
+            evidence/environment_weather_opacity_fidelity_001/comparison.json
+            evidence/environment_weather_opacity_fidelity_001/control_runtime_receipt.json
+            evidence/environment_weather_opacity_fidelity_001/candidate_runtime_receipt.json
+            evidence/environment_weather_opacity_fidelity_001/render_comparison.json
+            evidence/environment_weather_opacity_fidelity_001/render_hashes.json
+            evidence/environment_weather_opacity_fidelity_001/renders/*.png
+          if-no-files-found: warn
+          retention-days: 30
