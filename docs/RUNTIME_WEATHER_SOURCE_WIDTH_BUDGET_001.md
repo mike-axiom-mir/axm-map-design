@@ -13,7 +13,7 @@ Exact producer identity:
 - proof runtime: Godot 4.7.2 GL Compatibility;
 - 17 states, two fixed 1100×720 cameras, 36 Weather streaks.
 
-Runtime changes no Environment, VFX, Building, Nature, Object, camera, lighting or material producer code. It derives a fail-closed budget receipt from exact retained target-host evidence and independently recomputes all 34 control/candidate image differences.
+Runtime changes no Environment, VFX, Building, Nature, Object, camera, lighting or material producer code. It derives a fail-closed budget receipt from exact retained target-host evidence and independently rechecks all 34 retained control/candidate frame pairs for exact dimensions and byte-distinct presentation.
 
 ## Measure-before / after
 
@@ -47,7 +47,7 @@ The `+144` and `+2,304 B` values are exact proof-host observations, not a generi
 
 Runtime does not alter pixels. The exact retained source-width candidate remains a sparse visual delta against the control while preserving the broader source-correct Building/Nature/Object/path world. Existing Art Direction / Visual QA preference for the authored-width presentation stays separate from Runtime acceptance.
 
-The Runtime evidence recomputes all 34 A/B frame differences and requires every pair to remain visibly different but sparse (`<0.5%` changed pixels per frame). It also retains the existing five explicit near-plane endpoint clips instead of hiding that representation boundary.
+The Runtime evidence requires all 34 A/B pairs to remain byte-distinct at the exact 1100×720 dimensions. The producer evidence already measures the visual delta as sparse; Runtime preserves that as Art/QA context rather than turning it into a performance acceptance rule. It also retains the existing five explicit near-plane endpoint clips instead of hiding that representation boundary.
 
 ## Truth boundary
 
