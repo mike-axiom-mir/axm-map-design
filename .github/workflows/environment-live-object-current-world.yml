@@ -1,0 +1,314 @@
+name: Environment live Object current-world composition evidence
+
+on:
+  push:
+    branches: [studio/environment-live-object-composition-001]
+    paths:
+      - "tools/environment_live_object_current_world.py"
+      - ".github/workflows/environment-live-object-current-world.yml"
+      - "docs/ENVIRONMENT_LIVE_OBJECT_CURRENT_WORLD_001.md"
+  pull_request:
+    paths:
+      - "tools/environment_live_object_current_world.py"
+      - ".github/workflows/environment-live-object-current-world.yml"
+      - "docs/ENVIRONMENT_LIVE_OBJECT_CURRENT_WORLD_001.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-live-object-current-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact Environment receiving head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact stacked identities
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 3e641a5ea7b2507a53e5ff1a8fba0f0f9c94abaf^{commit}
+          git merge-base --is-ancestor 3e641a5ea7b2507a53e5ff1a8fba0f0f9c94abaf HEAD
+          git diff --exit-code 3e641a5ea7b2507a53e5ff1a8fba0f0f9c94abaf -- \
+            tools/environment_atmosphere_current_world_rebind.py \
+            environment-proof/atmosphere_current_world_rebind_observe.gd
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact dense VFX donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 6e386d513c0b2e821a89fb066b2e3ab58a0d6868
+          path: .vfx-donor
+          fetch-depth: 1
+
+      - name: Checkout exact Object Environment donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 85a2a0be959b4e39f9ffcf83da89078b604f9881
+          path: .object-map-donor
+          fetch-depth: 1
+
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+
+      - name: Checkout exact accepted Nature visual response
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cee14f5b3feea78b0adcd044bad2ea3c97657fc6
+          path: .nature-response
+
+      - name: Checkout exact historical rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          path: .nature-rear-historical
+
+      - name: Checkout exact migrated rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          path: .nature-rear-migrated
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Checkout exact Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building
+
+      - name: Checkout exact Object structural source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: d3fa10a270faae7925811f44f03381fe5c5d0215
+          path: .object
+
+      - name: Verify exact donor heads and compile
+        run: |
+          set -euo pipefail
+          test "$(git -C .object-map-donor rev-parse HEAD)" = "85a2a0be959b4e39f9ffcf83da89078b604f9881"
+          test "$(git -C .object rev-parse HEAD)" = "d3fa10a270faae7925811f44f03381fe5c5d0215"
+          test "$(git -C .vfx-donor rev-parse HEAD)" = "6e386d513c0b2e821a89fb066b2e3ab58a0d6868"
+          test "$(git -C .nature-response rev-parse HEAD)" = "cee14f5b3feea78b0adcd044bad2ea3c97657fc6"
+          test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
+          test "$(git -C .nature-rear-migrated rev-parse HEAD)" = "4ddbe66e5c02d22407ef773d5346a2fe6f349a2d"
+          python -m py_compile \
+            tools/environment_atmosphere_current_world_rebind.py \
+            tools/environment_live_object_current_world.py
+
+      - name: Build exact PR20 current-world atmosphere prerequisite
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+        run: |
+          set -euo pipefail
+          out=evidence/environment_live_object_current_world_001
+          mkdir -p "$out" environment-proof/generated
+          python tools/environment_atmosphere_current_world_rebind.py build \
+            --vfx-donor-root .vfx-donor \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --nature-response-root .nature-response \
+            --weather-root .weather \
+            --building-root .building \
+            --historical-rear-root .nature-rear-historical \
+            --migrated-rear-root .nature-rear-migrated \
+            --output "$out/atmosphere_pr20.json"
+
+      - name: Rebuild exact PR19 Object replacement donor
+        env:
+          AXM_RECEIVING_HEAD: 85a2a0be959b4e39f9ffcf83da89078b604f9881
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          AXM_OBJECT_HEAD: d3fa10a270faae7925811f44f03381fe5c5d0215
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          root = Path.cwd()
+          donor = root / ".object-map-donor"
+          sys.path.insert(0, str(donor / "tools"))
+          import environment_object_source_replacement as obj
+
+          baseline, candidate, report = obj.build_payloads(
+              donor / "examples" / "environment_object_source_replacement_001.json",
+              root / ".nature-base",
+              root / ".nature-east",
+              root / ".weather",
+              root / ".building",
+              root / ".nature-rear-historical",
+              root / ".nature-rear-migrated",
+              root / ".object",
+          )
+          assert report["status"] == obj.STATUS, report
+          assert all(report["checks"].values()), report
+          out = root / "evidence" / "environment_live_object_current_world_001"
+          (out / "object_pr19_candidate.json").write_text(
+              json.dumps(candidate, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          (out / "object_pr19_report.json").write_text(
+              json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+          )
+          print(json.dumps({
+              "status": report["status"],
+              "source": report["object_source"],
+              "spacing_conflicts": report["spacing_conflicts"],
+          }, indent=2, sort_keys=True))
+          PY
+
+      - name: Compose exact Object source into all 17 live current-world states
+        run: |
+          set -euo pipefail
+          out=evidence/environment_live_object_current_world_001
+          python tools/environment_live_object_current_world.py build \
+            --atmosphere "$out/atmosphere_pr20.json" \
+            --object-candidate "$out/object_pr19_candidate.json" \
+            --object-report "$out/object_pr19_report.json" \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/live_object_current_world.json" \
+            --observer-output environment-proof/generated/current_world_atmosphere_rebind.json
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("evidence/environment_live_object_current_world_001")
+          data=json.loads((root/"live_object_current_world.json").read_text())
+          exact=(root/"exact-head.txt").read_text().strip()
+          assert data["status"]=="PASS_LIVE_WORLD_OBJECT_SOURCE_COMPOSITION_STRUCTURE", data
+          assert all(data["checks"].values()), data
+          assert data["receiving_head"]==exact, (data["receiving_head"], exact)
+          assert len(data["states"])==17, data
+          print(json.dumps({
+              "status": data["status"],
+              "composition_digest": data["composition_digest"],
+          }, indent=2))
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render all 17 combined states with unchanged PR20 observer
+        run: |
+          set -euo pipefail
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_rebind_observe.gd
+
+      - name: Re-run inherited PR20 target-host gate on combined observer projection
+        run: |
+          set -euo pipefail
+          out=evidence/environment_live_object_current_world_001
+          cp environment-proof/atmosphere-current-world-rebind-runtime.json "$out/runtime.json"
+          python tools/environment_atmosphere_current_world_rebind.py verify \
+            --payload environment-proof/generated/current_world_atmosphere_rebind.json \
+            --receipt "$out/runtime.json" \
+            --image-root environment-proof \
+            --output "$out/inherited_pr20_target_host.json"
+
+      - name: Verify Environment combined target-host evidence
+        run: |
+          set -euo pipefail
+          out=evidence/environment_live_object_current_world_001
+          python tools/environment_live_object_current_world.py verify \
+            --payload "$out/live_object_current_world.json" \
+            --runtime-receipt "$out/runtime.json" \
+            --inherited-target-report "$out/inherited_pr20_target_host.json" \
+            --image-root environment-proof \
+            --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("evidence/environment_live_object_current_world_001")
+          target=json.loads((root/"target_host.json").read_text())
+          assert target["state"]=="PASS_LIVE_WORLD_OBJECT_SOURCE_COMPOSITION_TARGET_HOST", target
+          assert all(target["checks"].values()), target
+          print(json.dumps({
+              "state": target["state"],
+              "object_source_runtime_signature": target["object_source_runtime_signature"],
+              "inherited_runtime_counter_sets": target["inherited_runtime_counter_sets"],
+          }, indent=2))
+          PY
+
+      - name: Retain exact live-world frames
+        if: always()
+        run: |
+          mkdir -p evidence/environment_live_object_current_world_001/rendered
+          cp environment-proof/atmosphere-current-*.png \
+            evidence/environment_live_object_current_world_001/rendered/ 2>/dev/null || true
+
+      - name: Upload exact Environment live Object evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-live-object-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_live_object_current_world_001/exact-head.txt
+            evidence/environment_live_object_current_world_001/atmosphere_pr20.json
+            evidence/environment_live_object_current_world_001/object_pr19_candidate.json
+            evidence/environment_live_object_current_world_001/object_pr19_report.json
+            evidence/environment_live_object_current_world_001/live_object_current_world.json
+            evidence/environment_live_object_current_world_001/runtime.json
+            evidence/environment_live_object_current_world_001/inherited_pr20_target_host.json
+            evidence/environment_live_object_current_world_001/target_host.json
+            evidence/environment_live_object_current_world_001/rendered/*.png
+          if-no-files-found: warn
+          retention-days: 30
