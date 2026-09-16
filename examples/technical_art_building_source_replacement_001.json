@@ -30,7 +30,7 @@
     "truth_state": "SOURCE_OWNED_CLOSED_OUTWARD_SUCCESSOR_NOT_FINAL"
   },
   "comparison_policy": {
-    "isolate_delta": "BUILDING_PROXY_TO_EXACT_SUCCESSOR_BUILDING_SOURCE_ONLY",
+    "isolate_delta": "BUILDING_PROXY_TO_EXACT_BUILDING_SOURCE_ONLY",
     "keep_west_sapling": true,
     "keep_accepted_east_tree": true,
     "keep_weather": true,
@@ -41,5 +41,5 @@
     "materials": "EXISTING_ENVIRONMENT_PROOF_MATERIALS_ONLY_NOT_BUILDING_LOOKDEV_ACCEPTANCE",
     "building_materials_pr3_consumed": false
   },
-  "truth_boundary": "This Technical Art receiving contract binds the exact source-owned Building PR #2 successor topology into the established seed-29 Map source-replacement path while preserving the prior Environment composition rules. It proves bounded source identity and receiving geometry only. It does not establish Building material acceptance, current-world PR #24 adoption, runtime budgets, architecture/engineering, collision/navigation, gameplay, final Art Direction, CANON, production readiness or Technical Art mastery."
+  "truth_boundary": "This Technical Art receiving contract binds the exact source-owned Building PR #2 successor topology into the established seed-29 Map source-replacement path while preserving the existing source-replacement comparison policy and prior Environment composition rules. It proves bounded source identity and receiving geometry only. It does not establish Building material acceptance, current-world PR #24 adoption, runtime budgets, architecture/engineering, collision/navigation, gameplay, final Art Direction, CANON, production readiness or Technical Art mastery."
 }
