@@ -36,6 +36,10 @@ For each fixed camera independently, the playback observer:
 
 The verifier requires all 17 states in exact order in both cameras, exact source digests, stable resource identities, the existing `0.05 px` width gate, the exact five/zero near-plane clip totals, and both submission and post-draw observation within one source interval of each scheduled source time. A `0.5 ms` numerical/scheduler epsilon is allowed only around that one-interval deadline.
 
+Dedicated workflow:
+
+`VFX Weather source-width wall-clock presentation evidence`
+
 Expected scoped state, only if exact-head CI proves it:
 
 `PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_BOUNDED_WALL_CLOCK_PRESENTATION`
