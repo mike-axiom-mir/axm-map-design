@@ -5,12 +5,16 @@ on:
     branches: [studio/vfx-atmosphere-live-intermediates-001]
     paths:
       - "tools/environment_atmosphere_live_intermediates.py"
+      - "tools/environment_atmosphere_live_opacity.py"
+      - "tests/test_environment_atmosphere_live_opacity.py"
       - "environment-proof/atmosphere_live_intermediates_observe.gd"
       - "docs/ENVIRONMENT_ATMOSPHERE_LIVE_INTERMEDIATES_001.md"
       - ".github/workflows/vfx-atmosphere-live-intermediates.yml"
   pull_request:
     paths:
       - "tools/environment_atmosphere_live_intermediates.py"
+      - "tools/environment_atmosphere_live_opacity.py"
+      - "tests/test_environment_atmosphere_live_opacity.py"
       - "environment-proof/atmosphere_live_intermediates_observe.gd"
       - "docs/ENVIRONMENT_ATMOSPHERE_LIVE_INTERMEDIATES_001.md"
       - ".github/workflows/vfx-atmosphere-live-intermediates.yml"
@@ -71,7 +75,10 @@ jobs:
           test "$(git -C .weather rev-parse HEAD)" = "ca2eaba519e8449835b0ea6ef944b7080c3caa6a"
           python -m py_compile \
             tools/environment_atmosphere_sync.py \
-            tools/environment_atmosphere_live_intermediates.py
+            tools/environment_atmosphere_live_intermediates.py \
+            tools/environment_atmosphere_live_opacity.py \
+            tests/test_environment_atmosphere_live_opacity.py
+          python -m unittest discover -s tests -p 'test_environment_atmosphere_live_opacity.py' -v
 
       - name: Build exact 17-state dense source sequence
         env:
@@ -92,6 +99,8 @@ jobs:
           assert data['status']=='PASS_DENSE_INTERMEDIATE_SOURCE_SEQUENCE', data
           assert data['stacked_on_runtime_head']=='f0c72b9dd4688bdb01ac40aa33f469afffd7ec0a', data
           assert data['stacked_on_sync_head']=='d476cf7c11de74c53397cb21e6f40f90a51c0356', data
+          assert data['weather_source_head']=='ca2eaba519e8449835b0ea6ef944b7080c3caa6a', data
+          assert data['sequence_digest']=='f7f2cad01184e8651bcc722b755a2f3c2292ca13e81c7399579d7f42e0c19b30', data
           assert len(data['states'])==17 and data['measurements']['new_half_step_count']==8, data
           assert all(data['checks'].values()), data
           # The source generator deliberately rebuilds the exact PR #12 prerequisite under
@@ -145,13 +154,20 @@ jobs:
             --image-root environment-proof \
             --vfx-head "$(cat exact-head.txt)" \
             --output "$out/target_host.json"
+          python tools/environment_atmosphere_live_opacity.py \
+            --payload "$out/atmosphere_live_intermediates.json" \
+            --receipt "$out/runtime.json" \
+            --output "$out/opacity_fidelity.json"
           python - <<'PY'
           import json
           from pathlib import Path
-          data=json.loads(Path('evidence/environment_atmosphere_live_intermediates_001/target_host.json').read_text())
-          assert data['state']=='PASS_DENSE_INTERMEDIATE_LIVE_UPDATE_PROOF_HOST', data
-          assert all(data['checks'].values()), data
-          print(json.dumps({'state':data['state'],'runtime_counter_sets':data['runtime_counter_sets']}, indent=2))
+          target=json.loads(Path('evidence/environment_atmosphere_live_intermediates_001/target_host.json').read_text())
+          opacity=json.loads(Path('evidence/environment_atmosphere_live_intermediates_001/opacity_fidelity.json').read_text())
+          assert target['state']=='PASS_DENSE_INTERMEDIATE_LIVE_UPDATE_PROOF_HOST', target
+          assert all(target['checks'].values()), target
+          assert opacity['state']=='PASS_DENSE_LIVE_SOURCE_OPACITY_FIDELITY', opacity
+          assert all(opacity['checks'].values()), opacity
+          print(json.dumps({'target_host_state':target['state'],'runtime_counter_sets':target['runtime_counter_sets'],'opacity_state':opacity['state'],'source_opacity':opacity['source_opacity']}, indent=2))
           PY
 
       - name: Retain exact dense VFX frames
@@ -170,6 +186,7 @@ jobs:
             evidence/environment_atmosphere_live_intermediates_001/atmosphere_live_intermediates.json
             evidence/environment_atmosphere_live_intermediates_001/runtime.json
             evidence/environment_atmosphere_live_intermediates_001/target_host.json
+            evidence/environment_atmosphere_live_intermediates_001/opacity_fidelity.json
             evidence/environment_atmosphere_live_intermediates_001/rendered/*.png
           if-no-files-found: warn
           retention-days: 30
