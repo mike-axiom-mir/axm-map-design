@@ -1,0 +1,30 @@
+{
+  "schema": "axm.environment-source-aware-variation-gate/v0.1",
+  "gate_id": "west-sapling-source-envelope-001",
+  "target_asset_id": "proxy:nature-tree-west-a",
+  "source_evidence": {
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "head": "fbc202449981f2bac153951c561ed0ed6120c936",
+    "study_id": "sapling-neutral-001",
+    "source_digest": "a61207b23c441b2cc0becd165fa62289bb7e51065ae0d6fa56bf9f3cab036cc1",
+    "mesh_digest": "89b835bd8f3e728206543d210787f1bbd1cc1bacb6d01f6695caf3ea1a63fa4c",
+    "vertex_count": 390,
+    "triangle_count": 570,
+    "receiving_repository": "mike-axiom-mir/axm-map-design",
+    "receiving_pr": 4,
+    "receiving_head": "e1cc463f0ae64d76da360fd9d4e87c5f551b6321",
+    "retained_artifact_id": 10428450742,
+    "retained_seed": 29,
+    "retained_seed_study_digest": "6bb6a6436f2b13aff58a210b252bfcef310c8fd1cc76c2198d75cad819f0c499"
+  },
+  "required_source_size_m": [
+    2.1603629093570857,
+    1.4132717100681425,
+    4.8610059432109285
+  ],
+  "placement_policy": "PRESERVE_TARGET_CENTER_XY__GROUND_SOURCE_MIN_Z__NO_SOURCE_SCALE__NO_EXTRA_SOURCE_ROTATION",
+  "fit_policy": "SOURCE_AXIS_ALIGNED_FOOTPRINT_MUST_FIT_RESERVED_PROXY_ROTATED_AABB_AND_SOURCE_HEIGHT_MUST_FIT_RESERVED_HEIGHT",
+  "tolerance_m": 1e-09,
+  "failure_policy": "FAIL_CLOSED_KEEP_SEED_SEQUENCE_NO_BOUND_WIDENING_NO_SOURCE_SCALE_NO_LEAST_BAD_VARIANT",
+  "truth_boundary": "This gate carries the exact retained west-sapling receiving envelope from Map Environment PR #4 into the existing Map-local seeded proxy generator. It does not revalidate the Nature source builder, generate Nature geometry, approve world art, prove other source replacements, or authorize runtime/gameplay/CANON claims."
+}
