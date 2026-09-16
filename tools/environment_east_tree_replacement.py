@@ -90,17 +90,6 @@ def _inside(inner, outer, tolerance: float = 1e-9) -> bool:
     )
 
 
-def _payload_item(item: dict) -> dict:
-    return {
-        "asset_id": item["asset_id"],
-        "kind": item["kind"],
-        "evidence": item.get("evidence"),
-        "position_m": [float(value) for value in item["position"]],
-        "size_m": [float(value) for value in item["size"]],
-        "rotation_deg": float(item.get("rotation_deg", 0.0)),
-    }
-
-
 def _preserved_items_except_target(baseline_items: list[dict], candidate_items: list[dict], target_id: str) -> bool:
     baseline = {row["asset_id"]: row for row in baseline_items if row["asset_id"] != target_id}
     candidate = {row["asset_id"]: row for row in candidate_items}
@@ -117,7 +106,7 @@ def _load_compact_source(nature_root: str | Path, cfg: dict):
     source = organic.load_source(nature_root / cfg["source_path"])
     evidence = compact.evaluate(source)
     mesh = organic.build_mesh(source)
-    return organic, source, evidence, mesh
+    return source, evidence, mesh
 
 
 def build_payloads(
@@ -152,7 +141,7 @@ def build_payloads(
     if target.get("kind") != "nature-proxy" or target.get("evidence") != "PROXY_ONLY":
         raise ValueError("east-tree replacement target must remain an explicit nature proxy")
 
-    organic, compact_source, compact_evidence, compact_mesh = _load_compact_source(
+    compact_source, compact_evidence, compact_mesh = _load_compact_source(
         compact_nature_root, replacement_cfg
     )
     world_mesh, world_bounds = _world_mesh(compact_mesh, target)
@@ -182,10 +171,11 @@ def build_payloads(
     if _intersects(world_footprint, west_footprint, clearance):
         remaining_conflicts.append("source:nature:sapling-neutral-001")
 
-    expected_size = [float(value) for value in replacement_cfg["expected_proxy_size_m"]]
+    source_declared_envelope = [float(value) for value in replacement_cfg["source_declared_envelope_m"]]
     target_size = [float(value) for value in target["size"]]
     target_top = float(target["position"][2]) + target_size[2] * 0.5
     handoff = compact_source.get("environment_handoff", {})
+    handoff_envelope = [float(value) for value in handoff.get("proxy_size_m", [])]
 
     candidate = copy.deepcopy(baseline)
     candidate["schema"] = CANDIDATE_SCENE_SCHEMA
@@ -214,6 +204,7 @@ def build_payloads(
         "reserved_proxy_size_m": target_size,
         "reserved_proxy_rotation_deg": float(target.get("rotation_deg", 0.0)),
         "reserved_proxy_footprint_m": list(reserved_footprint),
+        "source_declared_envelope_m": source_declared_envelope,
         "source_world_bounds_m": world_bounds,
         "source_world_footprint_m": list(world_footprint),
         "source_repository": replacement_cfg["repository"],
@@ -232,7 +223,8 @@ def build_payloads(
         "baseline_fixed_camera_payload_pass": baseline_eye["status"] == "PASS",
         "baseline_seed_matches": int(baseline_report["base_variant"]["seed"]) == int(baseline_cfg["seed"]),
         "target_is_exact_remaining_nature_proxy": target["asset_id"] == target_id and target["kind"] == "nature-proxy" and target.get("evidence") == "PROXY_ONLY",
-        "target_reserved_size_matches": all(abs(target_size[i] - expected_size[i]) <= 1e-12 for i in range(3)),
+        "source_declared_envelope_matches_handoff": len(handoff_envelope) == 3 and all(abs(handoff_envelope[i] - source_declared_envelope[i]) <= 1e-12 for i in range(3)),
+        "seed_target_envelope_not_smaller_than_source_declared": all(target_size[i] + 1e-12 >= source_declared_envelope[i] for i in range(3)),
         "compact_source_revalidated": compact_evidence.get("status") == "PASS_COMPACT_SOURCE_ENVELOPE",
         "compact_study_id_matches": compact_source.get("study_id") == replacement_cfg["expected_study_id"],
         "compact_source_digest_matches": compact_evidence.get("source_digest") == replacement_cfg["expected_source_digest"],
@@ -271,7 +263,10 @@ def build_payloads(
             "vertices": int(compact_evidence.get("vertices", 0)),
             "triangles": int(compact_evidence.get("triangles", 0)),
             "source_size_m": [float(value) for value in compact_evidence["source_size_m"]],
-            "reserved_margin_m": [float(value) for value in compact_evidence["reserved_margin_m"]],
+            "source_declared_envelope_m": source_declared_envelope,
+            "source_declared_margin_m": [float(value) for value in compact_evidence["reserved_margin_m"]],
+            "seed_target_size_m": target_size,
+            "seed_target_extra_margin_over_declared_m": [target_size[i] - source_declared_envelope[i] for i in range(3)],
             "evidence_status": compact_evidence.get("status"),
         },
         "spacing_conflicts": remaining_conflicts,
