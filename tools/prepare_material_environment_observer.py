@@ -4,7 +4,7 @@ import argparse
 import hashlib
 from pathlib import Path
 
-EXPECTED_ENVIRONMENT_OBSERVER_SHA256 = "d3cad9499f4646d390a181ece344d04c33bd9a0aad503e464117f97d8880a5b9"
+EXPECTED_ENVIRONMENT_OBSERVER_BLOB_SHA = "05b9d7e84cadc065b21d5a7ea8009b9850bfcd25"
 
 INSERT = r'''
 func receiving_material_from_spec(spec:Dictionary)->StandardMaterial3D:
@@ -57,14 +57,15 @@ func add_building_material_receiving(root3d:Node3D,data:Dictionary)->Dictionary:
 '''
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    return hashlib.sha1(b"blob " + str(len(data)).encode("ascii") + b"\0" + data).hexdigest()
 
 
 def patch(source: Path, output: Path) -> None:
     text = source.read_text(encoding="utf-8")
-    observed = sha256(source)
-    if observed != EXPECTED_ENVIRONMENT_OBSERVER_SHA256:
+    observed = git_blob_sha(source)
+    if observed != EXPECTED_ENVIRONMENT_OBSERVER_BLOB_SHA:
         raise SystemExit(f"Environment observer identity drift: {observed}")
 
     weather_anchor = "func add_weather(root3d:Node3D,data:Dictionary)->Dictionary:\n"
