@@ -1,0 +1,158 @@
+name: Environment eye-level observation evidence
+
+on:
+  push:
+    branches: [studio/environment-real-nature-weather-001]
+    paths:
+      - "tools/environment_eye_level.py"
+      - "tests/test_environment_eye_level.py"
+      - "environment-proof/**"
+      - "docs/ENVIRONMENT_EYE_LEVEL_001.md"
+      - ".github/workflows/environment-eye-level.yml"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  pull_request:
+    paths:
+      - "tools/environment_eye_level.py"
+      - "tests/test_environment_eye_level.py"
+      - "environment-proof/**"
+      - "docs/ENVIRONMENT_EYE_LEVEL_001.md"
+      - ".github/workflows/environment-eye-level.yml"
+      - "tools/environment_real_slice.py"
+      - "examples/environment_real_slice_001.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-eye-level-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Environment lane
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature
+
+      - name: Checkout exact Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather
+
+      - name: Compile and test bounded observation contract
+        run: |
+          python -m compileall -q tools tests
+          python -m unittest tests.test_environment_eye_level -v
+
+      - name: Rebuild exact source integration and eye-level payload
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python tools/environment_real_slice.py --nature-root .nature --weather-root .weather --output evidence/environment_real_slice_001
+          python tools/environment_eye_level.py --nature-root .nature --weather-root .weather --output evidence/environment_eye_level_001
+
+      - name: Validate mixed-scene payload
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_eye_level_001')
+          e=json.loads((root/'eye_level_evidence.json').read_text())
+          s=json.loads((root/'scene_runtime.json').read_text())
+          assert e['status']=='PASS',e
+          assert all(e['checks'].values()),e
+          assert e['sapling_vertices']==390,e
+          assert e['sapling_triangles']==570,e
+          assert e['weather_streaks']==36,e
+          assert set(e['cameras'])=={'path_eye','elevated_oblique'},e
+          assert s['scene_digest']==e['scene_digest'],(s,e)
+          print(json.dumps(e,indent=2))
+          PY
+
+      - name: Stage exact scene payload into proof host
+        run: |
+          rm -rf environment-proof/generated
+          mkdir -p environment-proof/generated
+          cp evidence/environment_eye_level_001/scene_runtime.json environment-proof/generated/
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact mixed scene from two fixed cameras
+        run: |
+          set -euo pipefail
+          rm -f environment-proof/environment-eye-level-runtime-receipt.json environment-proof/path_eye.png environment-proof/elevated_oblique.png
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script observe.gd
+
+      - name: Validate target-host capture evidence only
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('environment-proof')
+          r=json.loads((root/'environment-eye-level-runtime-receipt.json').read_text())
+          e=json.loads(Path('evidence/environment_eye_level_001/eye_level_evidence.json').read_text())
+          assert r['state']=='PASS_TARGET_HOST_ENVIRONMENT_OBSERVATION_READY',r
+          assert r['promotion_effect']=='NONE',r
+          assert r['scene_digest']==e['scene_digest'],(r,e)
+          assert r['receiving_head']==e['receiving_head'],(r,e)
+          assert set(r['contexts'])=={'path_eye','elevated_oblique'},r
+          for context,row in r['contexts'].items():
+            assert row['state']=='PASS',(context,row)
+            assert row['capture']['bytes']>3000,(context,row)
+            assert row['sapling']['vertices']==390,(context,row)
+            assert row['sapling']['triangles']==570,(context,row)
+            assert row['weather']['streaks']==36,(context,row)
+          print(json.dumps(r,indent=2))
+          PY
+
+      - name: Upload exact eye-level observation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-eye-level-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_real_slice_001/evidence.json
+            evidence/environment_real_slice_001/comparison.svg
+            evidence/environment_eye_level_001/scene_runtime.json
+            evidence/environment_eye_level_001/eye_level_evidence.json
+            environment-proof/environment-eye-level-runtime-receipt.json
+            environment-proof/path_eye.png
+            environment-proof/elevated_oblique.png
+          if-no-files-found: warn
+          retention-days: 30

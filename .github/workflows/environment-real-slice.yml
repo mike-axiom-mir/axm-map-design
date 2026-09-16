@@ -1,0 +1,74 @@
+name: Environment real source slice
+
+on:
+  pull_request:
+    paths:
+      - 'examples/environment_real_slice_001.json'
+      - 'tools/environment_real_slice.py'
+      - 'tests/test_environment_real_slice.py'
+      - '.github/workflows/environment-real-slice.yml'
+  push:
+    branches:
+      - 'studio/environment-real-nature-weather-001'
+    paths:
+      - 'examples/environment_real_slice_001.json'
+      - 'tools/environment_real_slice.py'
+      - 'tests/test_environment_real_slice.py'
+      - '.github/workflows/environment-real-slice.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-real-slice:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    env:
+      AXM_NATURE_ROOT: ${{ github.workspace }}/deps/nature
+      AXM_WEATHER_ROOT: ${{ github.workspace }}/deps/weather
+    steps:
+      - name: Checkout map integration lane
+        uses: actions/checkout@v4
+
+      - name: Checkout exact Nature source head
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: deps/nature
+
+      - name: Checkout exact Weather source head
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: deps/weather
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile exact integration code
+        run: python -m compileall tools tests
+
+      - name: Run full map regression suite including cross-repo source slice
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
+
+      - name: Build retained exact source slice evidence
+        if: matrix.python-version == '3.11'
+        run: >-
+          python tools/environment_real_slice.py
+          --nature-root "$AXM_NATURE_ROOT"
+          --weather-root "$AXM_WEATHER_ROOT"
+          --output evidence/environment_real_slice_001
+
+      - name: Upload exact source slice evidence
+        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-real-slice-001-evidence
+          path: evidence/environment_real_slice_001
+          if-no-files-found: error
+          retention-days: 30

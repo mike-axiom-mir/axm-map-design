@@ -1,0 +1,38 @@
+{
+  "schema": "axm.environment-east-tree-replacement/v0.1",
+  "study_id": "environment-east-tree-replacement-001",
+  "baseline_environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 4,
+    "exact_predecessor_head": "8f81c57d9169dc9faba0cb01b85f17dff92bad6f",
+    "base_manifest": "examples/environment_real_slice_001.json",
+    "seed": 29,
+    "cameras": ["path_eye", "elevated_oblique"],
+    "relationship": "PRESERVE_EXISTING_ACCEPTED_SCENE_AND_REPLACE_ONE_REMAINING_PROXY_ONLY"
+  },
+  "replacement": {
+    "target_asset_id": "proxy:nature-tree-east-b",
+    "source_declared_envelope_m": [1.6, 1.6, 4.0],
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "pull_request": 6,
+    "head": "64116d63fc76daa1623b5fd5046a4e6074100bda",
+    "source_path": "examples/compact_east_tree_neutral_001.json",
+    "expected_study_id": "compact-east-tree-neutral-001",
+    "expected_source_digest": "9c87cf26f02f7adee832908652942218ec779c9029a0611aae1fb66eb0f62f54",
+    "expected_mesh_digest": "c7367ed5dcea6ebe39869c48fd653845b25c9a8725a2e637a1d6f2fbee1fa32f",
+    "expected_vertices": 390,
+    "expected_triangles": 570,
+    "placement_policy": "PRESERVE_TARGET_CENTER_XY__GROUND_SOURCE_MIN_Z__NO_FORM_SCALE__NO_EXTRA_ROTATION",
+    "truth_state": "SOURCE_OWNED_CANDIDATE_NOT_FINAL"
+  },
+  "comparison_policy": {
+    "isolate_delta": "PROXY_TO_EXACT_SOURCE_ONLY",
+    "keep_west_sapling": true,
+    "keep_weather": true,
+    "keep_cameras": true,
+    "keep_path": true,
+    "keep_other_items": true,
+    "materials": "EXISTING_PROOF_MATERIALS_ONLY_NOT_LOOKDEV_ACCEPTANCE"
+  },
+  "truth_boundary": "This study tests whether one exact source-owned compact Nature body can replace the remaining east-foreground Nature proxy in the existing seed-29 Environment receiving scene without hidden scaling, path/spacing regression, or unrelated scene mutation, and retains fixed-camera proof renders for comparison. The Nature source declares a stricter 1.6 x 1.6 x 4.0 m fit envelope; the actual seed-29 proxy is allowed to be larger because Procedural Design owns its retained variation. It does not establish Art Director or Visual Observer acceptance, botanical correctness, deformation/wind behavior, final materials/lighting, collision/navigation/gameplay, runtime performance, CANON, production readiness, or Environment/Nature mastery."
+}
