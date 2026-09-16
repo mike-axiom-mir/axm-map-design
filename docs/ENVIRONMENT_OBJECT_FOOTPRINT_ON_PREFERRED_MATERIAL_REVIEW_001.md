@@ -40,6 +40,10 @@ with:
 - the historical cue extent preserved at 161 changed pixels in `path_eye` and 106 in `elevated_oblique`;
 - all 1,224 source-width Weather observations still within the inherited `0.05 px` gate.
 
+## Evidence provenance note
+
+Workflow run `35147985983` at review head `bcaf68d03cdb2b9e2e6dc907809fda88485900ee` is intentionally retained as a failed setup attempt. It downloaded and hash-verified the exact parent artifact, then stopped before rendering because the proof-host `environment-proof/generated/` directory did not exist in that checkout. No visual/runtime PASS was claimed from that run. The branch now preserves that generated-path requirement explicitly before retrying the same bounded gate.
+
 ## Ownership / handoffs
 
 - **Environment / Map:** owns the footprint cue and this receiving comparison.
