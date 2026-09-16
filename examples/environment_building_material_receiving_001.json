@@ -25,10 +25,10 @@
   "building_materials": {
     "repository": "mike-axiom-mir/axm-building-design",
     "pull_request": 3,
-    "exact_head": "484ced313ba0337ea27eebd01c5677e72e8456af",
+    "exact_head": "b08f683f1c3f75c474fb347e1d1990c1c4426a33",
     "profile_path": "lookdev/building_material_profile_001.json",
     "builder_path": "tools/build_building_material_lookdev_evidence.py",
-    "expected_profile_sha256": "85650897cde5bceaf1eb2d389c2a61d47c3d50a2000e429cac8a7846c8c153c4",
+    "expected_profile_sha256": "e8dd0c33b9b2aea108194af57a8fe8de39c7e67bb86109af6dbf3895f22c010b",
     "expected_material_ids": [
       "frame_galvanized",
       "infill_coating",
