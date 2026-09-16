@@ -9,17 +9,16 @@ extends "res://atmosphere_current_world_weather_width_runtime_cache_observe.gd"
 func snapshot_live_mesh(source:Mesh,label:String)->Dictionary:
     if source==null:
         return {"state":"FAIL_SNAPSHOT_NULL_MESH","label":label}
-    var source_surface_count:=source.get_surface_count()
+    var source_surface_count:int=source.get_surface_count()
     if source_surface_count<=0:
         return {"state":"FAIL_SNAPSHOT_EMPTY_SOURCE","label":label,"source_surface_count":source_surface_count}
-    var snapshot:=ArrayMesh.new()
+    var snapshot:ArrayMesh=ArrayMesh.new()
     for surface_index in range(source_surface_count):
-        var arrays:=source.surface_get_arrays(surface_index)
+        var arrays:Array=source.surface_get_arrays(surface_index)
         if arrays.is_empty():
             return {"state":"FAIL_SNAPSHOT_EMPTY_ARRAYS","label":label,"surface_index":surface_index}
-        var primitive:=source.surface_get_primitive_type(surface_index)
-        snapshot.add_surface_from_arrays(primitive,arrays)
-        var material:=source.surface_get_material(surface_index)
+        snapshot.add_surface_from_arrays(source.surface_get_primitive_type(surface_index),arrays)
+        var material:Material=source.surface_get_material(surface_index)
         if material!=null:
             snapshot.surface_set_material(surface_index,material)
     if snapshot.get_surface_count()!=source_surface_count:
@@ -68,8 +67,8 @@ func build_context_cache(camera:Camera3D,states:Array,context:String)->Dictionar
         if String(sapling_snapshot.get("state",""))!="PASS_LIVE_MESH_SNAPSHOT":
             return {"state":"FAIL_CACHE_SAPLING_SNAPSHOT","index":row["index"],"detail":sapling_snapshot}
 
-        var cached_weather:=weather_snapshot["mesh"] as Mesh
-        var cached_sapling:=sapling_snapshot["mesh"] as Mesh
+        var cached_weather:Mesh=weather_snapshot["mesh"] as Mesh
+        var cached_sapling:Mesh=sapling_snapshot["mesh"] as Mesh
         var expected_weather_surfaces:=int(weather_update.get("surface_count",0))
         var expected_sapling_surfaces:=int(sapling_update.get("surface_count",0))
         if cached_weather.get_surface_count()!=expected_weather_surfaces or cached_sapling.get_surface_count()!=expected_sapling_surfaces:
