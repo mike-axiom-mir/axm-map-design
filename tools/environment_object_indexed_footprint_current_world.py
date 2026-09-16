@@ -19,6 +19,7 @@ EXPECTED_MATERIALS = ["shell_coating", "service_dark", "hardware_steel", "rubber
 RUNTIME_KEYS = ("draw_calls_in_frame", "objects_in_frame", "primitives_in_frame", "buffer_mem_bytes", "texture_mem_bytes")
 CAMERAS = ("path_eye", "elevated_oblique")
 WEATHER_MODES = ("control", "candidate")
+WEATHER_RESOURCE_ID_KEYS = ("node_instance_id", "mesh_instance_id", "material_instance_id")
 
 
 class VerificationFailure(RuntimeError):
@@ -41,6 +42,14 @@ def png_map(root: Path) -> dict[str, str]:
 
 def runtime_signature(row: dict[str, Any]) -> dict[str, int]:
     return {key: int(row[key]) for key in RUNTIME_KEYS}
+
+
+def weather_semantics(row: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in row.items() if key not in WEATHER_RESOURCE_ID_KEYS}
+
+
+def weather_resource_identity(row: dict[str, Any]) -> tuple[int, int, int]:
+    return tuple(int(row[key]) for key in WEATHER_RESOURCE_ID_KEYS)
 
 
 def object_diag(receipt: dict[str, Any]) -> dict[str, Any]:
@@ -123,6 +132,8 @@ def main() -> int:
     require(len(rsamples) == len(csamples) == 17, "expected exact 17-state world sequence")
 
     runtime_deltas: dict[str, set[tuple[tuple[str, int], ...]]] = {camera: set() for camera in CAMERAS}
+    reference_weather_resources: set[tuple[int, int, int]] = set()
+    candidate_weather_resources: set[tuple[int, int, int]] = set()
     width_count = 0
     max_width_residual = 0.0
     projected_cue_bboxes_equal = 0
@@ -134,17 +145,23 @@ def main() -> int:
             for weather_mode in WEATHER_MODES:
                 rctx = rs["contexts"][camera][weather_mode]
                 cctx = cs["contexts"][camera][weather_mode]
-                require(rctx["weather_update"] == cctx["weather_update"], f"{index}/{camera}/{weather_mode}: Weather observation drift")
+                rweather = rctx["weather_update"]
+                cweather = cctx["weather_update"]
+                reference_weather_resources.add(weather_resource_identity(rweather))
+                candidate_weather_resources.add(weather_resource_identity(cweather))
+                require(weather_semantics(rweather) == weather_semantics(cweather), f"{index}/{camera}/{weather_mode}: Weather semantic observation drift")
                 require(rctx["capture"].get("dressing_projected_bbox_px") == cctx["capture"].get("dressing_projected_bbox_px"), f"{index}/{camera}/{weather_mode}: cue projection drift")
                 projected_cue_bboxes_equal += 1
                 if weather_mode == "candidate":
-                    width_count += int(cctx["weather_update"].get("measured_width_count", 0))
-                    max_width_residual = max(max_width_residual, float(cctx["weather_update"].get("maximum_projected_width_residual_px", 0.0)))
+                    width_count += int(cweather.get("measured_width_count", 0))
+                    max_width_residual = max(max_width_residual, float(cweather.get("maximum_projected_width_residual_px", 0.0)))
                 rrun = runtime_signature(rctx["runtime"])
                 crun = runtime_signature(cctx["runtime"])
                 delta = {key: crun[key] - rrun[key] for key in RUNTIME_KEYS}
                 runtime_deltas[camera].add(tuple(sorted(delta.items())))
 
+    require(len(reference_weather_resources) == 1, "reference Weather resource identity is not stable in-process")
+    require(len(candidate_weather_resources) == 1, "candidate Weather resource identity is not stable in-process")
     require(projected_cue_bboxes_equal == 68, "not all cue projections remained identical")
     require(width_count == 1224, f"Weather width measurement count drift: {width_count}")
     require(max_width_residual <= 0.05, f"Weather width residual exceeded inherited gate: {max_width_residual}")
@@ -180,6 +197,7 @@ def main() -> int:
             "all_68_frames_byte_identical": True,
             "all_68_cue_projections_identical": True,
             "all_1224_weather_width_observations_preserved": True,
+            "weather_resource_identity_stable_within_each_process": True,
             "building_nature_weather_route_camera_lighting_identities_preserved": True,
             "draw_object_primitive_texture_counters_unchanged": True,
             "observed_buffer_delta_matches_runtime_donor": True,
@@ -193,7 +211,7 @@ def main() -> int:
         "runtime_deltas": normalized_runtime,
         "visual_tradeoff": "NONE_OBSERVED__68_CURRENT_WORLD_FRAMES_BYTE_IDENTICAL_TO_EXACT_VISIBLE_CUE_REFERENCE",
         "decision": "ADOPTION_READY_FOR_RECEIVER_REPRESENTATION__FOOTPRINT_VISUAL_QA_AND_TARGET_DEVICE_PERF_REMAIN_SEPARATE",
-        "truth_boundary": "This PASS proves only that the exact Runtime PR #33 post-normal indexing mechanism can be received in the current Environment world while preserving the exact Art-preferred visible footprint-cue frames, five Object material roles, 812 Object triangles, Building/Nature/Weather identities and Weather-width evidence. It does not grant independent Visual-QA acceptance of the footprint cue, target-device performance acceptance, arbitrary-asset indexing safety, Object scale acceptance, gameplay meaning, CANON or production readiness.",
+        "truth_boundary": "This PASS proves only that the exact Runtime PR #33 post-normal indexing mechanism can be received in the current Environment world while preserving the exact Art-preferred visible footprint-cue frames, five Object material roles, 812 Object triangles, Building/Nature/Weather identities and Weather-width evidence. Cross-process Godot instance IDs are process-local and are not treated as semantic identity; each receipt must still prove one stable Weather node/mesh/material identity within its own process. It does not grant independent Visual-QA acceptance of the footprint cue, target-device performance acceptance, arbitrary-asset indexing safety, Object scale acceptance, gameplay meaning, CANON or production readiness.",
         "non_claims": [
             "independent Visual QA acceptance of the footprint cue",
             "target-device CPU/GPU/FPS/VRAM or heap performance",
