@@ -1,0 +1,245 @@
+name: Environment current-world Object material-family evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_object_material_family_current_world.py"
+      - "environment-proof/atmosphere_current_world_object_material_family_observe.gd"
+      - "docs/ENVIRONMENT_OBJECT_MATERIAL_FAMILY_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-object-material-family-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_object_material_family_current_world.py"
+      - "environment-proof/atmosphere_current_world_object_material_family_observe.gd"
+      - "docs/ENVIRONMENT_OBJECT_MATERIAL_FAMILY_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-object-material-family-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-environment-object-material-family:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment lane head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Nature-family predecessor ancestry
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 72d4128b602e27c886a0731ddd670ec8c14aaa7e^{commit}
+          git merge-base --is-ancestor 72d4128b602e27c886a0731ddd670ec8c14aaa7e HEAD
+          python -m py_compile tools/environment_object_material_family_current_world.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install image measurement dependencies
+        run: python -m pip install --disable-pip-version-check pillow numpy
+
+      - name: Checkout exact Object Materials donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: c85517446a769e0d5f880fc0e9e32f47124f7b5e
+          path: .object-materials
+          fetch-depth: 1
+
+      - name: Verify exact Object source and base material profile
+        run: |
+          set -euo pipefail
+          test "$(git -C .object-materials rev-parse HEAD)" = c85517446a769e0d5f880fc0e9e32f47124f7b5e
+          echo "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a  .object-materials/assets/modular-equipment-case-001/source.json" | sha256sum --check --strict
+          echo "dc200229d6c25fa84063aa51f66103abc022efa54b2167e4432a5b47fc40360c  .object-materials/lookdev/object_material_profile_001.json" | sha256sum --check --strict
+          python - <<'PY'
+          import json
+          p=json.load(open('.object-materials/lookdev/object_material_profile_001.json'))
+          assert p['schema']=='axm.object-material-profile/v0.1',p
+          assert p['asset_id']=='modular-equipment-case-001',p
+          assert p['candidate']['shell_coating']=={'albedo':'#3F484EFF','metallic':0.42,'roughness':0.54},p
+          assert p['candidate']['service_dark']=={'albedo':'#252B2FFF','metallic':0.18,'roughness':0.66},p
+          assert p['candidate']['hardware_steel']=={'albedo':'#9AA3A8FF','metallic':0.88,'roughness':0.32},p
+          assert p['candidate']['rubber_guard']=={'albedo':'#171A1CFF','metallic':0.0,'roughness':0.86},p
+          assert p['candidate']['interface_orange']=={'albedo':'#A96532FF','metallic':0.20,'roughness':0.48},p
+          assert p['candidate']['module_housing']=={'albedo':'#35596DFF','metallic':0.34,'roughness':0.50},p
+          print('PASS_EXACT_OBJECT_BASE_MATERIAL_PROFILE')
+          PY
+
+      - name: Download exact Nature-family Environment parent evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_material_family_001
+          mkdir -p "$out/parent"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10463255035/zip" \
+            --output "$out/parent.zip"
+          echo "a4dbc0e2b8ef6f16bb846d0f639b7935b414ddfe4222463f397d11a16cfc0a45  $out/parent.zip" | sha256sum --check --strict
+          unzip -q "$out/parent.zip" -d "$out/parent"
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = 72d4128b602e27c886a0731ddd670ec8c14aaa7e
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/parent/runtime.json"
+          test -f "$out/parent/target_host.json"
+          test -d "$out/parent/rendered"
+
+      - name: Verify exact parent live acceptance surface
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_object_material_family_001/parent')
+          p=json.loads((root/'combined_current_world.json').read_text())
+          r=json.loads((root/'runtime.json').read_text())
+          t=json.loads((root/'target_host.json').read_text())
+          assert p['schema']=='axm.environment-current-world-nature-material-family-composition/v0.1',p
+          assert p['status']=='PASS_CURRENT_WORLD_NATURE_MATERIAL_FAMILY_STRUCTURE' and all(p['checks'].values()),p
+          assert p['receiving_head']=='72d4128b602e27c886a0731ddd670ec8c14aaa7e',p
+          assert p['composition_digest']=='5d050b2d628f73d7e1b738e900eaba22f56ac7bcdd5fc46a5bf781e1d9058866',p
+          assert r['state']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_LIVE_OBSERVATION',r
+          assert r['receiving_head']==p['receiving_head'] and len(r['samples'])==17,r
+          assert t['state']=='PASS_CURRENT_WORLD_NATURE_MATERIAL_FAMILY_TARGET_HOST',t
+          print('PASS_EXACT_NATURE_FAMILY_PARENT_LIVE_SURFACE')
+          PY
+
+      - name: Build exact current-world Object material-family composition
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_material_family_001
+          mkdir -p environment-proof/generated
+          python tools/environment_object_material_family_current_world.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --profile .object-materials/lookdev/object_material_profile_001.json \
+            --object-root .object-materials \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/combined_current_world.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          cp "$out/combined_current_world.json" environment-proof/generated/current_world_object_material_family.json
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_material_family_001/combined_current_world.json'))
+          assert p['status']=='PASS_CURRENT_WORLD_OBJECT_MATERIAL_FAMILY_STRUCTURE' and all(p['checks'].values()),p
+          assert len(p['states'])==17,p
+          assert p['object_host_material_ids']==['shell_coating','service_dark','hardware_steel','rubber_guard','interface_orange'],p
+          print(json.dumps({'status':p['status'],'composition_digest':p['composition_digest'],'surface_triangle_counts':p['object_surface_triangle_counts']},indent=2))
+          PY
+
+      - name: Exercise fail-closed receiving controls
+        run: |
+          python - <<'PY'
+          import copy,json,tempfile
+          from pathlib import Path
+          import tools.environment_object_material_family_current_world as m
+          root=Path('evidence/environment_object_material_family_001')
+          parent=json.loads((root/'parent/combined_current_world.json').read_text())
+          profile=Path('.object-materials/lookdev/object_material_profile_001.json')
+          objroot=Path('.object-materials')
+          cases=[]
+          bad=copy.deepcopy(parent); bad['composition_digest']='drifted'; cases.append(('parent composition drift',bad))
+          bad=copy.deepcopy(parent)
+          target=[x for x in bad['states'][0]['scene']['additional_source_meshes'] if x.get('asset_id')=='source:object:modular-equipment-case-001'][0]
+          target['triangles'][0]=list(reversed(target['triangles'][0])); cases.append(('Object triangle ordering drift',bad))
+          bad=copy.deepcopy(parent); bad['states'][0]['scene']['additional_source_meshes'].append({'asset_id':'source:object:utility-module-001'}); cases.append(('utility module scope widening',bad))
+          for label,env in cases:
+              try: m.build(env,profile,objroot,'NEGATIVE')
+              except ValueError: print('PASS_NEGATIVE_CONTROL',label)
+              else: raise AssertionError(label)
+          PY
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify proof-host inheritance chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_infill_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_readability_dressing_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_material_family_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_material_family_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact Object material family in real Godot current world
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_material_family_001
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_object_material_family_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify all-state full-world visual and runtime consequence
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_material_family_001
+          python tools/environment_object_material_family_current_world.py verify \
+            --payload "$out/combined_current_world.json" --receipt "$out/runtime.json" \
+            --parent-receipt "$out/parent/runtime.json" --candidate-root environment-proof \
+            --parent-root "$out/parent/rendered" --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          t=json.load(open('evidence/environment_object_material_family_001/target_host.json'))
+          assert t['state']=='PASS_CURRENT_WORLD_OBJECT_MATERIAL_FAMILY_TARGET_HOST' and all(t['checks'].values()),t
+          assert t['measured_width_count']==1224,t
+          print(json.dumps({'state':t['state'],'visual_delta':t['visual_delta'],'max_width_residual':t['maximum_projected_width_residual_px'],'max_rgb_delta':t['maximum_rgb_channel_delta']},indent=2))
+          PY
+
+      - name: Retain exact candidate frames
+        if: always()
+        run: |
+          out=evidence/environment_object_material_family_001
+          mkdir -p "$out/rendered"
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          rm -rf "$out/parent" "$out/parent.zip"
+
+      - name: Upload retained Environment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-material-family-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_object_material_family_001
+          if-no-files-found: error
+          retention-days: 30
