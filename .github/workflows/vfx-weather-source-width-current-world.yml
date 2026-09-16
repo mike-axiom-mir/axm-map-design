@@ -173,12 +173,18 @@ jobs:
       - name: Run exact control and source-width candidate through all 17 states and both fixed cameras
         run: |
           set -euo pipefail
+          mkdir -p evidence/environment_weather_source_width_current_world_001
+          set +e
           xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
             .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
             --display-driver x11 \
             --rendering-method gl_compatibility \
             --path environment-proof \
-            --script atmosphere_current_world_weather_width_observe.gd
+            --script atmosphere_current_world_weather_width_observe.gd \
+            2>&1 | tee evidence/environment_weather_source_width_current_world_001/godot.log
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "$status"
 
       - name: Verify exact source-width target-host evidence
         run: |
@@ -206,11 +212,13 @@ jobs:
           },indent=2))
           PY
 
-      - name: Retain exact source-width A/B frames
+      - name: Retain exact source-width A/B frames and failure diagnostics
         if: always()
         run: |
-          mkdir -p evidence/environment_weather_source_width_current_world_001/rendered
-          cp environment-proof/atmosphere-width-*.png evidence/environment_weather_source_width_current_world_001/rendered/ 2>/dev/null || true
+          out=evidence/environment_weather_source_width_current_world_001
+          mkdir -p "$out/rendered"
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
 
       - name: Upload exact current-world Weather source-width evidence
         if: always()
@@ -222,6 +230,7 @@ jobs:
             evidence/environment_weather_source_width_current_world_001/parent_variant.json
             evidence/environment_weather_source_width_current_world_001/parent_target_host.json
             evidence/environment_weather_source_width_current_world_001/current_world_weather_width.json
+            evidence/environment_weather_source_width_current_world_001/godot.log
             evidence/environment_weather_source_width_current_world_001/runtime.json
             evidence/environment_weather_source_width_current_world_001/target_host.json
             evidence/environment_weather_source_width_current_world_001/rendered/*.png
