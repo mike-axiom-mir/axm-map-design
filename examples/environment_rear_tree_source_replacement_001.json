@@ -1,0 +1,46 @@
+{
+  "schema": "axm.environment-rear-tree-source-replacement/v0.1",
+  "study_id": "environment-rear-tree-source-replacement-001",
+  "baseline_environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 11,
+    "exact_head": "c72838eb4b40ee7903a3c3e326a1bf77fa08bee5",
+    "building_manifest": "examples/environment_building_source_replacement_001.json",
+    "seed": 29,
+    "cameras": ["path_eye", "elevated_oblique"],
+    "relationship": "PRESERVE_ACCEPTED_BUILDING_PLUS_COMPACT_EAST_TREE_SCENE_AND_REPLACE_ONE_REAR_NATURE_PROXY_ONLY"
+  },
+  "replacement": {
+    "target_asset_id": "proxy:nature-tree-east-a",
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "pull_request": 8,
+    "head": "a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12",
+    "source_path": "examples/east_rear_tree_neutral_001.json",
+    "expected_study_id": "east-rear-tree-neutral-001",
+    "expected_source_digest": "0adf2cde8cfc355ec21b6fb06c6759b753300164b5f72ba029dc1b8c6d2ef307",
+    "expected_mesh_digest": "d7fc5deaa1c12d1d8c7d7b6dc95bf1e8544ce26140ee2e4a7d2c67a2c4133e48",
+    "expected_vertices": 390,
+    "expected_triangles": 570,
+    "expected_reserved_position_m": [6.089407, 2.004654, 2.098546],
+    "expected_reserved_size_m": [1.678837, 1.678837, 4.197092],
+    "expected_reserved_rotation_deg": -5.415604,
+    "placement_policy": "PRESERVE_TARGET_CENTER_XY__GROUND_SOURCE_MIN_Z__NO_FORM_SCALE__NO_EXTRA_ROTATION",
+    "truth_state": "SOURCE_OWNED_CANDIDATE_NOT_FINAL",
+    "topology_state": "ORGANIC_BASELINE_GENERATOR__GEOMETRY_REINDEX_CANDIDATE_NOT_MIGRATED"
+  },
+  "comparison_policy": {
+    "isolate_delta": "REAR_NATURE_PROXY_TO_EXACT_SOURCE_ONLY",
+    "keep_building_source": true,
+    "keep_west_sapling": true,
+    "keep_accepted_compact_east_tree": true,
+    "keep_weather": true,
+    "keep_object_proxies": true,
+    "keep_other_nature_proxies": true,
+    "keep_cameras": true,
+    "keep_path": true,
+    "keep_neutral_environment_materials": true,
+    "building_materials_pr14_consumed": false,
+    "geometry_reindex_candidate_consumed": false
+  },
+  "truth_boundary": "This study tests whether exact Nature PR #8 source east-rear-tree-neutral-001 can replace only proxy:nature-tree-east-a in the exact accepted Building PR #11 seed-29 Environment scene while preserving the source-owned Building pavilion, west sapling, accepted compact east tree, Weather field, Object proxies, path, cameras and unrelated scene state. The source is rendered with proof-host culling disabled because its established Organic baseline generator still has a separate Geometry reindex-only winding candidate that has not been migrated. A PASS proves bounded composition and target-host visibility only; it does not establish source topology migration, final vegetation materials, deformation/wind quality, final Art Direction or Visual QA acceptance, target-device runtime budgets, collision/navigation/gameplay, CANON, production readiness or Environment/Nature mastery."
+}
