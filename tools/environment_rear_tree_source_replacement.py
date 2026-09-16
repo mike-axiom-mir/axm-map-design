@@ -83,7 +83,7 @@ def _vector_matches(actual, expected, tolerance: float = 1e-9) -> bool:
 
 
 def _load_rear_source(rear_nature_root: str | Path, cfg: dict) -> tuple[dict, dict, dict]:
-    root = Path(rear_nature_root)
+    root = Path(rear_nature_root).resolve()
     builder = root / "tools" / "build_rear_tree.py"
     source_path = root / cfg["source_path"]
     if not builder.exists() or not source_path.exists():
