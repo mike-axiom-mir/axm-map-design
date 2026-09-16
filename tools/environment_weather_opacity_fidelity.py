@@ -37,7 +37,7 @@ def _profile_payload(base: dict, mode: str) -> dict:
     if mode not in SUPPORTED_MODES:
         raise ValueError(f"unsupported weather opacity mode: {mode}")
     value = copy.deepcopy(base)
-    value["study_id"] = f"environment-weather-opacity-fidelity-001-{mode.lower()}"
+    value["study_id"] = "environment-weather-opacity-fidelity-001"
     value["weather_render_profile"] = {
         "schema": "axm.environment-weather-render-profile/v0.1",
         "opacity_mode": mode,
