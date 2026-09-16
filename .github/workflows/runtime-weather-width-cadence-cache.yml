@@ -1,0 +1,193 @@
+name: Runtime Weather width cadence cache evidence
+
+on:
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_weather_width_runtime_cache_observe.gd"
+      - "tools/environment_weather_width_runtime_cache.py"
+      - ".github/workflows/runtime-weather-width-cadence-cache.yml"
+      - "docs/RUNTIME_WEATHER_WIDTH_CADENCE_CACHE_001.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-weather-width-runtime-cache:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact Runtime PR head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Runtime head and VFX parent ancestry
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-runtime-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e bbc8721a8af60b11e660773786426965c421e4ff^{commit}
+          git merge-base --is-ancestor bbc8721a8af60b11e660773786426965c421e4ff HEAD
+          printf '%s\n' bbc8721a8af60b11e660773786426965c421e4ff > exact-vfx-parent-head.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile exact Runtime verifier
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/environment_weather_width_current_world.py tools/environment_weather_width_runtime_cache.py
+
+      - name: Download exact retained PR22 Weather-variant evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-variant-current-world-001-e482d003853e52fc835f1797ddfb6506a50083ef
+          path: .parent-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35086299949
+
+      - name: Verify retained parent identity
+        run: |
+          set -euo pipefail
+          test "$(cat .parent-evidence/exact-head.txt | tr -d '\n\r')" = "e482d003853e52fc835f1797ddfb6506a50083ef"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.parent-evidence')
+          parent=json.loads((root/'current_world_weather_variant.json').read_text())
+          target=json.loads((root/'target_host.json').read_text())
+          assert parent['status']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_REBIND_STRUCTURE', parent
+          assert all(parent['checks'].values()), parent
+          assert parent['receiving_head']=='e482d003853e52fc835f1797ddfb6506a50083ef', parent
+          assert target['state']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_LIVE_TARGET_HOST', target
+          assert all(target['checks'].values()), target
+          PY
+
+      - name: Checkout exact Weather variation family
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: 05b26c4e82bbe0a4de0ee7bee34179efc58b9719
+          path: .weather-variant
+          fetch-depth: 1
+
+      - name: Rebuild exact VFX-parent source-width payload
+        env:
+          AXM_RECEIVING_HEAD: bbc8721a8af60b11e660773786426965c421e4ff
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_cadence_cache_001
+          mkdir -p "$out" environment-proof/generated
+          cp .parent-evidence/current_world_weather_variant.json "$out/parent_variant.json"
+          python tools/environment_weather_width_current_world.py build \
+            --parent "$out/parent_variant.json" \
+            --weather-variant-root .weather-variant \
+            --output "$out/current_world_weather_width.json"
+          cp exact-runtime-head.txt "$out/exact-runtime-head.txt"
+          cp exact-vfx-parent-head.txt "$out/exact-vfx-parent-head.txt"
+          cp "$out/current_world_weather_width.json" environment-proof/generated/current_world_weather_width.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/runtime_weather_width_cadence_cache_001')
+          data=json.loads((root/'current_world_weather_width.json').read_text())
+          assert data['status']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_STRUCTURE', data
+          assert all(data['checks'].values()), data
+          assert data['receiving_head']=='bbc8721a8af60b11e660773786426965c421e4ff', data
+          assert [row['time_s'] for row in data['states']]==[i*0.03125 for i in range(17)], data
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Compare per-state rebuild against prebuilt mesh-resource swap in real Godot
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_cadence_cache_001
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_weather_width_runtime_cache_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          cp environment-proof/atmosphere-current-world-weather-width-runtime-cache.json "$out/runtime.json"
+
+      - name: Verify exact Runtime A/B and retained visual pairs
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_cadence_cache_001
+          python tools/environment_weather_width_runtime_cache.py \
+            --receipt "$out/runtime.json" \
+            --frames-root environment-proof \
+            --output "$out/report.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('evidence/runtime_weather_width_cadence_cache_001/report.json').read_text())
+          assert report['state'] != 'FAIL_RUNTIME_CACHE_EVIDENCE_INTEGRITY', report
+          assert report['checks']['all_visual_review_pairs_byte_identical'] is True, report
+          print(json.dumps({
+              'state':report['state'],
+              'cached_submit_deadline_clear':report['cached_submit_deadline_clear'],
+              'cached_post_draw_deadline_clear':report['cached_post_draw_deadline_clear'],
+              'context_metrics':report['context_metrics'],
+          },indent=2))
+          PY
+
+      - name: Exercise deliberate cached source-identity drift control
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import copy, json
+          from pathlib import Path
+          import tools.environment_weather_width_runtime_cache as verifier
+          root=Path('evidence/runtime_weather_width_cadence_cache_001')
+          receipt=json.loads((root/'runtime.json').read_text())
+          drift=copy.deepcopy(receipt)
+          drift['contexts']['path_eye']['cached_swap']['samples'][8]['weather_field_digest']='INTENTIONAL-DRIFT'
+          report=verifier.verify(drift,Path('environment-proof'))
+          assert report['state']=='FAIL_RUNTIME_CACHE_EVIDENCE_INTEGRITY', report
+          assert report['checks']['path_eye_source_identity'] is False, report
+          print('PASS_FAIL_CLOSED_CACHED_SOURCE_IDENTITY_DRIFT')
+          PY
+
+      - name: Collect retained review frames
+        if: always()
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_width_cadence_cache_001
+          mkdir -p "$out/frames"
+          cp environment-proof/runtime-cache-*.png "$out/frames/" 2>/dev/null || true
+
+      - name: Upload exact Runtime cadence-cache evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-weather-width-cadence-cache-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/runtime_weather_width_cadence_cache_001/
+          if-no-files-found: error
+          retention-days: 30
