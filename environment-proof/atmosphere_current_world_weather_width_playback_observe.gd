@@ -15,7 +15,7 @@ func write_playback_receipt(data:Dictionary)->void:
 func wait_until_tick(target_us:int)->void:
     var now_us:=Time.get_ticks_usec()
     if now_us<target_us:
-        await get_tree().create_timer(float(target_us-now_us)/1000000.0).timeout
+        await create_timer(float(target_us-now_us)/1000000.0).timeout
 
 func run_context_playback(camera:Camera3D,states:Array,context:String)->Dictionary:
     var first=states[0] as Dictionary
