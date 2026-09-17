@@ -1,0 +1,362 @@
+name: Technical Art Object rigid current-world bridge
+
+on:
+  push:
+    branches: [studio/technical-art-object-rigid-current-world-bridge-001]
+    paths:
+      - "contracts/technical_art_object_rigid_current_world_bridge.json"
+      - "environment-proof/atmosphere_current_world_object_rigid_component_observe.gd"
+      - "tools/technical_art_object_rigid_current_world_bridge.py"
+      - "docs/TECHNICAL_ART_OBJECT_RIGID_CURRENT_WORLD_BRIDGE_001.md"
+      - ".github/workflows/technical-art-object-rigid-current-world-bridge.yml"
+  pull_request:
+    paths:
+      - "contracts/technical_art_object_rigid_current_world_bridge.json"
+      - "environment-proof/atmosphere_current_world_object_rigid_component_observe.gd"
+      - "tools/technical_art_object_rigid_current_world_bridge.py"
+      - "docs/TECHNICAL_ART_OBJECT_RIGID_CURRENT_WORLD_BRIDGE_001.md"
+      - ".github/workflows/technical-art-object-rigid-current-world-bridge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-object-rigid-current-world-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Technical Art head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Map lineage and static verifier syntax
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 061dbf12604f8a4ee19a62a79f0d9d2f99503181^{commit}
+          git merge-base --is-ancestor 061dbf12604f8a4ee19a62a79f0d9d2f99503181 HEAD
+          python -m py_compile tools/technical_art_object_rigid_current_world_bridge.py
+          python -m json.tool contracts/technical_art_object_rigid_current_world_bridge.json >/dev/null
+          grep -F 'extends "res://atmosphere_current_world_building_utility_panel_clearance_observe.gd"' \
+            environment-proof/atmosphere_current_world_object_rigid_component_observe.gd
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install proof dependencies
+        run: python -m pip install --disable-pip-version-check --no-input pillow
+
+      - name: Download exact retained current-world parent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          mkdir -p "$root/parent-current-world"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10516853353/zip" \
+            --output "$root/parent-current-world.zip"
+          echo "f879277d1e4b3c37b9a7fc491d992e520345a8642f56d0ae17abfcd9957444c0  $root/parent-current-world.zip" | sha256sum --check --strict
+          unzip -q "$root/parent-current-world.zip" -d "$root/parent-current-world"
+          test -f "$root/parent-current-world/report.json"
+          test -f "$root/parent-current-world/candidate/runtime.json"
+          test "$(find "$root/parent-current-world/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_bridge_001/parent-current-world/report.json'))
+          assert p['environment_head']=='d0461a787525d19004d83334c282adacaa06afed',p
+          assert p['state']=='PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_RECEIVER__VISUAL_OBSERVABILITY_CHARACTERIZED__ADOPTION_HELD',p
+          assert p['real_world_scope']['matched_frames']==68,p
+          assert p['runtime_continuity']['object_roughness_exact_states']==17,p
+          print('PASS_EXACT_RETAINED_CURRENT_WORLD_PARENT')
+          PY
+
+      - name: Download exact retained world payload and selected-roughness inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          mkdir -p "$root/world-input" "$root/roughness"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" \
+            --output "$root/world-input.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world-input.zip" | sha256sum --check --strict
+          unzip -q "$root/world-input.zip" -d "$root/world-input"
+          test -f "$root/world-input/combined_current_world.json"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" \
+            --output "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          test -f "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json"
+          test -f "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png"
+
+      - name: Download exact Object Technical Art rigid-scene donor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          mkdir -p "$root/object-ta"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-object-design/actions/artifacts/10440591535/zip" \
+            --output "$root/object-ta.zip"
+          echo "24298ae6b7467e3a90282cb485722ffbd4c6e5f0c84925370a6a1bcbf0125eee  $root/object-ta.zip" | sha256sum --check --strict
+          unzip -q "$root/object-ta.zip" -d "$root/object-ta"
+          test -f "$root/object-ta/rigid-proof/generated/uc-rigid-scene-handoff-receipt.json"
+          test -f "$root/object-ta/rigid-proof/generated/object-rigid-components.surface.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_bridge_001/object-ta/rigid-proof/generated/uc-rigid-scene-handoff-receipt.json'))
+          assert p['result']=='PASS_OBJECT_SOURCE_OWNED_RIGID_PARTS_THROUGH_UC_SCENE_GRAPH',p
+          assert p['source_repository_head']=='965fb2f24dbd0b0cbb748d9f8b8712d62966315f',p
+          assert p['source_sha256']=='49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a',p
+          assert p['triangles']==812 and p['closed_static_localization_max_error_m']==0.0,p
+          print('PASS_EXACT_OBJECT_TA_RIGID_SCENE_DONOR')
+          PY
+
+      - name: Checkout exact Object Technical Art source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: 965fb2f24dbd0b0cbb748d9f8b8712d62966315f
+          path: .object-ta
+          fetch-depth: 1
+
+      - name: Checkout tested and inspected-current UC rigid-scene implementations
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: 6dc465987e01362264f88b7cef4213609ae50763
+          path: .uc-donor
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: e9eed3d9eb66392992cc18c8884bfade0d3b8efd
+          path: .uc-current
+          fetch-depth: 1
+
+      - name: Generate exact receiver-only rigid component map
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          test "$(git -C .object-ta rev-parse HEAD)" = "965fb2f24dbd0b0cbb748d9f8b8712d62966315f"
+          test "$(git -C .object-ta rev-parse HEAD:assets/modular-equipment-case-001/source.json)" = "018e36bb08539f212d2c65e6408566e3540fd983"
+          mkdir -p environment-proof/generated "$root/candidate/rendered"
+          python tools/technical_art_object_rigid_current_world_bridge.py prepare \
+            --contract contracts/technical_art_object_rigid_current_world_bridge.json \
+            --object-root .object-ta \
+            --ta-receipt "$root/object-ta/rigid-proof/generated/uc-rigid-scene-handoff-receipt.json" \
+            --ta-surface "$root/object-ta/rigid-proof/generated/object-rigid-components.surface.json" \
+            --uc-donor-root .uc-donor \
+            --uc-current-root .uc-current \
+            --output environment-proof/generated/object-rigid-component-map.json \
+            --receipt "$root/component-map-receipt.json" \
+            | tee "$root/component-map.log"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_bridge_001/component-map-receipt.json'))
+          assert p['result']=='PASS_EXACT_OBJECT_TA_RIGID_COMPONENT_MAP_FOR_CURRENT_WORLD_RECEIVER',p
+          assert p['component_count']==31 and p['triangles']==812,p
+          assert p['uc_donor_and_inspected_current_blob_identical'] is True,p
+          print(p['result'])
+          PY
+
+      - name: Negative control rejects source-owned hierarchy drift
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          cp environment-proof/generated/object-rigid-component-map.json "$root/component-map-negative.json"
+          python - <<'PY'
+          import json
+          p='evidence/technical_art_object_rigid_current_world_bridge_001/component-map-negative.json'
+          d=json.load(open(p))
+          for row in d['components']:
+              if row['name']=='latch_0_lever':
+                  row['parent']='lid_shell'
+                  break
+          open(p,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/technical_art_object_rigid_current_world_bridge.py validate-map \
+            --contract contracts/technical_art_object_rigid_current_world_bridge.json \
+            --component-map "$root/component-map-negative.json" \
+            > "$root/component-map-negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -Eq "lid-owned parent-edge drift|fixed lever unexpectedly parented" "$root/component-map-negative.log"
+          echo "PASS_REJECTED_MUTATED_SOURCE_OWNED_HIERARCHY"
+
+      - name: Checkout exact compact-east and Weather-width receiver code
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Install exact retained world and receiver dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          cp "$root/world-input/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+          test "$(sha256sum environment-proof/generated/object-selected-roughness.png | cut -d' ' -f1)" = "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949"
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/observer-composition.json"
+          grep -F 'extends "res://atmosphere_current_world_selected_roughness_compact_east_observe.gd"' \
+            environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact rigid-component receiver in real retained world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_object_rigid_component_observe.gd \
+            2>&1 | tee "$root/candidate/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$root/candidate/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$root/candidate/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact neutral current-world equivalence
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          test "$(find "$root/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python tools/technical_art_object_rigid_current_world_bridge.py verify \
+            --contract contracts/technical_art_object_rigid_current_world_bridge.json \
+            --component-map environment-proof/generated/object-rigid-component-map.json \
+            --parent-runtime "$root/parent-current-world/candidate/runtime.json" \
+            --candidate-runtime "$root/candidate/runtime.json" \
+            --parent-frames "$root/parent-current-world/candidate/rendered" \
+            --candidate-frames "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/report.json" | tee "$root/verify.log"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_bridge_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_OBJECT_RIGID_COMPONENT_BOUNDARY_NEUTRAL_EQUIVALENCE__ANIMATION_VFX_ADOPTION_HELD',p
+          assert p['real_world_neutral_equivalence']=={'states':17,'frames':68,'changed_frames':0,'changed_pixels':0,'pixel_exact':True},p
+          assert p['component_map']['component_count']==31 and p['component_map']['triangles']==812,p
+          assert p['animation_adoption'] is False and p['vfx_adoption'] is False,p
+          assert p['runtime_acceptance'] is False and p['environment_adoption'] is False,p
+          print(p['state'])
+          PY
+
+      - name: Negative control rejects one changed neutral pixel
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          frame="$root/candidate/rendered/atmosphere-width-candidate-path_eye-00.png"
+          cp "$frame" "$root/original-negative-frame.png"
+          python - <<'PY'
+          from PIL import Image
+          p='evidence/technical_art_object_rigid_current_world_bridge_001/candidate/rendered/atmosphere-width-candidate-path_eye-00.png'
+          im=Image.open(p).convert('RGBA')
+          px=list(im.getpixel((0,0)))
+          px[0]=(px[0]+1)%256
+          im.putpixel((0,0),tuple(px))
+          im.save(p)
+          PY
+          set +e
+          python tools/technical_art_object_rigid_current_world_bridge.py verify \
+            --contract contracts/technical_art_object_rigid_current_world_bridge.json \
+            --component-map environment-proof/generated/object-rigid-component-map.json \
+            --parent-runtime "$root/parent-current-world/candidate/runtime.json" \
+            --candidate-runtime "$root/candidate/runtime.json" \
+            --parent-frames "$root/parent-current-world/candidate/rendered" \
+            --candidate-frames "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/negative-report.json" \
+            > "$root/negative-pixel.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -q "neutral frame changed pixels" "$root/negative-pixel.log"
+          cp "$root/original-negative-frame.png" "$frame"
+          echo "PASS_REJECTED_ONE_CHANGED_NEUTRAL_PIXEL"
+
+      - name: Retain exact Technical Art bridge evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_bridge_001
+          out="$root/retained"
+          mkdir -p "$out/donor-receipts" "$out/candidate/rendered"
+          cp exact-head.txt "$out/" 2>/dev/null || true
+          cp contracts/technical_art_object_rigid_current_world_bridge.json "$out/" 2>/dev/null || true
+          cp docs/TECHNICAL_ART_OBJECT_RIGID_CURRENT_WORLD_BRIDGE_001.md "$out/" 2>/dev/null || true
+          cp environment-proof/generated/object-rigid-component-map.json "$out/" 2>/dev/null || true
+          cp "$root/component-map-receipt.json" "$out/" 2>/dev/null || true
+          cp "$root/report.json" "$out/" 2>/dev/null || true
+          cp "$root/verify.log" "$out/" 2>/dev/null || true
+          cp "$root/component-map-negative.log" "$out/" 2>/dev/null || true
+          cp "$root/negative-pixel.log" "$out/" 2>/dev/null || true
+          cp "$root/candidate/runtime.json" "$out/candidate/" 2>/dev/null || true
+          cp "$root/candidate/godot.log" "$out/candidate/" 2>/dev/null || true
+          cp "$root/candidate/rendered/"*.png "$out/candidate/rendered/" 2>/dev/null || true
+          cp "$root/parent-current-world/report.json" "$out/donor-receipts/current-world-parent-report.json" 2>/dev/null || true
+          cp "$root/object-ta/rigid-proof/generated/uc-rigid-scene-handoff-receipt.json" "$out/donor-receipts/" 2>/dev/null || true
+          cp "$root/object-ta/rigid-proof/generated/object-rigid-scene-graph.json" "$out/donor-receipts/" 2>/dev/null || true
+          cp "$root/object-ta/rigid-proof/generated/object-rigid-components.surface.json" "$out/donor-receipts/" 2>/dev/null || true
+          printf '%s\n' "$(git -C .uc-donor rev-parse HEAD)" > "$out/donor-receipts/uc-donor-head.txt"
+          printf '%s\n' "$(git -C .uc-current rev-parse HEAD)" > "$out/donor-receipts/uc-inspected-current-head.txt"
+          git -C .uc-donor rev-parse HEAD:src/axm_uc/rigid_scene_graph.py > "$out/donor-receipts/uc-rigid-scene-graph-blob.txt"
+
+      - name: Upload exact Technical Art Object rigid current-world bridge evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-object-rigid-current-world-bridge-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/technical_art_object_rigid_current_world_bridge_001/retained
+          if-no-files-found: error
+          retention-days: 30
