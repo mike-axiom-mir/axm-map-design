@@ -12,7 +12,7 @@ const MOTION_TRUTH := "DISCRETE_EXACT_VFX_STATES_NOT_SMOOTH_INTERPOLATION"
 
 func _source_for_phase(states:Array, phase:int)->Dictionary:
     var row := states[phase] as Dictionary
-    return _compact(row.get("scene", {}) as Dictionary)
+    return _compact_east(row.get("scene", {}) as Dictionary)
 
 func _max_vertex_delta(a:Array,b:Array)->float:
     if a.size()!=b.size() or a.is_empty():
@@ -285,32 +285,30 @@ func _initialize()->void:
         cycle_durations.append(float(wrap_time)-prior)
         prior=float(wrap_time)
 
-    receipt.update({
-        "state":"PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_STATE_ANIMATIONPLAYER_PLAYBACK_AND_LOOP",
-        "receiver_context":CONTEXT,
-        "animation_track_interpolation":"NEAREST",
-        "animation_update_mode":"DISCRETE",
-        "animation_loop_mode":"LOOP_LINEAR",
-        "deterministic_exact_key_checks":deterministic,
-        "deterministic_exact_key_count":deterministic.size(),
-        "source_endpoint_geometry_delta_m":endpoint_delta,
-        "authored_final_step_m":authored_final_step,
-        "loop_step_m":loop_step,
-        "loop_step_residual_m":abs(authored_final_step-loop_step),
-        "negative_control_endpoint_mutation_m":negative_delta,
-        "negative_control_result":"REJECTED_AS_REQUIRED",
-        "real_playback_wraps":completed_cycles.size(),
-        "real_playback_process_frames":process_frames,
-        "real_playback_cycles_observed_phases":completed_cycles,
-        "real_playback_wrap_times_s":wrap_times_s,
-        "real_playback_cycle_durations_s":cycle_durations,
-        "persistent_receiver_instance_id":node_id,
-        "persistent_animation_player_instance_id":player_id,
-        "frozen_weather_phase":0,
-        "frozen_west_sapling_phase":0,
-        "captures":captures,
-        "truth_boundary":"Exact current-world AnimationPlayer playback witness for the already-authored compact-east 17-state VFX response. The looping track uses the 16 unique source states at the exact 31.25 ms source cadence and omits only the duplicate phase-16 neutral endpoint, whose geometry equality and seam step are checked separately. This proves discrete exact-state playback and repeated loop continuity in the accepted current-world proof receiver; it does not establish smooth interpolation, physical wind, final motion naturalness, Runtime controller/state-machine policy, target-device delivery, collision/gameplay, Art/QA acceptance, CANON or production readiness."
-    })
+    receipt["state"]="PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_STATE_ANIMATIONPLAYER_PLAYBACK_AND_LOOP"
+    receipt["receiver_context"]=CONTEXT
+    receipt["animation_track_interpolation"]="NEAREST"
+    receipt["animation_update_mode"]="DISCRETE"
+    receipt["animation_loop_mode"]="LOOP_LINEAR"
+    receipt["deterministic_exact_key_checks"]=deterministic
+    receipt["deterministic_exact_key_count"]=deterministic.size()
+    receipt["source_endpoint_geometry_delta_m"]=endpoint_delta
+    receipt["authored_final_step_m"]=authored_final_step
+    receipt["loop_step_m"]=loop_step
+    receipt["loop_step_residual_m"]=abs(authored_final_step-loop_step)
+    receipt["negative_control_endpoint_mutation_m"]=negative_delta
+    receipt["negative_control_result"]="REJECTED_AS_REQUIRED"
+    receipt["real_playback_wraps"]=completed_cycles.size()
+    receipt["real_playback_process_frames"]=process_frames
+    receipt["real_playback_cycles_observed_phases"]=completed_cycles
+    receipt["real_playback_wrap_times_s"]=wrap_times_s
+    receipt["real_playback_cycle_durations_s"]=cycle_durations
+    receipt["persistent_receiver_instance_id"]=node_id
+    receipt["persistent_animation_player_instance_id"]=player_id
+    receipt["frozen_weather_phase"]=0
+    receipt["frozen_west_sapling_phase"]=0
+    receipt["captures"]=captures
+    receipt["truth_boundary"]="Exact current-world AnimationPlayer playback witness for the already-authored compact-east 17-state VFX response. The looping track uses the 16 unique source states at the exact 31.25 ms source cadence and omits only the duplicate phase-16 neutral endpoint, whose geometry equality and seam step are checked separately. This proves discrete exact-state playback and repeated loop continuity in the accepted current-world proof receiver; it does not establish smooth interpolation, physical wind, final motion naturalness, Runtime controller/state-machine policy, target-device delivery, collision/gameplay, Art/QA acceptance, CANON or production readiness."
     write_receipt()
     quit(0)
 
