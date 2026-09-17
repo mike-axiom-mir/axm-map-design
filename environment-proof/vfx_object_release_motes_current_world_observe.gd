@@ -4,7 +4,7 @@ const VFX_RECEIPT_PATH := "res://vfx-object-release-motes-current-world-runtime.
 const VFX_EFFECT_PATH := "res://generated/object-vfx-lid-release-motes-v2.json"
 const EXACT_ANIMATION_PARENT_HEAD := "c2695f654f9dd44312ca5d205eceb27f7c2680ee"
 const EXACT_OBJECT_VFX_HEAD := "bc114ee7ec876107892ccedeefc8e5020315488a"
-const EXACT_OBJECT_SOURCE_SHA256 := "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a"
+const VFX_OBJECT_SOURCE_SHA256 := "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a"
 const EXACT_OWNER_SEED := 41027
 const EXACT_MOTE_COUNT := 18
 const PIXEL_THRESHOLD := 1.0 / 255.0
@@ -63,7 +63,7 @@ func _vfx_validate_effect(effect:Dictionary)->String:
         return "unexpected VFX successor identity"
     if String(effect.get("asset_id",""))!="modular-equipment-case-001":
         return "unexpected VFX asset identity"
-    if String(effect.get("source_sha256",""))!=EXACT_OBJECT_SOURCE_SHA256:
+    if String(effect.get("source_sha256",""))!=VFX_OBJECT_SOURCE_SHA256:
         return "Object source identity drift"
     var dep:=effect.get("animation_dependency",{}) as Dictionary
     if String(dep.get("sequence_id",""))!="lid-latch-open-hold-close-001":
