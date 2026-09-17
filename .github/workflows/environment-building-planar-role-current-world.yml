@@ -107,8 +107,8 @@ jobs:
           set -euo pipefail
           out=evidence/environment_building_planar_role_current_world_001
           test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = "$PARENT_HEAD"
-          test "$(cat "$out/compact/exact-head.txt" | tr -d '\n\r')" = "ef2cb9cc84edc10ab66c2230daca625623e0b00d"
           test -f "$out/parent/combined_current_world.json"
+          test -f "$out/compact/combined_current_world.json"
           test -f "$out/parent/candidate/runtime.json"
           test -f "$out/compact/candidate/runtime.json"
           test "$(find "$out/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
@@ -116,8 +116,11 @@ jobs:
           python - <<'PY'
           import json
           p=json.load(open('evidence/environment_building_planar_role_current_world_001/parent/combined_current_world.json'))
+          c=json.load(open('evidence/environment_building_planar_role_current_world_001/compact/combined_current_world.json'))
           assert p['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',p
           assert p['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',p
+          assert c['environment_head']=='ef2cb9cc84edc10ab66c2230daca625623e0b00d',c
+          assert c['building_compact_v2_structure_result']=='PASS_CURRENT_WORLD_BUILDING_COMPACT_V2_STRUCTURE',c
           print('PASS_EXACT_ACTIVE_AND_COMPACT_CURRENT_WORLD_COMPARATORS')
           PY
 
