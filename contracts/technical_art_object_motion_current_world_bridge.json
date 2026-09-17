@@ -1,0 +1,11 @@
+{
+  "schema": "axm.technical-art-object-motion-current-world-bridge/v0.1",
+  "object_source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a",
+  "object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+  "animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "sequence_id": "lid-latch-open-hold-close-001",
+  "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
+  "coordinate_conversion": "source [x,y,z] -> UC/glTF [x,z,y]; handedness flip requires target +X rotation = negative source mathematical +X rotation",
+  "reusable_rule": "ANIMATION_OWNER_SAMPLES_MAY_ENTER_A_CURRENT_WORLD_RIGID_RECEIVER_ONLY_THROUGH_EXACT_COMPONENT_PIVOT_AND_TARGET_ROTATION_BINDINGS_WITH_NEUTRAL_AND_ENDPOINT_CLOSURE_PROVEN",
+  "truth_boundary": "Technical Art may adapt exact owner-authored transforms to the current-world receiver but does not author motion, mechanics, VFX, Runtime acceptance, final visual acceptance or CANON."
+}
