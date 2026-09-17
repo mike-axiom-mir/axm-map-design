@@ -4,11 +4,11 @@ Status: BOUNDED CROSS-REPO TECHNICAL-ART EVIDENCE LANE
 
 This lane answers one narrow question:
 
-> Does the generic Universal Creation indexed-surface observer, when explicitly asked to evaluate exact render tuples rather than source-vertex identity, produce a per-surface post-normal indexed representation that is exactly render-tuple isomorphic to the real Godot `SurfaceTool.index()` receiver for the exact Building planar-role current-world path?
+> Can Universal Creation observe the same post-normal per-surface index grouping as the real Godot `SurfaceTool.index()` receiver for the exact Building planar-role current-world path, without absorbing Building semantics or pretending that receiver-side attribute repacking is exact?
 
 ## Exact owners
 
-- Building Hard Surface owns the planar-role representation: `boundary-only-planar-role-rectangle-render-001` at exact head `93f22e4eeb9bb32516d4b11f8d8bcf47d9792910`.
+- Building Hard Surface owns the planar-role representation `boundary-only-planar-role-rectangle-render-001` at exact head `93f22e4eeb9bb32516d4b11f8d8bcf47d9792910`.
 - Building Materials owns the pinned five-role material partition at exact head `4179aa1401f5a9114399e2f998c96809d4b8ed2e`.
 - Runtime owns the measured post-normal per-surface indexing evidence at exact head `8d5860c308c244d314ede5b79021e46f35c4040d`.
 - Universal Creation owns only the generic indexed-surface eligibility observer. This lane pins the exact UC head under test in CI.
@@ -16,7 +16,7 @@ This lane answers one narrow question:
 
 ## Exact receiver path
 
-The current-world planar-role receiver emits five separate material surfaces and generates final normals before indexing. The Runtime successor then calls `SurfaceTool.index()` independently inside each final surface.
+The current-world planar-role receiver emits five separate material surfaces and generates final normals before indexing. Runtime then calls `SurfaceTool.index()` independently inside each final material surface.
 
 The retained Runtime result is:
 
@@ -40,7 +40,7 @@ No replacement mesh is authored by Technical Art.
 
 The merged UC observer's conservative default keeps source-vertex identity in the candidate key. That is intentionally safe for source-lineage preservation but cannot describe receiver-local triangle-corner deduplication when equal render tuples come from distinct corner/source identities.
 
-The bounded UC successor under test adds an explicit opt-in candidate identity policy:
+The bounded UC successor under test adds one explicit opt-in diagnostic policy:
 
 `ATTRIBUTES_AND_PROTECTED_SPLITS`
 
@@ -50,40 +50,60 @@ Under that policy:
 2. `protected_split_ids` is mandatory;
 3. distinct source vertices may share one structural candidate only when every declared render attribute and protected split identity is exactly equal;
 4. cross-source candidate groups remain separately reported;
-5. UC still emits no replacement mesh and authorizes no adoption.
+5. the existing source-lineage-preserving policy remains the default;
+6. UC still emits no replacement mesh and authorizes no adoption.
 
-For this Building proof, the five material partitions remain separate calls and each vertex carries the caller-owned partition split identity. UC therefore cannot merge across Building material roles.
+For this Building proof, the five material partitions remain separate calls and every render vertex carries the caller-owned partition split identity. UC therefore cannot merge across Building material roles.
 
-## Required proof
+## Exact structural result
 
-For every one of the five exact Godot surfaces, the proof requires:
+Across all five surfaces, UC and the real Godot receiver agree on the same partition of the 1,008 triangle corners into 312 indexed vertex groups. Their raw index numbers and stored vertex order need not match: those are representation-local labels. Technical Art instead requires a bijection between the candidate groups and exact preservation of the decoded POSITION corner stream.
 
-- UC result `POST_ATTRIBUTE_TUPLE_DEDUP_CANDIDATE`;
-- UC render state `RENDER_DOMAIN_CROSS_SOURCE_DEDUP_CANDIDATE`;
-- UC candidate vertex count exactly equals the real Godot indexed surface vertex count;
-- decoding the UC candidate indices through the UC candidate POSITION/NORMAL domain reproduces the exact original triangle-corner tuple stream;
-- decoding the Godot indices through the real Godot indexed POSITION/NORMAL domain reproduces that same exact triangle-corner tuple stream;
-- the UC and Godot indexed domains contain the same exact unique POSITION/NORMAL tuples.
+The observed structural identity is:
 
-Raw index numbers and stored vertex order are deliberately **not** required to match. They are local labels for an indexed representation; requiring the same numbering would confuse byte/layout identity with geometric/render-tuple equivalence. The first attempted proof is retained as a useful failed gate because it made exactly that over-strong assumption.
+- 1,008 input triangle corners;
+- 312 indexed groups;
+- 1,008 output indices;
+- 336 triangles;
+- 5 material partitions;
+- exact corner-grouping isomorphism between UC and Godot on every surface;
+- exact decoded POSITION corner stream on every surface;
+- UC exactly reproduces the pre-index NORMAL corner stream used for its candidate grouping.
 
-Aggregate expected identity remains exactly 312 vertices / 1,008 indices / 336 triangles across five surfaces.
+The conservative UC policy is rerun on the same exact input and must retain all 1,008 source/corner identities. Cross-source mode without the explicit split declaration must return `HOLD_CROSS_SOURCE_SPLIT_DECLARATION_REQUIRED` with no candidate.
+
+## Receiver-side normal observation
+
+The exact Godot `create_from -> index -> commit` receiver does not return the pre-index normal rows bit-for-bit unchanged on this pinned path. The retained observation is deliberately separate from the structural grouping PASS:
+
+- 120 of 1,008 decoded triangle-corner normal rows change;
+- every changed corner is in `frame_galvanized`;
+- maximum absolute component delta: `0.00011304020881702792`;
+- maximum angular delta: `0.006869404718583788` degrees;
+- the other four material surfaces retain exact normal rows.
+
+This is a **transport exactness HOLD**, not a visual rejection and not a visual acceptance. The numeric drift is small, but Art Direction / Visual QA own whether it is visually acceptable. Technical Art does not erase it by loosening the observer, and UC does not learn a Building-specific tolerance.
+
+## Retained failed proofs
+
+The failed runs are part of the evidence chain rather than discarded noise.
+
+The first proof required identical raw index IDs / vertex storage order between independent indexers. That was over-constrained: index labels are local implementation details, so the Technical Art contract was repaired to compare group identity rather than byte-layout identity.
+
+The second proof then required exact decoded POSITION+NORMAL equality after Godot indexing. That correctly exposed the receiver-side normal repack above. The final contract therefore separates the exact structural indexing proof from the independently held normal-transport observation instead of silently weakening either boundary.
 
 ## Negative controls
 
-The same exact input is also evaluated with UC's conservative default. It must preserve all 1,008 triangle-corner identities rather than silently crossing source identity.
-
-The explicit cross-source policy is then rerun with the protected-split declaration removed. It must return `HOLD_CROSS_SOURCE_SPLIT_DECLARATION_REQUIRED` with no candidate.
-
-Finally, the workflow mutates the real Godot indexed output by swapping two triangle-corner indices. The decoded render-tuple stream must change and the Technical Art verifier must reject the mutated receiver instead of accepting a count-only match.
+The final workflow also swaps two indices in the real Godot receiver output. That changes the corner grouping / decoded position assignment and must be rejected. A count-only match is not enough.
 
 ## Truth boundary
 
 This lane does **not** claim:
 
 - automatic Building, Environment or Runtime adoption;
-- that UC should own Building material, topology or representation semantics;
+- that UC owns Building material, topology or representation semantics;
 - raw index-ID or stored vertex-order identity between independent indexers;
+- exact post-index NORMAL transport;
 - visual equality or independent Visual QA acceptance;
 - removal or acceptance of the residual Runtime primitive cost;
 - target-device CPU/GPU/FPS/VRAM/heap behavior;
