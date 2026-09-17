@@ -69,9 +69,18 @@ func _motion_seek(player:AnimationPlayer,plan:Dictionary,index:int,lid:Node3D,pi
     return {"index":index,"time_s":row["time_s"],"lid_error_deg":lid_error,"max_latch_error_deg":latch_error,"lid_target_rotation_deg_x":row["lid_target_rotation_deg_x"],"latch_target_rotation_deg_x":row["latch_target_rotation_deg_x"]}
 
 func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:String)->Dictionary:
+    var child_count_before:=root3d.get_child_count()
     var result:=super.add_static_source(root3d,source,cull_target_asset_id)
     if String(result.get("asset_id",""))!=OBJECT_ASSET_ID:
         return result
+    if root3d.get_child_count()!=child_count_before+1:
+        fail("Technical Art Object motion expected one emitted rigid receiver child")
+        return {}
+    var emitted=root3d.get_child(root3d.get_child_count()-1)
+    if not (emitted is Node3D):
+        fail("Technical Art Object motion emitted rigid receiver is not Node3D")
+        return {}
+    var container:=emitted as Node3D
     var plan:=_motion_read_json(MOTION_PLAN_PATH)
     if plan.is_empty():
         return {}
@@ -89,11 +98,10 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         fail("Technical Art Object motion sample count drift")
         return {}
 
-    var container:=_motion_find_node(root3d,OBJECT_ASSET_ID)
-    var lid:=_motion_find_node(container,"lid_shell") if container!=null else null
-    var keeper0:=_motion_find_node(container,"latch_0_keeper") if container!=null else null
-    var keeper1:=_motion_find_node(container,"latch_1_keeper") if container!=null else null
-    if container==null or lid==null or keeper0==null or keeper1==null:
+    var lid:=_motion_find_node(container,"lid_shell")
+    var keeper0:=_motion_find_node(container,"latch_0_keeper")
+    var keeper1:=_motion_find_node(container,"latch_1_keeper")
+    if lid==null or keeper0==null or keeper1==null:
         fail("Technical Art Object motion receiver hierarchy missing")
         return {}
 
