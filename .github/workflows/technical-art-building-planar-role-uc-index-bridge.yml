@@ -32,7 +32,8 @@ jobs:
       UNINDEXED_RUN: '35182784756'
       UNINDEXED_ARTIFACT_NAME: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
       WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
-      UC_HEAD: 237ea786a56a0b5c6fa3647ed302c3a8f04fcbed
+      UC_PROVEN_DRAFT_HEAD: 237ea786a56a0b5c6fa3647ed302c3a8f04fcbed
+      UC_HEAD: 2295495cccf60c1fbd541b20215d17ac18e32821
       UC_OBSERVER_PATH: src/axm_uc/indexed_surface_eligibility.py
     steps:
       - name: Checkout exact Technical Art head
@@ -104,22 +105,52 @@ jobs:
           cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
           test -f environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd
 
-      - name: Checkout exact UC observer head
+      - name: Checkout merged UC main observer
         uses: actions/checkout@v4
         with:
           repository: mike-axiom-mir/axm-universal-creation
           ref: ${{ env.UC_HEAD }}
           path: .uc
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Bind and install exact UC observer
+      - name: Bind merged UC continuity and install exact observer
         run: |
           set -euo pipefail
+          root=evidence/technical_art_building_uc_index_bridge
+          mkdir -p "$root"
           test "$(git -C .uc rev-parse HEAD)" = "$UC_HEAD"
+          git -C .uc cat-file -e "$UC_PROVEN_DRAFT_HEAD^{commit}"
+          git -C .uc merge-base --is-ancestor "$UC_PROVEN_DRAFT_HEAD" "$UC_HEAD"
+          test "$(git -C .uc rev-list --count "$UC_PROVEN_DRAFT_HEAD..$UC_HEAD")" = "4"
+          actual="$(git -C .uc diff --name-only "$UC_PROVEN_DRAFT_HEAD..$UC_HEAD" | sort)"
+          expected="$(printf '%s\n' '.github/workflows/indexed-surface-eligibility.yml' 'src/axm_uc/indexed_surface_eligibility.py' 'tests/test_indexed_surface_cross_source_metrics.py' | sort)"
+          test "$actual" = "$expected"
           grep -F 'CROSS_SOURCE_TUPLE_POLICY = "ATTRIBUTES_AND_PROTECTED_SPLITS"' ".uc/$UC_OBSERVER_PATH"
           python -m pip install --disable-pip-version-check -e .uc
-          sha256sum ".uc/$UC_OBSERVER_PATH" > evidence/technical_art_building_uc_index_bridge/uc-observer.sha256
-          git -C .uc rev-parse HEAD > evidence/technical_art_building_uc_index_bridge/uc-head.txt
+          sha256sum ".uc/$UC_OBSERVER_PATH" > "$root/uc-observer.sha256"
+          git -C .uc rev-parse HEAD > "$root/uc-head.txt"
+          printf '%s\n' "$UC_PROVEN_DRAFT_HEAD" > "$root/uc-proven-draft-head.txt"
+          UC_PROVEN_DRAFT_HEAD="$UC_PROVEN_DRAFT_HEAD" UC_HEAD="$UC_HEAD" python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          repo=pathlib.Path('.uc')
+          observer=repo / 'src/axm_uc/indexed_surface_eligibility.py'
+          payload={
+              'schema':'axm.technical-art-uc-merge-continuity/v0.1',
+              'previous_proven_head':os.environ['UC_PROVEN_DRAFT_HEAD'],
+              'merged_main_head':os.environ['UC_HEAD'],
+              'previous_proven_head_is_ancestor':True,
+              'commit_distance':4,
+              'changed_paths':subprocess.check_output([
+                  'git','-C',str(repo),'diff','--name-only',f"{os.environ['UC_PROVEN_DRAFT_HEAD']}..{os.environ['UC_HEAD']}"
+              ],text=True).splitlines(),
+              'observer_sha256':hashlib.sha256(observer.read_bytes()).hexdigest(),
+              'rebind_requires_real_receiver_reproof':True,
+              'automatic_semantic_equivalence_claimed':False,
+          }
+          pathlib.Path('evidence/technical_art_building_uc_index_bridge/uc-merge-continuity.json').write_text(
+              json.dumps(payload,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print('PASS_UC_MERGED_MAIN_CONTINUITY_BOUND')
+          PY
 
       - name: Download pinned Godot 4.7.2
         env:
@@ -156,7 +187,7 @@ jobs:
           test -f environment-proof/technical-art-building-planar-role-index-bundle.json
           cp environment-proof/technical-art-building-planar-role-index-bundle.json evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
 
-      - name: Prove exact index grouping and observe normal repack drift
+      - name: Re-prove exact index grouping against merged UC main and observe normal repack drift
         run: |
           set -euo pipefail
           out=evidence/technical_art_building_uc_index_bridge/final
@@ -170,11 +201,14 @@ jobs:
             --uc-observer ".uc/$UC_OBSERVER_PATH"
           cp exact-head.txt "$out/technical-art-head.txt"
           cp evidence/technical_art_building_uc_index_bridge/uc-head.txt "$out/uc-head.txt"
+          cp evidence/technical_art_building_uc_index_bridge/uc-proven-draft-head.txt "$out/uc-proven-draft-head.txt"
           cp evidence/technical_art_building_uc_index_bridge/uc-observer.sha256 "$out/uc-observer.sha256"
+          cp evidence/technical_art_building_uc_index_bridge/uc-merge-continuity.json "$out/uc-merge-continuity.json"
           python - <<'PY'
           import json
           p=json.load(open('evidence/technical_art_building_uc_index_bridge/final/receipt.json'))
           assert p['result']=='PASS_BUILDING_EXACT_GODOT_INDEX_GROUPING_MATCHES_UC_CROSS_SOURCE_TUPLE_CANDIDATE__HOLD_GODOT_NORMAL_REPACK_EXACTNESS_AND_VISUAL_REVIEW',p
+          assert p['uc_head']=='2295495cccf60c1fbd541b20215d17ac18e32821',p
           assert p['uc_candidate']['candidate_vertices']==312,p
           assert p['uc_candidate']['candidate_indices']==1008,p
           assert p['uc_candidate']['exact_corner_grouping_isomorphic_to_godot_all_surfaces'] is True,p
@@ -183,7 +217,12 @@ jobs:
           assert p['godot_postindex_normal_transport']['exact'] is False,p
           assert p['godot_postindex_normal_transport']['changed_corner_count']==120,p
           assert p['negative_controls']['default_source_lineage_mode_preserves_all_1008_triangle_corners'] is True,p
-          print(p['result'])
+          c=json.load(open('evidence/technical_art_building_uc_index_bridge/final/uc-merge-continuity.json'))
+          assert c['previous_proven_head']=='237ea786a56a0b5c6fa3647ed302c3a8f04fcbed',c
+          assert c['merged_main_head']=='2295495cccf60c1fbd541b20215d17ac18e32821',c
+          assert c['previous_proven_head_is_ancestor'] is True,c
+          assert c['automatic_semantic_equivalence_claimed'] is False,c
+          print('PASS_BUILDING_EXACT_GODOT_INDEX_GROUPING_REBOUND_TO_MERGED_UC_MAIN__HOLD_GODOT_NORMAL_REPACK_EXACTNESS')
           PY
 
       - name: Deliberate fail-closed corner-group mutation
@@ -220,7 +259,9 @@ jobs:
             evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
             evidence/technical_art_building_uc_index_bridge/runtime-report.json
             evidence/technical_art_building_uc_index_bridge/uc-head.txt
+            evidence/technical_art_building_uc_index_bridge/uc-proven-draft-head.txt
             evidence/technical_art_building_uc_index_bridge/uc-observer.sha256
+            evidence/technical_art_building_uc_index_bridge/uc-merge-continuity.json
             evidence/technical_art_building_uc_index_bridge/godot.log
           if-no-files-found: error
           retention-days: 30
