@@ -1,0 +1,208 @@
+name: VFX compact-east responsive Nature current-world evidence
+
+on:
+  push:
+    branches: [studio/vfx-compact-east-responsive-current-world-001]
+    paths:
+      - "tools/environment_compact_east_visual_response_current_world.py"
+      - "environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd"
+      - "docs/VFX_COMPACT_EAST_VISUAL_RESPONSE_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-compact-east-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_compact_east_visual_response_current_world.py"
+      - "environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd"
+      - "docs/VFX_COMPACT_EAST_VISUAL_RESPONSE_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-compact-east-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-compact-east-response:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout exact VFX receiving head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact head, accepted parent, and verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 7713cbe5863c3bc38dabb6236eb4b393401224b6^{commit}
+          git merge-base --is-ancestor 7713cbe5863c3bc38dabb6236eb4b393401224b6 HEAD
+          python -m py_compile tools/environment_compact_east_visual_response_current_world.py
+          grep -F 'COMPACT_EAST_VFX_HEAD := "cef2ad78d8e36a55ada5dad07329f1a7125d48de"' environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd
+
+      - name: Checkout exact Nature VFX owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cef2ad78d8e36a55ada5dad07329f1a7125d48de
+          path: .nature-vfx
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Rebuild exact compact-east bounded visual-response source
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature-vfx rev-parse HEAD)" = cef2ad78d8e36a55ada5dad07329f1a7125d48de
+          rm -rf .compact-vfx-evidence evidence/vfx_compact_east_current_world_001
+          mkdir -p evidence/vfx_compact_east_current_world_001
+          python .nature-vfx/tools/build_compact_east_tree_wind_candidate.py .compact-vfx-evidence
+          git -C .nature-vfx rev-parse HEAD > .compact-vfx-evidence/exact-head.txt
+          python - <<'PY'
+          import json
+          s=json.load(open('.compact-vfx-evidence/summary.json'))
+          assert s['state']=='PASS_COMPACT_EAST_TREE_BOUNDED_VISUAL_RESPONSE_CANDIDATE',s
+          assert s['source_head']=='64116d63fc76daa1623b5fd5046a4e6074100bda',s
+          assert s['source_digest']=='9c87cf26f02f7adee832908652942218ec779c9029a0611aae1fb66eb0f62f54',s
+          assert s['migrated_neutral_mesh_digest']=='420135f6effbadb1b344675948b9ddc471dcb83177702888f0b32327c5121c18',s
+          assert s['weather_semantics']=='VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED',s
+          assert s['sample_count']==17 and len(s['samples'])==17,s
+          assert s['peak_max_displacement_m'] <= 0.135 + 1e-12,s
+          assert all(s['checks'].values()),s
+          print('PASS_EXACT_COMPACT_EAST_VFX_SOURCE_REBUILD')
+          PY
+
+      - name: Download exact accepted Nature leaf-flutter current-world parent evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/vfx_compact_east_current_world_001/parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Verify exact accepted parent identity
+        run: |
+          set -euo pipefail
+          out=evidence/vfx_compact_east_current_world_001
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/parent/report.json"
+          test -f "$out/parent/candidate/runtime.json"
+          test "$(find "$out/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          root='evidence/vfx_compact_east_current_world_001/parent'
+          p=json.load(open(root+'/combined_current_world.json'))
+          r=json.load(open(root+'/report.json'))
+          assert p['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',p
+          assert p['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',p
+          assert len(p['states'])==17,p
+          assert r['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',r
+          assert r['matched_frames']==68,r
+          print('PASS_EXACT_ACCEPTED_LEAF_FLUTTER_PARENT')
+          PY
+
+      - name: Build exact compact-east current-world receiving payload
+        run: |
+          set -euo pipefail
+          out=evidence/vfx_compact_east_current_world_001
+          mkdir -p environment-proof/generated
+          python tools/environment_compact_east_visual_response_current_world.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --source-root .compact-vfx-evidence \
+            --environment-head "$(cat exact-head.txt)" \
+            --output environment-proof/generated/current_world_nature_winding_migration.json
+          cp environment-proof/generated/current_world_nature_winding_migration.json "$out/combined_current_world.json"
+          cp .compact-vfx-evidence/summary.json "$out/compact-east-vfx-summary.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('environment-proof/generated/current_world_nature_winding_migration.json'))
+          assert p['compact_east_visual_response_structure_result']=='PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_STRUCTURE',p
+          assert p['compact_east_visual_response_vfx_head']=='cef2ad78d8e36a55ada5dad07329f1a7125d48de',p
+          counts=p['compact_east_visual_response_changed_vertex_counts']
+          assert len(counts)==17 and counts[0]==0 and counts[16]==0,p
+          assert all(v>0 for v in counts[1:16]),p
+          assert p['compact_east_visual_response_maximum_current_world_vertex_delta_m'] <= 0.135 + 1e-12,p
+          assert p['compact_east_visual_response_weather_semantics']=='VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED',p
+          assert p['negative_controls']['physical_weather_semantic_promotion_rejected'] is True,p
+          assert all(p['checks'].values()),p
+          print('PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_STRUCTURE')
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact current world with compact-east bounded response
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/vfx_compact_east_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_compact_east_visual_response_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact compact-east current-world target-host result
+        run: |
+          set -euo pipefail
+          out=evidence/vfx_compact_east_current_world_001
+          python tools/environment_compact_east_visual_response_current_world.py verify \
+            --payload "$out/combined_current_world.json" \
+            --parent-root "$out/parent/candidate" \
+            --candidate-root "$out/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/vfx_compact_east_current_world_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_TARGET_HOST',p
+          assert p['matched_frames']==68,p
+          assert p['neutral_endpoint_changed_pixels']==0,p
+          assert p['interior_changed_frames']==60,p
+          assert all(p['checks'].values()),p
+          print(json.dumps(p,indent=2))
+          PY
+
+      - name: Remove downloaded parent and bulky rebuilt source before upload
+        if: always()
+        run: |
+          rm -rf evidence/vfx_compact_east_current_world_001/parent
+          rm -rf .compact-vfx-evidence
+
+      - name: Upload retained compact-east current-world evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-compact-east-responsive-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/vfx_compact_east_current_world_001
+          if-no-files-found: error
+          retention-days: 30
