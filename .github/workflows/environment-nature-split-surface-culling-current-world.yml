@@ -57,24 +57,31 @@ jobs:
           grep -F 'EXPECTED_LEAF_CANDIDATE_DIGEST = "e0b423bd4ff20251a960655441f97e36277da2f5b88a832ecfc5ccfe404bbbea"' .nature-vfx/tools/build_sapling_wind_leaf_backface_dynamic.py
 
       - name: Download exact current-world parent evidence
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-building-current-source-policy-rebind-001-b0fa28733d77cad79d78f29e7ef76ccb9ab0b399
+          path: evidence/environment_nature_split_surface_culling_current_world_001/parent
+          github-token: ${{ github.token }}
+          run-id: 35167196419
+
+      - name: Verify exact current-world parent evidence identity
         run: |
           set -euo pipefail
           out=evidence/environment_nature_split_surface_culling_current_world_001
-          mkdir -p "$out/parent"
-          curl --fail --location --retry 3 --retry-delay 2 \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10474474259/zip" \
-            --output "$out/parent.zip"
-          echo "08347ca601af63cdbfd6d421ac86ffbaad110ef1e556c4e961de1b96d7772bf3  $out/parent.zip" | sha256sum --check --strict
-          unzip -q "$out/parent.zip" -d "$out/parent"
           test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = b0fa28733d77cad79d78f29e7ef76ccb9ab0b399
           test -f "$out/parent/combined_current_world.json"
           test -f "$out/parent/candidate/runtime.json"
           test -d "$out/parent/candidate/rendered"
+          test "$(find "$out/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_nature_split_surface_culling_current_world_001/parent/combined_current_world.json'))
+          assert p['environment_head']=='b0fa28733d77cad79d78f29e7ef76ccb9ab0b399',p
+          assert p['composition_digest']=='6a7c4fa18d24d739b879d0fa8ecf76eb9ec8103ada0e771b65d401afe375adfb',p
+          assert p['building_current_source_policy_rebind_result']=='PASS_CURRENT_WORLD_BUILDING_CURRENT_SOURCE_POLICY_REBIND_STRUCTURE',p
+          assert len(p['states'])==17,p
+          print('PASS_EXACT_CURRENT_WORLD_PARENT_ARTIFACT_IDENTITY')
+          PY
 
       - name: Build exact split surface-culling receiving payload
         run: |
@@ -186,7 +193,6 @@ jobs:
         if: always()
         run: |
           rm -rf evidence/environment_nature_split_surface_culling_current_world_001/parent
-          rm -f evidence/environment_nature_split_surface_culling_current_world_001/parent.zip
 
       - name: Upload retained Environment Nature split-culling evidence
         if: always()
