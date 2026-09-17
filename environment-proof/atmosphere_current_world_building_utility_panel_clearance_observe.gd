@@ -22,7 +22,7 @@ const EAST_OLD_RECEIVER_CENTER := Vector3(3.88,7.30,1.65)
 const EAST_NEW_RECEIVER_CENTER := Vector3(3.90,7.30,1.65)
 const FRONT_TRANSLATION := Vector3(0.0,-0.02,0.0)
 const EAST_TRANSLATION := Vector3(0.02,0.0,0.0)
-const CENTER_EPS := 0.0000001
+const CENTER_EPS := 0.000001
 
 func _source_vec(value:Variant)->Vector3:
     if not (value is Array):
