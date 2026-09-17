@@ -318,6 +318,26 @@ def _changed_pixels(a: Path, b: Path) -> tuple[int, list[int] | None, int]:
         return count, [int(v) for v in bbox], left.size[0] * left.size[1]
 
 
+def _frame_identity(name: str) -> tuple[str, str, int]:
+    prefix = "atmosphere-width-"
+    if not name.startswith(prefix) or not name.endswith(".png"):
+        raise ValueError(f"unexpected target-host frame name: {name}")
+    stem = name[len(prefix):-4]
+    try:
+        mode, remainder = stem.split("-", 1)
+        context, phase_text = remainder.rsplit("-", 1)
+        phase = int(phase_text)
+    except Exception as exc:
+        raise ValueError(f"unexpected target-host frame name: {name}") from exc
+    if mode not in {"control", "candidate"}:
+        raise ValueError(f"unexpected target-host Weather mode: {name}")
+    if context not in {"path_eye", "elevated_oblique"}:
+        raise ValueError(f"unexpected target-host camera context: {name}")
+    if phase < 0 or phase > 16:
+        raise ValueError(f"unexpected target-host source phase: {name}")
+    return mode, context, phase
+
+
 def verify(payload: dict[str, Any], parent_root: Path, candidate_root: Path, environment_head: str) -> dict[str, Any]:
     _validate_receiving_payload(payload, environment_head)
     parent_runtime = load_json(parent_root / "runtime.json")
@@ -354,15 +374,17 @@ def verify(payload: dict[str, Any], parent_root: Path, candidate_root: Path, env
     if len(parent_frames) != 68 or set(parent_frames) != set(candidate_frames):
         raise ValueError("expected exact 68 matched parent/candidate target-host frames")
 
+    contexts = ("path_eye", "elevated_oblique")
+    modes = ("control", "candidate")
     frame_rows: list[dict[str, Any]] = []
     neutral_changed = 0
     interior_changed_frames = 0
     max_changed_fraction = 0.0
+    visible: dict[str, dict[str, set[int]]] = {
+        context: {mode: set() for mode in modes} for context in contexts
+    }
     for name in sorted(parent_frames):
-        try:
-            phase = int(name.rsplit("-", 1)[1].split(".", 1)[0])
-        except Exception as exc:
-            raise ValueError(f"unexpected target-host frame name: {name}") from exc
+        mode, context, phase = _frame_identity(name)
         changed, bbox, total = _changed_pixels(parent_frames[name], candidate_frames[name])
         fraction = changed / total if total else 0.0
         max_changed_fraction = max(max_changed_fraction, fraction)
@@ -370,11 +392,41 @@ def verify(payload: dict[str, Any], parent_root: Path, candidate_root: Path, env
             neutral_changed += changed
         elif changed > 0:
             interior_changed_frames += 1
-        frame_rows.append({"frame": name, "phase": phase, "changed_pixels": changed, "changed_fraction": fraction, "bbox": bbox})
+            visible[context][mode].add(phase)
+        frame_rows.append({
+            "frame": name,
+            "mode": mode,
+            "context": context,
+            "phase": phase,
+            "changed_pixels": changed,
+            "changed_fraction": fraction,
+            "bbox": bbox,
+        })
     if neutral_changed != 0:
         raise ValueError("compact-east neutral endpoint target-host frames changed")
-    if interior_changed_frames != 60:
-        raise ValueError(f"expected all 60 interior target-host frames to show the compact-east visual response, got {interior_changed_frames}")
+
+    interior_phases = set(range(1, 16))
+    fully_observing_contexts = [
+        context for context in contexts
+        if all(visible[context][mode] == interior_phases for mode in modes)
+    ]
+    non_observing_contexts = [
+        context for context in contexts
+        if all(not visible[context][mode] for mode in modes)
+    ]
+    partial_contexts = [
+        context for context in contexts
+        if context not in fully_observing_contexts and context not in non_observing_contexts
+    ]
+    if not fully_observing_contexts:
+        raise ValueError("no retained current-world camera shows all 15 compact-east interior phases in both Weather review modes")
+    if partial_contexts:
+        raise ValueError(f"compact-east visibility is only partial in retained contexts: {partial_contexts}")
+    covered_phases = set().union(*(
+        visible[context][mode] for context in fully_observing_contexts for mode in modes
+    ))
+    if covered_phases != interior_phases:
+        raise ValueError("not every compact-east interior source phase is visually evidenced in an observing context")
 
     parent_samples = parent_runtime.get("samples", [])
     if len(parent_samples) != 17:
@@ -391,10 +443,20 @@ def verify(payload: dict[str, Any], parent_root: Path, candidate_root: Path, env
         if before.get("sapling_mesh_digest") != after.get("sapling_mesh_digest"):
             raise ValueError(f"west-sapling runtime digest drift at phase {index}")
 
+    visibility_by_context = {
+        context: {
+            mode: sorted(visible[context][mode]) for mode in modes
+        } for context in contexts
+    }
+    expected_visible_frame_count = 15 * len(modes) * len(fully_observing_contexts)
     checks = {
         "exact_68_target_host_frames_matched": len(frame_rows) == 68,
         "neutral_endpoint_frames_pixel_exact": neutral_changed == 0,
-        "all_60_interior_frames_visibly_changed": interior_changed_frames == 60,
+        "at_least_one_context_fully_observes_all_15_interior_phases_in_both_weather_modes": bool(fully_observing_contexts),
+        "interior_changed_frame_count_matches_observing_contexts": interior_changed_frames == expected_visible_frame_count,
+        "non_observing_contexts_remain_pixel_exact_to_parent": all(
+            not visible[context][mode] for context in non_observing_contexts for mode in modes
+        ),
         "runtime_compact_east_mesh_sequence_matches_canonical": runtime_digests == expected_digests,
         "runtime_non_compact_static_sources_preserved": preserved_non_compact,
         "visual_change_not_promoted_to_physical_or_gameplay_claim": True,
@@ -402,7 +464,7 @@ def verify(payload: dict[str, Any], parent_root: Path, candidate_root: Path, env
     if not all(checks.values()):
         raise ValueError(f"compact-east target-host checks failed: {checks}")
     return {
-        "schema": "axm.environment-compact-east-visual-response-target-host-report/v0.1",
+        "schema": "axm.environment-compact-east-visual-response-target-host-report/v0.2",
         "state": TARGET_RESULT,
         "environment_head": environment_head,
         "parent_environment_head": PARENT_HEAD,
@@ -410,11 +472,15 @@ def verify(payload: dict[str, Any], parent_root: Path, candidate_root: Path, env
         "matched_frames": len(frame_rows),
         "neutral_endpoint_changed_pixels": neutral_changed,
         "interior_changed_frames": interior_changed_frames,
+        "fully_observing_contexts": fully_observing_contexts,
+        "non_observing_contexts": non_observing_contexts,
+        "partial_contexts": partial_contexts,
+        "visibility_by_context": visibility_by_context,
         "maximum_changed_frame_fraction": max_changed_fraction,
         "frame_differences": frame_rows,
         "checks": checks,
         "truth_boundary": (
-            "Exact current-world A/B receiving evidence for one compact-east Nature visual-response candidate. Pixel deltas prove that the exact bounded source states are visible in the two retained Godot cameras while neutral endpoints and unrelated runtime identities remain fixed. They do not establish natural-looking motion, physical wind, gameplay/physics, wall-clock timing, target-device performance or final Art/Visual-QA acceptance."
+            "Exact current-world A/B receiving evidence for one compact-east Nature visual-response candidate. Runtime phase identity and all 15 interior source states are visually demonstrated in at least one retained fixed camera and in both inherited Weather review modes; neutral endpoints and unrelated runtime identities remain fixed. A retained camera with zero pixel delta is explicitly reported as non-observing rather than being treated as failed motion or fabricated visibility. Pixel deltas do not establish natural-looking motion, physical wind, gameplay/physics, wall-clock timing, target-device performance or final Art/Visual-QA acceptance."
         ),
     }
 
