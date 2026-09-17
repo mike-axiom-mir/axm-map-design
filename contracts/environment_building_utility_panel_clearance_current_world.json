@@ -14,7 +14,7 @@
     "current_head": "fbfa3b47048755b45dac91451171d5511c8d4f47",
     "source_content_head": "32bbdd54f00aaac87ba8139bf932d8aff6109a66",
     "panel_blob_sha": "51b7fa61dd87934a89e033a2fdf5cc3b99992454",
-    "required_standoff_m": 0.10,
+    "required_standoff_m": 0.1,
     "body_depth_m": 0.08,
     "required_body_gap_m": 0.02,
     "receiver_plate_thickness_m": 0.04
@@ -28,27 +28,94 @@
     "automatic_receiver_adoption": false
   },
   "receiver_rebind": {
-    "source_vertex_groups": {
-      "front-utility-bay": [136, 137, 138, 139, 140, 141, 142, 143],
-      "east-utility-bay": [144, 145, 146, 147, 148, 149, 150, 151]
+    "current_receiver_vertex_groups": {
+      "front-utility-bay": [
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175
+      ],
+      "east-utility-bay": [
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183
+      ]
     },
     "predecessor_centers_source_xyz_m": {
-      "front-utility-bay": [-2.45, -1.08, 1.65],
-      "east-utility-bay": [3.88, 0.10, 1.65]
+      "front-utility-bay": [
+        -2.45,
+        -1.08,
+        1.65
+      ],
+      "east-utility-bay": [
+        3.88,
+        0.1,
+        1.65
+      ]
     },
     "successor_centers_source_xyz_m": {
-      "front-utility-bay": [-2.45, -1.10, 1.65],
-      "east-utility-bay": [3.90, 0.10, 1.65]
+      "front-utility-bay": [
+        -2.45,
+        -1.1,
+        1.65
+      ],
+      "east-utility-bay": [
+        3.9,
+        0.1,
+        1.65
+      ]
     },
     "translations_source_xyz_m": {
-      "front-utility-bay": [0.0, -0.02, 0.0],
-      "east-utility-bay": [0.02, 0.0, 0.0]
+      "front-utility-bay": [
+        0.0,
+        -0.02,
+        0.0
+      ],
+      "east-utility-bay": [
+        0.02,
+        0.0,
+        0.0
+      ]
     },
-    "expected_vertex_count": 152,
-    "expected_triangle_count": 228,
-    "expected_surface_count": 5
+    "expected_vertex_count": 184,
+    "expected_triangle_count": 276,
+    "expected_surface_count": 5,
+    "predecessor_centers_current_receiver_xyz_m": {
+      "front-utility-bay": [
+        -2.45,
+        6.12,
+        1.65
+      ],
+      "east-utility-bay": [
+        3.88,
+        7.3,
+        1.65
+      ]
+    },
+    "successor_centers_current_receiver_xyz_m": {
+      "front-utility-bay": [
+        -2.45,
+        6.1,
+        1.65
+      ],
+      "east-utility-bay": [
+        3.9,
+        7.3,
+        1.65
+      ]
+    }
   },
   "preserve_exact": [
+    "Building current-source policy identity and header-segmented 23-box representation outside the two utility-panel translations",
     "Object selected-roughness receiver and its held Environment adoption state",
     "Nature compact-east exact 17-phase receiving sequence and held Environment adoption state",
     "Weather source-width presentation and 17-state schedule",
@@ -62,5 +129,16 @@
     "art_qa_acceptance_required": true,
     "runtime_acceptance_required": true
   },
-  "truth_boundary": "This contract authorizes only an Environment receiving candidate that translates the two already-source-owned utility-panel proof boxes by the exact +0.02 m receiver-normal successor delta while preserving the retained multi-asset world. It does not rewrite Building source authority, infer new receiver frames, transfer historical visual acceptance, adopt the Building successor, approve Object roughness or Nature motion, establish target-device performance, collision, gameplay, CANON or production readiness."
+  "truth_boundary": "This contract authorizes only an Environment receiving candidate that translates the two utility-panel boxes inside the already-current header-segmented-23 Building receiver by the exact source/procedural +0.02 m receiver-normal successor delta while preserving the retained multi-asset world. The first authored attempt targeted the legacy 152-vertex compatibility path and produced no current-world Building mutation; this repaired contract binds the actual 184-vertex current receiver explicitly. It does not rewrite Building source authority, infer new receiver frames, transfer historical visual acceptance, adopt the Building successor, approve Object roughness or Nature motion, establish target-device performance, collision, gameplay, CANON or production readiness.",
+  "current_receiver_authority": {
+    "source_policy_head": "a976af429b0ea90e0f0cc72d4a8bd4eb8fef22d3",
+    "current_source_variant_id": "header-segmented-23",
+    "segmentation_source_head": "34124101e616c423c5a3ed5e122ddf09b98a1650",
+    "segmentation_revision": "service-pavilion-001/interpenetration-free-header-segmentation-003",
+    "placement_translation_source_xyz_m": [
+      0.0,
+      7.2,
+      0.0
+    ]
+  }
 }
