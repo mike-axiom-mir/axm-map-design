@@ -11,6 +11,7 @@ import argparse
 import copy
 import hashlib
 import json
+import math
 from pathlib import Path
 
 from axm_uc.indexed_surface_eligibility import (
@@ -20,13 +21,14 @@ from axm_uc.indexed_surface_eligibility import (
     observe_indexed_surface_eligibility,
 )
 
-SCHEMA = "axm.technical-art-building-planar-role-uc-index-bridge/v0.2"
+SCHEMA = "axm.technical-art-building-planar-role-uc-index-bridge/v0.3"
 BUNDLE_SCHEMA = "axm.technical-art-building-planar-role-index-bundle/v0.1"
 RUNTIME_SCHEMA = "axm.runtime-building-planar-role-surface-index-budget/v0.1"
 RUNTIME_HEAD = "8d5860c308c244d314ede5b79021e46f35c4040d"
 HARD_SURFACE_HEAD = "93f22e4eeb9bb32516d4b11f8d8bcf47d9792910"
 MATERIALS_HEAD = "4179aa1401f5a9114399e2f998c96809d4b8ed2e"
 REPRESENTATION_ID = "boundary-only-planar-role-rectangle-render-001"
+EXPECTED_NORMAL_CHANGED_CORNERS = 120
 EXPECTED_PARTITIONS = [
     "frame_galvanized",
     "infill_coating",
@@ -42,6 +44,11 @@ def load_json(path: Path) -> dict:
 
 def sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def stable_digest(value) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def write_json(path: Path, value) -> None:
@@ -75,28 +82,60 @@ def candidate_rows(before: dict, report: dict) -> tuple[list[list[float]], list[
     return positions, normals
 
 
-def vertex_tuple(position, normal):
-    return (tuple(position), tuple(normal))
-
-
-def unique_tuple_multiset(positions, normals):
-    if len(positions) != len(normals):
-        raise ValueError("POSITION/NORMAL cardinality drift")
-    rows = [vertex_tuple(p, n) for p, n in zip(positions, normals)]
-    return sorted(rows, key=repr)
-
-
-def decoded_tuple_stream(positions, normals, indices):
-    if len(positions) != len(normals):
-        raise ValueError("POSITION/NORMAL cardinality drift")
-    rows = [vertex_tuple(p, n) for p, n in zip(positions, normals)]
-    out = []
-    for index in indices:
-        index = int(index)
+def decoded_rows(rows, indices):
+    output = []
+    for raw_index in indices:
+        index = int(raw_index)
         if index < 0 or index >= len(rows):
             raise ValueError("index outside declared vertex domain")
-        out.append(rows[index])
-    return out
+        output.append(rows[index])
+    return output
+
+
+def grouping_isomorphic(left_indices, right_indices) -> bool:
+    if len(left_indices) != len(right_indices):
+        return False
+    left_to_right = {}
+    right_to_left = {}
+    for left, right in zip(left_indices, right_indices):
+        left = int(left)
+        right = int(right)
+        if left in left_to_right and left_to_right[left] != right:
+            return False
+        if right in right_to_left and right_to_left[right] != left:
+            return False
+        left_to_right.setdefault(left, right)
+        right_to_left.setdefault(right, left)
+    return True
+
+
+def normal_residual(source_rows, receiver_rows) -> dict:
+    if len(source_rows) != len(receiver_rows):
+        raise ValueError("normal stream cardinality drift")
+    changed = 0
+    max_component = 0.0
+    max_angle = 0.0
+    for source, receiver in zip(source_rows, receiver_rows):
+        if len(source) != 3 or len(receiver) != 3:
+            raise ValueError("normal row width drift")
+        if any(not math.isfinite(float(value)) for value in [*source, *receiver]):
+            raise ValueError("non-finite normal observed")
+        if source != receiver:
+            changed += 1
+        max_component = max(max_component, *(abs(float(a) - float(b)) for a, b in zip(source, receiver)))
+        source_len = math.sqrt(sum(float(value) * float(value) for value in source))
+        receiver_len = math.sqrt(sum(float(value) * float(value) for value in receiver))
+        if source_len == 0.0 or receiver_len == 0.0:
+            raise ValueError("zero-length normal observed")
+        cosine = sum(float(a) * float(b) for a, b in zip(source, receiver)) / (source_len * receiver_len)
+        cosine = max(-1.0, min(1.0, cosine))
+        max_angle = max(max_angle, math.degrees(math.acos(cosine)))
+    return {
+        "changed_corner_count": changed,
+        "max_abs_component_delta": max_component,
+        "max_angular_delta_degrees": max_angle,
+        "exact": changed == 0,
+    }
 
 
 def build_spec(partition: str, before: dict) -> dict:
@@ -167,6 +206,9 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
     total_candidate_vertices = 0
     total_candidate_indices = 0
     total_cross_source_groups = 0
+    total_changed_normal_corners = 0
+    max_normal_component_delta = 0.0
+    max_normal_angle_delta = 0.0
 
     for surface_index, partition in enumerate(EXPECTED_PARTITIONS):
         before = before_bundle["surfaces"][surface_index]
@@ -197,23 +239,32 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             raise ValueError(f"{partition}: UC candidate vertex count differs from exact Godot indexed surface")
 
         uc_positions, uc_normals = candidate_rows(before, report)
+        uc_indices = [int(value) for value in report["candidate"]["indices"]]
         godot_positions = normalize_rows(after["positions"])
         godot_normals = normalize_rows(after["normals"])
-        uc_indices = [int(value) for value in report["candidate"]["indices"]]
         godot_indices = [int(value) for value in after["storage_indices"]]
+        source_positions = normalize_rows(before["positions"])
+        source_normals = normalize_rows(before["normals"])
 
-        # Index IDs and stored vertex order are representation-local. The exact
-        # equivalence contract is the decoded triangle-corner render tuple stream
-        # plus the exact unique tuple domain and cardinality, all within the same
-        # caller-owned material partition.
-        uc_stream = decoded_tuple_stream(uc_positions, uc_normals, uc_indices)
-        godot_stream = decoded_tuple_stream(godot_positions, godot_normals, godot_indices)
-        if uc_stream != godot_stream:
-            raise ValueError(f"{partition}: UC candidate decodes to a different exact POSITION/NORMAL triangle-corner stream than Godot")
-        if unique_tuple_multiset(uc_positions, uc_normals) != unique_tuple_multiset(godot_positions, godot_normals):
-            raise ValueError(f"{partition}: UC and Godot indexed vertex tuple domains differ")
-        if len(set(uc_stream)) != len(uc_positions) or len(set(godot_stream)) != len(godot_positions):
-            raise ValueError(f"{partition}: indexed vertex domain contains duplicate declared POSITION/NORMAL tuples")
+        # Raw index IDs are local labels. Exact indexing equivalence is the same
+        # corner partition (bijection between candidate groups) plus an exact
+        # decoded POSITION stream. NORMAL transport is observed separately because
+        # the pinned Godot create_from/index/commit path measurably repacks some
+        # normals after the grouping decision.
+        if not grouping_isomorphic(uc_indices, godot_indices):
+            raise ValueError(f"{partition}: UC and Godot group different triangle corners")
+        if decoded_rows(uc_positions, uc_indices) != source_positions:
+            raise ValueError(f"{partition}: UC candidate does not reproduce exact source POSITION corner stream")
+        if decoded_rows(godot_positions, godot_indices) != source_positions:
+            raise ValueError(f"{partition}: Godot indexed receiver changes POSITION corner stream")
+        if decoded_rows(uc_normals, uc_indices) != source_normals:
+            raise ValueError(f"{partition}: UC candidate does not reproduce exact pre-index NORMAL corner stream")
+
+        receiver_normal_stream = decoded_rows(godot_normals, godot_indices)
+        residual = normal_residual(source_normals, receiver_normal_stream)
+        total_changed_normal_corners += residual["changed_corner_count"]
+        max_normal_component_delta = max(max_normal_component_delta, residual["max_abs_component_delta"])
+        max_normal_angle_delta = max(max_normal_angle_delta, residual["max_angular_delta_degrees"])
 
         source_preserving = copy.deepcopy(spec)
         source_preserving.pop("candidate_identity_policy")
@@ -242,8 +293,14 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             "triangles": int(after["triangle_count"]),
             "indices": int(after["storage_index_count"]),
             "uc_candidate_vertex_count": int(report["candidate"]["vertex_count"]),
-            "uc_godot_exact_decoded_tuple_stream_match": True,
-            "uc_godot_exact_unique_tuple_domain_match": True,
+            "uc_godot_exact_corner_grouping_isomorphic": True,
+            "uc_exact_position_corner_stream": True,
+            "godot_exact_position_corner_stream": True,
+            "uc_exact_preindex_normal_corner_stream": True,
+            "godot_postindex_normal_transport": residual,
+            "source_position_stream_digest": stable_digest(source_positions),
+            "source_normal_stream_digest": stable_digest(source_normals),
+            "godot_postindex_normal_stream_digest": stable_digest(receiver_normal_stream),
             "raw_index_numbering_or_vertex_order_required_to_match": False,
             "cross_source_candidate_groups": int(report["cross_source_observation"]["candidate_groups_spanning_multiple_source_vertices"]),
             "conservative_source_lineage_vertex_count": int(conservative["candidate"]["vertex_count"]),
@@ -252,10 +309,14 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
 
     if total_candidate_vertices != 312 or total_candidate_indices != 1008:
         raise ValueError("aggregate UC candidate counts do not reproduce exact Godot indexed receiver")
+    if total_changed_normal_corners != EXPECTED_NORMAL_CHANGED_CORNERS:
+        raise ValueError(
+            f"pinned Godot normal repack observation drift: expected {EXPECTED_NORMAL_CHANGED_CORNERS} changed corners, got {total_changed_normal_corners}"
+        )
 
     receipt = {
         "schema": SCHEMA,
-        "result": "PASS_BUILDING_EXACT_GODOT_POST_NORMAL_PER_SURFACE_INDEX_ISOMORPHIC_TO_UC_CROSS_SOURCE_TUPLE_CANDIDATE",
+        "result": "PASS_BUILDING_EXACT_GODOT_INDEX_GROUPING_MATCHES_UC_CROSS_SOURCE_TUPLE_CANDIDATE__HOLD_GODOT_NORMAL_REPACK_EXACTNESS_AND_VISUAL_REVIEW",
         "technical_art_head": technical_art_head,
         "runtime_parent_head": RUNTIME_HEAD,
         "building_hard_surface_head": HARD_SURFACE_HEAD,
@@ -277,9 +338,17 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             "candidate_vertices": total_candidate_vertices,
             "candidate_indices": total_candidate_indices,
             "cross_source_candidate_groups": total_cross_source_groups,
-            "exact_decoded_position_normal_triangle_corner_stream_match_all_surfaces": True,
-            "exact_unique_position_normal_tuple_domain_match_all_surfaces": True,
+            "exact_corner_grouping_isomorphic_to_godot_all_surfaces": True,
+            "exact_decoded_position_corner_stream_match_all_surfaces": True,
             "raw_index_numbering_or_vertex_order_claimed": False,
+        },
+        "godot_postindex_normal_transport": {
+            "exact": total_changed_normal_corners == 0,
+            "changed_corner_count": total_changed_normal_corners,
+            "total_corner_count": 1008,
+            "max_abs_component_delta": max_normal_component_delta,
+            "max_angular_delta_degrees": max_normal_angle_delta,
+            "continuity_observation_bound_only_not_visual_acceptance": True,
         },
         "surfaces": surface_reports,
         "negative_controls": {
@@ -293,6 +362,7 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             "building_semantics_centralized_in_uc": False,
             "material_partitions_crossed": False,
             "raw_index_id_or_vertex_storage_order_equivalence_claimed": False,
+            "postindex_normal_exactness_claimed": False,
             "runtime_savings_remeasured_here": False,
             "visual_acceptance_claimed_here": False,
             "environment_adoption_authorized": False,
