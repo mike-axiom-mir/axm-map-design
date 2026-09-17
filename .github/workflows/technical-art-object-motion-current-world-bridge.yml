@@ -210,7 +210,7 @@ jobs:
           root=pathlib.Path('evidence/technical_art_object_motion_current_world_bridge')
           def find(v):
               if isinstance(v,dict):
-                  if v.get('schema')=='axm.environment-object-motion-current-world-observation/v0.1': return [v]
+                  if v.get('schema')=='axm.environment-object-motion-current-world-observation/v0.2': return [v]
                   out=[]
                   for x in v.values(): out+=find(x)
                   return out
