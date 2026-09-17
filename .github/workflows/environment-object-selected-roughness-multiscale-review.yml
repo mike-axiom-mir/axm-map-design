@@ -1,0 +1,144 @@
+name: Environment Object selected roughness multiscale review
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_object_selected_roughness_multiscale_review.json"
+      - "tools/environment_object_selected_roughness_multiscale_review.py"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_MULTISCALE_REVIEW_001.md"
+      - ".github/workflows/environment-object-selected-roughness-multiscale-review.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_object_selected_roughness_multiscale_review.json"
+      - "tools/environment_object_selected_roughness_multiscale_review.py"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_MULTISCALE_REVIEW_001.md"
+      - ".github/workflows/environment-object-selected-roughness-multiscale-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-retained-multiscale-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact review head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind review lineage and compile
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e d8a1d950ed5f21e6ad356404f46407c99c160017^{commit}
+          git merge-base --is-ancestor d8a1d950ed5f21e6ad356404f46407c99c160017 HEAD
+          python -m py_compile tools/environment_object_selected_roughness_multiscale_review.py
+          python -m json.tool contracts/environment_object_selected_roughness_multiscale_review.json >/dev/null
+
+      - name: Install review-image dependencies
+        run: python -m pip install --disable-pip-version-check --no-input pillow numpy
+
+      - name: Download and SHA-bind exact retained real-scene artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_multiscale_review_001
+          mkdir -p "$root/parent" "$root/candidate"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10501901585/zip" \
+            --output "$root/parent.zip"
+          echo "a3e3c3adc794877d84f3735f4f4ff69e3120843588da5c8aaa259d7ab7b965e3  $root/parent.zip" | sha256sum --check --strict
+          unzip -q "$root/parent.zip" -d "$root/parent"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" \
+            --output "$root/candidate.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/candidate.zip" | sha256sum --check --strict
+          unzip -q "$root/candidate.zip" -d "$root/candidate"
+
+          test -f "$root/parent/selected-uv0-report.json"
+          test -d "$root/parent/candidate/rendered"
+          test -f "$root/candidate/selected-roughness-report.json"
+          test -d "$root/candidate/candidate/rendered"
+          test "$(find "$root/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$root/candidate/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+
+      - name: Build exact derived multiscale review surface
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_multiscale_review_001
+          python tools/environment_object_selected_roughness_multiscale_review.py \
+            --contract contracts/environment_object_selected_roughness_multiscale_review.json \
+            --candidate-report "$root/candidate/selected-roughness-report.json" \
+            --parent-rendered "$root/parent/candidate/rendered" \
+            --candidate-rendered "$root/candidate/candidate/rendered" \
+            --review-head "$(cat exact-head.txt)" \
+            --output-dir "$root/review" \
+            | tee "$root/review.log"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_selected_roughness_multiscale_review_001/review/multiscale-review-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_MULTI_SCALE_REVIEW_SURFACE__APPEARANCE_ACCEPTANCE_HELD',p
+          assert p['source_environment_head']=='d8a1d950ed5f21e6ad356404f46407c99c160017',p
+          assert p['full_scene_proof']['matched_frames']==68,p
+          assert p['full_scene_proof']['changed_pixels_raw_total']==6426,p
+          assert p['full_scene_proof']['changed_pixels_gt_1lsb_total']==1666,p
+          assert p['full_scene_proof']['maximum_channel_delta_lsb']==7,p
+          assert p['full_scene_proof']['weather_width_measurements']==1224,p
+          assert p['derived_review_surface']['sheet_count']==12,p
+          assert p['derived_review_surface']['original_frames_unchanged'] is True,p
+          assert p['derived_review_surface']['new_camera_or_light_authorship'] is False,p
+          assert p['environment_adoption'] is False,p
+          assert p['art_qa_acceptance_required'] is True,p
+          print(p['state'])
+          PY
+
+      - name: Negative control rejects unrelated raster change outside Object envelope
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_multiscale_review_001
+          set +e
+          python tools/environment_object_selected_roughness_multiscale_review.py \
+            --contract contracts/environment_object_selected_roughness_multiscale_review.json \
+            --candidate-report "$root/candidate/selected-roughness-report.json" \
+            --parent-rendered "$root/parent/candidate/rendered" \
+            --candidate-rendered "$root/candidate/candidate/rendered" \
+            --review-head "$(cat exact-head.txt)" \
+            --output-dir "$root/negative" \
+            --inject-outside-delta \
+            > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -q "selected roughness raster change escaped localized Environment envelope" "$root/negative.log"
+          echo "PASS_REJECTED_UNRELATED_OUTSIDE_ENVELOPE_RASTER_CHANGE"
+
+      - name: Retain bounded review evidence only
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_multiscale_review_001
+          cp exact-head.txt "$root/review/exact-head.txt" 2>/dev/null || true
+          cp contracts/environment_object_selected_roughness_multiscale_review.json "$root/review/" 2>/dev/null || true
+          cp docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_MULTISCALE_REVIEW_001.md "$root/review/" 2>/dev/null || true
+          cp "$root/candidate/selected-roughness-report.json" "$root/review/source-selected-roughness-report.json" 2>/dev/null || true
+          cp "$root/negative.log" "$root/review/negative-control.log" 2>/dev/null || true
+          rm -rf "$root/parent" "$root/candidate" "$root/negative" "$root/parent.zip" "$root/candidate.zip"
+
+      - name: Upload exact Environment multiscale review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-selected-roughness-multiscale-review-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_object_selected_roughness_multiscale_review_001/review
+          if-no-files-found: error
+          retention-days: 30
