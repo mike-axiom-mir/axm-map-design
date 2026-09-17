@@ -1,0 +1,254 @@
+name: Environment Building source-intent indexed current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_building_source_intent_indexed_observe.gd"
+      - "tools/environment_building_source_intent_indexed_current_world.py"
+      - "docs/ENVIRONMENT_BUILDING_SOURCE_INTENT_INDEXED_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-source-intent-indexed-current-world.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_building_source_intent_indexed_observe.gd"
+      - "tools/environment_building_source_intent_indexed_current_world.py"
+      - "docs/ENVIRONMENT_BUILDING_SOURCE_INTENT_INDEXED_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-source-intent-indexed-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source-intent-indexed-current-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      GEOMETRY_HEAD: b9b4ab63e23b9756ab79597e86ecc41ea75ea8b7
+      GEOMETRY_CANDIDATE_SHA256: f6a831058de66901fd42704b1d8c1cf187b13a0919ae3719c03c4369f107e6c0
+      ACTIVE_HEAD: 7713cbe5863c3bc38dabb6236eb4b393401224b6
+      REVIEWED_312_HEAD: 55e10a4fa700fb81020a95bd5143deca6a09f208
+      UNINDEXED_HEAD: b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+      ACTIVE_RUN: "35174899697"
+      ACTIVE_ARTIFACT_NAME: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+      REVIEWED_312_RUN: "35190228022"
+      REVIEWED_312_ARTIFACT_NAME: environment-building-planar-role-consumer-identity-rebind-001-55e10a4fa700fb81020a95bd5143deca6a09f208
+      UNINDEXED_RUN: "35182784756"
+      UNINDEXED_ARTIFACT_NAME: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment lane and gate
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$REVIEWED_312_HEAD^{commit}"
+          git merge-base --is-ancestor "$REVIEWED_312_HEAD" HEAD
+          python -m py_compile tools/environment_building_source_intent_indexed_current_world.py
+          grep -F 'SOURCE_INTENT_CANDIDATE_ID' environment-proof/atmosphere_current_world_building_source_intent_indexed_observe.gd
+
+      - name: Checkout exact Building Geometry donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.GEOMETRY_HEAD }}
+          path: .building-geometry
+          fetch-depth: 1
+
+      - name: Rebuild exact 604-vertex Geometry candidate
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-geometry rev-parse HEAD)" = "$GEOMETRY_HEAD"
+          out=evidence/environment_building_source_intent_indexed_current_world_001/geometry
+          mkdir -p "$out"
+          python .building-geometry/tools/build_service_pavilion_planar_role_indexed_geometry.py \
+            --exact-head "$GEOMETRY_HEAD" \
+            --output-dir "$out"
+          test -f "$out/indexed-render-domain.json"
+          test -f "$out/indexed-render-domain-evidence.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          evidence=json.loads(Path('evidence/environment_building_source_intent_indexed_current_world_001/geometry/indexed-render-domain-evidence.json').read_text())
+          assert evidence['result']=='PASS_SOURCE_INTENT_INDEXED_RENDER_DOMAIN_EXACT_CORNER_RECONSTRUCTION',evidence
+          assert evidence['exact_head']=='b9b4ab63e23b9756ab79597e86ecc41ea75ea8b7',evidence
+          assert evidence['candidate_sha256']=='f6a831058de66901fd42704b1d8c1cf187b13a0919ae3719c03c4369f107e6c0',evidence
+          assert evidence['metrics']['render_vertex_count']==604,evidence
+          assert evidence['metrics']['exact_corner_stream_reconstruction'] is True,evidence
+          print('PASS_EXACT_604_GEOMETRY_DONOR_REBUILT')
+          PY
+
+      - name: Download exact active segmented current-world evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ACTIVE_ARTIFACT_NAME }}
+          path: evidence/environment_building_source_intent_indexed_current_world_001/active
+          github-token: ${{ github.token }}
+          run-id: ${{ env.ACTIVE_RUN }}
+
+      - name: Download exact reviewed 312-consumer current-world evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.REVIEWED_312_ARTIFACT_NAME }}
+          path: evidence/environment_building_source_intent_indexed_current_world_001/reviewed-312
+          github-token: ${{ github.token }}
+          run-id: ${{ env.REVIEWED_312_RUN }}
+
+      - name: Download exact unindexed planar-role payload donor
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.UNINDEXED_ARTIFACT_NAME }}
+          path: evidence/environment_building_source_intent_indexed_current_world_001/unindexed
+          github-token: ${{ github.token }}
+          run-id: ${{ env.UNINDEXED_RUN }}
+
+      - name: Verify retained parents and install exact candidate/world payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_source_intent_indexed_current_world_001
+          test "$(tr -d '\n\r' < "$out/active/exact-head.txt")" = "$ACTIVE_HEAD"
+          test "$(tr -d '\n\r' < "$out/reviewed-312/exact-head.txt")" = "$REVIEWED_312_HEAD"
+          test "$(tr -d '\n\r' < "$out/unindexed/exact-head.txt")" = "$UNINDEXED_HEAD"
+          test -f "$out/active/candidate/runtime.json"
+          test -f "$out/reviewed-312/indexed/runtime.json"
+          test -f "$out/unindexed/combined_current_world.json"
+          test "$(find "$out/active/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$out/reviewed-312/indexed/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          mkdir -p environment-proof/generated
+          cp "$out/unindexed/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$out/geometry/indexed-render-domain.json" environment-proof/generated/building_planar_role_source_intent_indexed.json
+
+      - name: Checkout exact inherited Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.WEATHER_WIDTH_OBSERVER_HEAD }}
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Restore exact observer-chain setup
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = "$WEATHER_WIDTH_OBSERVER_HEAD"
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_planar_role_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_source_intent_indexed_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact 604-vertex source-intent receiver in current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_source_intent_indexed_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_source_intent_indexed_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Gate exact multi-asset Environment comparison
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_source_intent_indexed_current_world_001
+          test -f "$out/candidate/runtime.json"
+          test "$(find "$out/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python tools/environment_building_source_intent_indexed_current_world.py \
+            --geometry-evidence "$out/geometry/indexed-render-domain-evidence.json" \
+            --geometry-candidate "$out/geometry/indexed-render-domain.json" \
+            --active-root "$out/active" \
+            --reviewed-312-root "$out/reviewed-312" \
+            --candidate-root "$out/candidate" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/environment-report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_source_intent_indexed_current_world_001/environment-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_SOURCE_INTENT_INDEXED_BUILDING_RECEIVER_REVIEW_READY',p
+          assert p['hold']=='HOLD_DEFAULT_ADOPTION_PENDING_ART_QA_TECHNICAL_ART_AND_TARGET_DEVICE_RUNTIME_REVIEW',p
+          assert p['environment_adoption'] is False,p
+          assert p['geometry']['vertices']==604,p
+          assert p['world_observations']['weather_width_observation_count']==1224,p
+          assert p['proof_host']['candidate_vs_reviewed_312_delta_sets']['primitives_in_frame']==[0],p
+          assert p['proof_host']['candidate_vs_active_delta_sets']['primitives_in_frame']==[180],p
+          print(json.dumps(p,indent=2,sort_keys=True))
+          PY
+
+      - name: Deliberate fail-closed Geometry identity mutation
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_source_intent_indexed_current_world_001
+          cp "$out/geometry/indexed-render-domain-evidence.json" "$out/mutated-geometry-evidence.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('evidence/environment_building_source_intent_indexed_current_world_001/mutated-geometry-evidence.json')
+          d=json.loads(p.read_text())
+          d['candidate_sha256']='0'*64
+          p.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          if python tools/environment_building_source_intent_indexed_current_world.py \
+            --geometry-evidence "$out/mutated-geometry-evidence.json" \
+            --geometry-candidate "$out/geometry/indexed-render-domain.json" \
+            --active-root "$out/active" \
+            --reviewed-312-root "$out/reviewed-312" \
+            --candidate-root "$out/candidate" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/mutated-environment-report.json"; then
+            echo "ERROR: Environment gate accepted mutated Geometry identity" >&2
+            exit 1
+          fi
+          echo PASS_FAIL_CLOSED_GEOMETRY_IDENTITY_MUTATION
+
+      - name: Upload exact Environment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-source-intent-indexed-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_building_source_intent_indexed_current_world_001/exact-head.txt
+            evidence/environment_building_source_intent_indexed_current_world_001/geometry/indexed-render-domain-evidence.json
+            evidence/environment_building_source_intent_indexed_current_world_001/geometry/indexed-render-domain.json
+            evidence/environment_building_source_intent_indexed_current_world_001/environment-report.json
+            evidence/environment_building_source_intent_indexed_current_world_001/candidate/runtime.json
+            evidence/environment_building_source_intent_indexed_current_world_001/candidate/godot.log
+            evidence/environment_building_source_intent_indexed_current_world_001/candidate/rendered/*.png
+          if-no-files-found: error
+          retention-days: 30
