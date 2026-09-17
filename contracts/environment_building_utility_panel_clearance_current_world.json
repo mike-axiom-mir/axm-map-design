@@ -1,0 +1,66 @@
+{
+  "schema": "axm.environment-building-utility-panel-clearance-current-world/v0.1",
+  "study_id": "environment-building-utility-panel-clearance-current-world-001",
+  "reusable_rule": "SOURCE_OWNED_RECEIVER_PLACEMENT_SUCCESSOR_MUST_BE_REBOUND_EXPLICITLY_IN_THE_REAL_WORLD_WHILE_UNRELATED_ASSET_CANDIDATES_REMAIN_EXACT_AND_ADOPTION_STAYS_HELD",
+  "parent_environment": {
+    "head": "4bd7eaf6970716dde4159448c92556785f47e954",
+    "artifact_id": 10509037278,
+    "artifact_sha256": "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97",
+    "state": "PASS_CURRENT_WORLD_SELECTED_ROUGHNESS_PLUS_COMPACT_EAST_COMPOSITION_REVIEW_READY__DUAL_ADOPTION_HELD"
+  },
+  "building_source_authority": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pr": 17,
+    "current_head": "fbfa3b47048755b45dac91451171d5511c8d4f47",
+    "source_content_head": "32bbdd54f00aaac87ba8139bf932d8aff6109a66",
+    "panel_blob_sha": "51b7fa61dd87934a89e033a2fdf5cc3b99992454",
+    "required_standoff_m": 0.10,
+    "body_depth_m": 0.08,
+    "required_body_gap_m": 0.02,
+    "receiver_plate_thickness_m": 0.04
+  },
+  "procedural_rebind_authority": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pr": 4,
+    "head": "0c458e19cda73e26e90531d24fe7697b5a8d14fc",
+    "family_schema": "axm.building-utility-panel-clearance-rebind-family/v0.1",
+    "required_result": "PASS_BOUNDED_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_FAMILY",
+    "automatic_receiver_adoption": false
+  },
+  "receiver_rebind": {
+    "source_vertex_groups": {
+      "front-utility-bay": [136, 137, 138, 139, 140, 141, 142, 143],
+      "east-utility-bay": [144, 145, 146, 147, 148, 149, 150, 151]
+    },
+    "predecessor_centers_source_xyz_m": {
+      "front-utility-bay": [-2.45, -1.08, 1.65],
+      "east-utility-bay": [3.88, 0.10, 1.65]
+    },
+    "successor_centers_source_xyz_m": {
+      "front-utility-bay": [-2.45, -1.10, 1.65],
+      "east-utility-bay": [3.90, 0.10, 1.65]
+    },
+    "translations_source_xyz_m": {
+      "front-utility-bay": [0.0, -0.02, 0.0],
+      "east-utility-bay": [0.02, 0.0, 0.0]
+    },
+    "expected_vertex_count": 152,
+    "expected_triangle_count": 228,
+    "expected_surface_count": 5
+  },
+  "preserve_exact": [
+    "Object selected-roughness receiver and its held Environment adoption state",
+    "Nature compact-east exact 17-phase receiving sequence and held Environment adoption state",
+    "Weather source-width presentation and 17-state schedule",
+    "Map footprint cue, route, cameras and lighting",
+    "Building topology, surface partition and material values outside the two source-owned panel translations"
+  ],
+  "decision": {
+    "environment_building_clearance_adoption": false,
+    "environment_selected_roughness_adoption": false,
+    "environment_compact_east_adoption": false,
+    "art_qa_acceptance_required": true,
+    "runtime_acceptance_required": true
+  },
+  "truth_boundary": "This contract authorizes only an Environment receiving candidate that translates the two already-source-owned utility-panel proof boxes by the exact +0.02 m receiver-normal successor delta while preserving the retained multi-asset world. It does not rewrite Building source authority, infer new receiver frames, transfer historical visual acceptance, adopt the Building successor, approve Object roughness or Nature motion, establish target-device performance, collision, gameplay, CANON or production readiness."
+}
