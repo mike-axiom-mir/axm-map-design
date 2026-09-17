@@ -4,10 +4,12 @@ on:
   push:
     branches: [studio/vfx-nature-leaf-flutter-wall-clock-current-world-001]
     paths:
+      - "tools/vfx_nature_leaf_flutter_skip_temporal_ab_review.py"
       - "docs/VFX_NATURE_LEAF_FLUTTER_SKIPPED_STATE_TEMPORAL_AB_REVIEW_001.md"
       - ".github/workflows/vfx-nature-leaf-flutter-skipped-state-temporal-ab-review-current-world.yml"
   pull_request:
     paths:
+      - "tools/vfx_nature_leaf_flutter_skip_temporal_ab_review.py"
       - "docs/VFX_NATURE_LEAF_FLUTTER_SKIPPED_STATE_TEMPORAL_AB_REVIEW_001.md"
       - ".github/workflows/vfx-nature-leaf-flutter-skipped-state-temporal-ab-review-current-world.yml"
   workflow_dispatch:
@@ -27,7 +29,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
-      - name: Bind exact lineage
+      - name: Bind exact lineage and compile builder
         run: |
           set -euo pipefail
           EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
@@ -35,6 +37,7 @@ jobs:
           printf '%s\n' "$EXPECTED" > exact-head.txt
           git cat-file -e 77bae394d6cc045d97130e706b52bbc415b48786^{commit}
           git merge-base --is-ancestor 77bae394d6cc045d97130e706b52bbc415b48786 HEAD
+          python -m py_compile tools/vfx_nature_leaf_flutter_skip_temporal_ab_review.py
 
       - name: Download exact clean-vs-ideal parent review
         uses: actions/download-artifact@v4
@@ -45,91 +48,23 @@ jobs:
           repository: mike-axiom-mir/axm-map-design
           run-id: 35206708371
 
-      - name: Verify exact parent and define skip windows
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bounded image observer dependency
+        run: python -m pip install 'Pillow>=10,<13'
+
+      - name: Build exact temporal A/B frame surfaces from retained telemetry and Godot states
         run: |
           set -euo pipefail
           root=evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001
           parent="$root/parent/review"
           out="$root/review"
-          mkdir -p "$out/media"
-          python - <<'PY'
-          import json
-          from pathlib import Path
-
-          root=Path('evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001')
-          parent=root/'parent'/'review'
-          out=root/'review'
-          m=json.loads((parent/'comparison-manifest.json').read_text())
-          assert m['state']=='PASS_TELEMETRY_BOUND_CLEAN_VS_IDEAL_REVIEW_SURFACE',m
-          assert m['accepted_receiver_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',m
-          assert m['nature_vfx_effect_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',m
-          assert m['clean_timing_head']=='795d9e8862e895e506c756b9ea01cd6228fa7ab7',m
-          assert m['clean_presented_total']==92 and m['clean_scheduled_total']==96,m
-          assert m['interpolation_added'] is False and m['source_retimed'] is False,m
-          assert m['direct_live_capture_of_clean_stream'] is False,m
-          assert m['ideal_schedule_is_counterfactual_reference_not_observed_runtime'] is True,m
-          assert m['browser_is_timing_authority'] is False,m
-          expected={'path_eye':[19],'elevated_oblique':[11,23,38]}
-          rows=[]
-          windows=[]
-          for context,skips in expected.items():
-              c=m['contexts'][context]
-              assert c['clean_skipped_slots']==skips,c
-              clean_slots={int(e['absolute_slot']) for e in c['cadence_aligned_clean_events'] if e.get('absolute_slot') is not None}
-              ideal_slots={int(e['absolute_slot']) for e in c['ideal_events'] if e.get('absolute_slot') is not None}
-              assert ideal_slots==set(range(48)),(context,len(ideal_slots))
-              for slot in skips:
-                  assert slot not in clean_slots and slot in ideal_slots,(context,slot)
-                  phase=slot%16
-                  start_slot=slot-3
-                  end_slot=slot+3
-                  assert start_slot in clean_slots and end_slot in clean_slots
-                  start_s=start_slot*0.03125
-                  duration_s=7*0.03125
-                  stem=f'{context}-slot-{slot:02d}-clean-left-ideal-right'
-                  rows.append((context,slot,phase,start_s,duration_s,stem))
-                  windows.append({
-                      'context':context,
-                      'skipped_slot':slot,
-                      'skipped_phase':phase,
-                      'start_slot':start_slot,
-                      'end_slot':end_slot,
-                      'review_start_s':start_s,
-                      'review_duration_s':duration_s,
-                      'clean_side':'CADENCE_ALIGNED_RETAINED_CLEAN_FRAME_POST_DRAW_RECONSTRUCTION',
-                      'ideal_side':'UNOBSERVED_AUTHORED_31_25MS_SOURCE_SCHEDULE_REFERENCE',
-                      'stem':stem,
-                  })
-          assert len(windows)==4
-          (out/'windows.tsv').write_text('\n'.join('\t'.join(map(str,r)) for r in rows)+'\n')
-          report={
-              'state':'PASS_TELEMETRY_BOUND_SKIPPED_STATE_TEMPORAL_AB_REVIEW_SURFACE_BUILT_PENDING_MEDIA_VALIDATION',
-              'accepted_receiver_head':m['accepted_receiver_head'],
-              'nature_vfx_effect_head':m['nature_vfx_effect_head'],
-              'clean_timing_head':m['clean_timing_head'],
-              'parent_clean_vs_ideal_head':'9e3a7e64ebd50be175ef6866a0fa37960d589adb',
-              'parent_clean_vs_ideal_workflow':35206708371,
-              'parent_clean_presented_total':92,
-              'parent_clean_scheduled_total':96,
-              'timing_authority':'RETAINED_CLEAN_FRAME_POST_DRAW_TELEMETRY_ONLY',
-              'comparison_raster_hz':64,
-              'comparison_raster_semantics':'REVIEW_ONLY_FRAME_DUPLICATION_OR_DROP_NO_MOTION_INTERPOLATION',
-              'native_media_is_timing_authority':False,
-              'slow_media_is_timing_authority':False,
-              'slow_review_factor':4.0,
-              'source_interpolation_added':False,
-              'source_retimed':False,
-              'source_amplitude_modified':False,
-              'clean_stream_direct_live_capture':False,
-              'ideal_schedule_observed_runtime':False,
-              'final_perceptual_acceptance_claimed':False,
-              'gameplay_or_physics_claimed':False,
-              'target_device_performance_claimed':False,
-              'windows':windows,
-          }
-          (out/'temporal-ab-manifest.json').write_text(json.dumps(report,indent=2)+'\n')
-          print(json.dumps({'state':report['state'],'windows':windows},indent=2))
-          PY
+          python tools/vfx_nature_leaf_flutter_skip_temporal_ab_review.py \
+            --parent "$parent" \
+            --output "$out" \
+            | tee "$root/build.log"
           cp exact-head.txt "$out/exact-head.txt"
 
       - name: Install lossless review encoder when needed
@@ -140,33 +75,30 @@ jobs:
             sudo apt-get install -y ffmpeg
           fi
 
-      - name: Build native and 4x-slow side-by-side review media
+      - name: Encode native and 4x-slow lossless review media
         run: |
           set -euo pipefail
-          root=evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001
-          parent="$root/parent/review"
-          out="$root/review"
-          while IFS=$'\t' read -r context slot phase start dur stem; do
-            clean="$parent/cadence-aligned-clean-review-$context.mkv"
-            ideal="$parent/ideal-review-$context.mkv"
+          out=evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001/review
+          mkdir -p "$out/media"
+          while IFS=$'\t' read -r context slot phase stem frames; do
+            frame_dir="$out/frames/$stem"
             native="$out/media/$stem-native.mkv"
             slow="$out/media/$stem-slow4x.mkv"
-            test -s "$clean" && test -s "$ideal"
-            ffmpeg -hide_banner -loglevel error -y -filter_complex_threads 1 -i "$clean" -i "$ideal" \
-              -filter_complex "[0:v]trim=start=$start:duration=$dur,setpts=PTS-STARTPTS,fps=64,tpad=stop_mode=clone:stop_duration=0.05,trim=duration=$dur[left];[1:v]trim=start=$start:duration=$dur,setpts=PTS-STARTPTS,fps=64,tpad=stop_mode=clone:stop_duration=0.05,trim=duration=$dur[right];[left][right]hstack=inputs=2[v]" \
-              -map '[v]' -an -c:v ffv1 -level 3 -pix_fmt bgr0 -threads 1 "$native"
-            ffmpeg -hide_banner -loglevel error -y -i "$native" \
-              -vf 'settb=AVTB,setpts=4*PTS' -fps_mode vfr -an -c:v ffv1 -level 3 -pix_fmt bgr0 -threads 1 "$slow"
+            test "$(find "$frame_dir" -maxdepth 1 -name 'frame-*.png' | wc -l)" -eq "$frames"
+            ffmpeg -hide_banner -loglevel error -y \
+              -framerate 64 -start_number 0 -i "$frame_dir/frame-%03d.png" \
+              -an -c:v ffv1 -level 3 -pix_fmt bgr0 -threads 1 "$native"
+            ffmpeg -hide_banner -loglevel error -y \
+              -framerate 16 -start_number 0 -i "$frame_dir/frame-%03d.png" \
+              -an -c:v ffv1 -level 3 -pix_fmt bgr0 -threads 1 "$slow"
             ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$native" > "$native.duration.txt"
             ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$slow" > "$slow.duration.txt"
             ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$native" > "$native.size.txt"
           done < "$out/windows.tsv"
 
-      - name: Finalize and fail-closed validate review package
+      - name: Fail-closed validate and finalize review package
         run: |
           set -euo pipefail
-          root=evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001
-          out="$root/review"
           python - <<'PY'
           import json
           from pathlib import Path
@@ -175,6 +107,8 @@ jobs:
           report=json.loads((out/'temporal-ab-manifest.json').read_text())
           expected={('path_eye',19):3,('elevated_oblique',11):11,('elevated_oblique',23):7,('elevated_oblique',38):6}
           assert report['comparison_raster_hz']==64,report
+          assert abs(report['comparison_frame_ms']-15.625)<1e-12,report
+          assert report['ideal_step_exact_review_frames']==2,report
           assert report['source_interpolation_added'] is False,report
           assert report['source_retimed'] is False,report
           assert report['source_amplitude_modified'] is False,report
@@ -187,7 +121,11 @@ jobs:
           for w in report['windows']:
               key=(w['context'],w['skipped_slot'])
               assert expected[key]==w['skipped_phase'],w
-              assert abs(w['review_duration_s']-0.21875)<1e-12,w
+              assert abs(w['review_duration_ms']-218.75)<1e-12,w
+              assert w['frame_count']==14,w
+              assert w['differing_source_state_review_frames']>0,w
+              assert len(w['frames'])==14,w
+              assert w['frames'][6]['ideal_phase']==w['skipped_phase'],w
               stem=w['stem']
               native=out/'media'/f'{stem}-native.mkv'
               slow=out/'media'/f'{stem}-slow4x.mkv'
@@ -197,7 +135,7 @@ jobs:
               sd=float((slow.parent/(slow.name+'.duration.txt')).read_text().strip())
               size=(native.parent/(native.name+'.size.txt')).read_text().strip()
               assert 0.20 <= nd <= 0.24,(native,nd)
-              assert 0.80 <= sd <= 0.95,(slow,sd)
+              assert 0.85 <= sd <= 0.90,(slow,sd)
               assert size=='2200x720',(native,size)
               w['native_media']=f'media/{native.name}'
               w['native_duration_s']=nd
@@ -208,14 +146,14 @@ jobs:
           (out/'temporal-ab-manifest.json').write_text(json.dumps(report,indent=2)+'\n')
           options=''.join(f'<option value="{i}">{w["context"]} slot {w["skipped_slot"]} / phase {w["skipped_phase"]}</option>' for i,w in enumerate(report['windows']))
           payload=json.dumps(report,separators=(',',':')).replace('</','<\\/')
-          html=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXM Nature skipped-state temporal A/B</title><style>body{{font-family:system-ui;background:#111;color:#eee;margin:18px}}video{{width:100%;max-width:1100px;background:#000}}.truth{{border:1px solid #666;padding:10px;border-radius:8px;margin:10px 0}}select{{font:inherit;margin-right:8px}}</style></head><body><h1>Nature leaf flutter — skipped-state temporal A/B</h1><div class="truth">Review media only. Left = clean cadence-aligned reconstruction from retained measured telemetry. Right = unobserved ideal 31.25 ms source schedule. 4× slow multiplies review time only. The 64 Hz comparison raster duplicates/holds frames; it is not timing authority and adds no motion interpolation.</div><select id="w">{options}</select><select id="s"><option value="native">native</option><option value="slow4x">4× slow diagnostic</option></select><br><video id="v" controls loop muted autoplay></video><pre id="m"></pre><script>const D={payload},W=document.getElementById('w'),S=document.getElementById('s'),V=document.getElementById('v'),M=document.getElementById('m');function r(){{const x=D.windows[+W.value],k=S.value;V.src=k==='native'?x.native_media:x.slow4x_media;M.textContent=JSON.stringify(x,null,2);V.play().catch(()=>{{}})}}W.onchange=r;S.onchange=r;r();</script></body></html>'''
+          html=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXM Nature skipped-state temporal A/B</title><style>body{{font-family:system-ui;background:#111;color:#eee;margin:18px}}video{{width:100%;max-width:1100px;background:#000}}.truth{{border:1px solid #666;padding:10px;border-radius:8px;margin:10px 0}}select{{font:inherit;margin-right:8px}}</style></head><body><h1>Nature leaf flutter — skipped-state temporal A/B</h1><div class="truth">Review media only. Left = cadence-aligned clean reconstruction from retained measured telemetry. Right = unobserved ideal 31.25 ms source schedule. 4× slow changes review playback only. The 64 Hz raster samples and holds exact source-state images; it is not timing authority and creates no motion interpolation.</div><select id="w">{options}</select><select id="s"><option value="native">native</option><option value="slow4x">4× slow diagnostic</option></select><br><video id="v" controls loop muted autoplay></video><pre id="m"></pre><script>const D={payload},W=document.getElementById('w'),S=document.getElementById('s'),V=document.getElementById('v'),M=document.getElementById('m');function r(){{const x=D.windows[+W.value],k=S.value;V.src=k==='native'?x.native_media:x.slow4x_media;M.textContent=JSON.stringify(x,null,2);V.play().catch(()=>{{}})}}W.onchange=r;S.onchange=r;r();</script></body></html>'''
           (out/'review.html').write_text(html)
           summary={
               'state':report['state'],
               'window_count':len(report['windows']),
               'media_files':8,
               'comparison_raster_hz':report['comparison_raster_hz'],
-              'windows':[{k:w[k] for k in ('context','skipped_slot','skipped_phase','review_start_s','review_duration_s','native_duration_s','slow4x_duration_s')} for w in report['windows']],
+              'windows':[{k:w[k] for k in ('context','skipped_slot','skipped_phase','frame_count','differing_source_state_review_frames','native_duration_s','slow4x_duration_s')} for w in report['windows']],
           }
           (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
           print(json.dumps(summary,indent=2))
@@ -227,6 +165,7 @@ jobs:
         with:
           name: vfx-nature-leaf-flutter-skip-temporal-ab-review-001-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
+            evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001/build.log
             evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001/review/
           if-no-files-found: warn
           compression-level: 6
