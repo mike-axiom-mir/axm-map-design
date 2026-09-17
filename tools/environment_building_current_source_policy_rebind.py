@@ -87,13 +87,50 @@ def building_receiver(scene: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("current-world Building receiver missing")
     if receiver.get("asset_id") != "source:building:service-pavilion-001":
         raise ValueError("current-world Building receiver asset drift")
+
     vertices = receiver.get("vertices_source_xyz_m", [])
-    triangles = receiver.get("triangles", [])
-    if len(vertices) != 184 or len(triangles) != 276:
-        raise ValueError("current-world Building receiver no longer matches segmented 184v/276t representation")
+    surfaces = receiver.get("surfaces", [])
+    if len(vertices) != 184 or not isinstance(surfaces, list):
+        raise ValueError("current-world Building receiver no longer matches segmented 184v representation")
+
+    expected_roles = [
+        "frame_galvanized",
+        "infill_coating",
+        "roof_membrane",
+        "slab_mineral",
+        "utility_panel_ochre",
+    ]
+    if [surface.get("surface_role") for surface in surfaces] != expected_roles:
+        raise ValueError("current-world Building receiver five-surface partition drift")
+
+    triangles: list[list[int]] = []
+    for surface in surfaces:
+        surface_triangles = surface.get("triangles", [])
+        if not isinstance(surface_triangles, list):
+            raise ValueError("current-world Building receiver surface triangle payload drift")
+        triangles.extend(surface_triangles)
+    if len(triangles) != 276:
+        raise ValueError("current-world Building receiver no longer matches segmented 276t surface partition")
+    if any(
+        not isinstance(triangle, list)
+        or len(triangle) != 3
+        or any(not isinstance(index, int) or index < 0 or index >= 184 for index in triangle)
+        for triangle in triangles
+    ):
+        raise ValueError("current-world Building receiver surface triangle index drift")
+
     provenance = receiver.get("provenance", {})
     if provenance.get("building_header_segmentation_revision") != SEGMENTATION_REVISION:
         raise ValueError("current-world Building receiver segmentation provenance drift")
+    rebind = receiver.get("source_header_segmentation_rebind", {})
+    topology = rebind.get("topology_summary", {})
+    if (
+        rebind.get("segmentation_revision") != SEGMENTATION_REVISION
+        or topology.get("object_count") != 23
+        or topology.get("vertex_count") != 184
+        or topology.get("triangle_count") != 276
+    ):
+        raise ValueError("current-world Building receiver source-segmentation binding drift")
     return receiver
 
 
