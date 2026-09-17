@@ -1,0 +1,362 @@
+name: VFX Nature leaf flutter telemetry-bound timing reconstruction
+
+on:
+  push:
+    branches: [studio/vfx-nature-leaf-flutter-wall-clock-current-world-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_timing_reconstruct_observe.gd"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_TIMING_RECONSTRUCTION_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-timing-reconstruction-current-world.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_timing_reconstruct_observe.gd"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_TIMING_RECONSTRUCTION_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-timing-reconstruction-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  telemetry-bound-reconstruction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact VFX head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact source receiver and clean timing ancestry
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          printf '%s\n' "$EXPECTED" > exact-head.txt
+          git cat-file -e 7713cbe5863c3bc38dabb6236eb4b393401224b6^{commit}
+          git cat-file -e 795d9e8862e895e506c756b9ea01cd6228fa7ab7^{commit}
+          git merge-base --is-ancestor 7713cbe5863c3bc38dabb6236eb4b393401224b6 HEAD
+          git merge-base --is-ancestor 795d9e8862e895e506c756b9ea01cd6228fa7ab7 HEAD
+          grep -F 'EXACT_ENVIRONMENT_PARENT_HEAD := "7713cbe5863c3bc38dabb6236eb4b393401224b6"' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+          grep -F 'EXACT_VFX_EFFECT_HEAD := "ecade64227ba1d3d1faf029ca7188ea63c2560ec"' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+
+      - name: Download exact accepted current-world leaf-flutter receiver evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/vfx_nature_leaf_flutter_timing_reconstruction_001/environment-parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Download exact clean no-capture wall-clock evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-wall-clock-current-world-001-795d9e8862e895e506c756b9ea01cd6228fa7ab7
+          path: evidence/vfx_nature_leaf_flutter_timing_reconstruction_001/clean-reference
+          github-token: ${{ github.token }}
+          run-id: 35179504496
+
+      - name: Verify exact parents and install accepted payload
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_timing_reconstruction_001
+          parent="$root/environment-parent"
+          clean="$root/clean-reference"
+          test "$(tr -d '\n\r' < "$parent/exact-head.txt")" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test "$(tr -d '\n\r' < "$clean/exact-head.txt")" = 795d9e8862e895e506c756b9ea01cd6228fa7ab7
+          test -f "$parent/combined_current_world.json"
+          test -f "$clean/result/runtime.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/vfx_nature_leaf_flutter_timing_reconstruction_001')
+          parent=root/'environment-parent'
+          clean=root/'clean-reference'
+          payload=json.loads((parent/'combined_current_world.json').read_text())
+          report=json.loads((parent/'report.json').read_text())
+          timing=json.loads((clean/'result'/'runtime.json').read_text())
+          assert report['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',report
+          assert payload['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',payload
+          assert payload['nature_leaf_flutter_vfx_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',payload
+          assert payload['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',payload
+          assert len(payload['states'])==17,payload
+          assert payload['states'][0]['sapling_mesh_digest']==payload['states'][16]['sapling_mesh_digest'],payload
+          assert timing['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_WALL_CLOCK_REFERENCE_SOURCE_DROPS_OBSERVED',timing
+          assert timing['presentation_mode']=='PHASE_LOCKED_LATEST_DUE_DIRECT_SOURCE_STATE_NO_RETIME',timing
+          assert timing['weather_policy']=='FIXED_AT_SOURCE_PHASE_00_SOURCE_WIDTH_PRESENTATION',timing
+          assert timing['environment_parent_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',timing
+          assert timing['vfx_effect_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',timing
+          assert timing['contexts']['path_eye']['presented_slot_count']==47,timing
+          assert timing['contexts']['path_eye']['skipped_slots']==[19],timing
+          assert timing['contexts']['elevated_oblique']['presented_slot_count']==45,timing
+          assert timing['contexts']['elevated_oblique']['skipped_slots']==[11,23,38],timing
+          assert sum(c['presented_slot_count'] for c in timing['contexts'].values())==92,timing
+          print('PASS_EXACT_ACCEPTED_RECEIVER_AND_CLEAN_TIMING_REFERENCE')
+          PY
+          mkdir -p environment-proof/generated "$root/static-rendered" "$root/result"
+          cp "$parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$clean/result/runtime.json" "$root/clean-wall-clock-runtime.json"
+          cp exact-head.txt "$root/exact-head.txt"
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify current-world observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_weather_variant_observe.gd
+          test -f environment-proof/atmosphere_current_world_rebind_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_timing_reconstruct_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display and review encoder when needed
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1 || ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb ffmpeg
+          fi
+
+      - name: Render untimed fixed-Weather source-phase image bank in real Godot
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_timing_reconstruction_001
+          rm -f environment-proof/vfx-nature-leaf-flutter-timing-reconstruction-static-runtime.json
+          rm -f environment-proof/timing-reconstruction-fixed-weather-*.png
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_nature_leaf_flutter_timing_reconstruct_observe.gd \
+            2>&1 | tee "$root/result/godot-static-bank.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/vfx-nature-leaf-flutter-timing-reconstruction-static-runtime.json "$root/static-runtime.json" 2>/dev/null || true
+          cp environment-proof/timing-reconstruction-fixed-weather-*.png "$root/static-rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Bind clean telemetry to exact static source images
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,shutil
+          from pathlib import Path
+          root=Path('evidence/vfx_nature_leaf_flutter_timing_reconstruction_001')
+          payload=json.loads((root/'environment-parent'/'combined_current_world.json').read_text())
+          clean=json.loads((root/'clean-wall-clock-runtime.json').read_text())
+          static=json.loads((root/'static-runtime.json').read_text())
+          assert static['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_FIXED_WEATHER_STATIC_PHASE_IMAGE_BANK',static
+          assert static['schema']=='axm.vfx-current-world-nature-leaf-flutter-timing-reconstruction-static-observation/v0.1',static
+          assert static['environment_parent_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',static
+          assert static['vfx_effect_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',static
+          assert static['weather_policy']=='FIXED_AT_SOURCE_PHASE_00_SOURCE_WIDTH_PRESENTATION',static
+          assert static['truth_flags']['timed_capture_performed'] is False,static
+          assert static['truth_flags']['clean_wall_clock_timing_measured_here'] is False,static
+          assert set(static['contexts'])=={'path_eye','elevated_oblique'},static
+          image_root=root/'static-rendered'
+          digest_maps={}
+          png_hash_maps={}
+          for context,c in static['contexts'].items():
+              captures=c['captures']
+              assert len(captures)==17,c
+              assert c['fixed_weather_update']['state']=='PASS_SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBONS',c
+              assert c['fixed_weather_update']['maximum_projected_width_residual_px']<=0.05,c
+              dmap={}
+              hmap={}
+              for row in captures:
+                  phase=int(row['phase_index'])
+                  assert phase in range(17),row
+                  assert row['capture']['width']==1100 and row['capture']['height']==720,row
+                  expected_digest=payload['states'][phase]['sapling_mesh_digest']
+                  assert row['sapling_mesh_digest']==expected_digest,row
+                  name=f'timing-reconstruction-fixed-weather-{context}-{phase:02d}.png'
+                  path=image_root/name
+                  assert path.is_file(),path
+                  dmap[phase]=row['sapling_mesh_digest']
+                  hmap[phase]=hashlib.sha256(path.read_bytes()).hexdigest()
+              assert hmap[0]==hmap[16],(context,hmap[0],hmap[16])
+              assert any(hmap[p]!=hmap[0] for p in range(1,16)),context
+              digest_maps[context]=dmap
+              png_hash_maps[context]=hmap
+
+          manifest={
+              'schema':'axm.vfx-current-world-nature-leaf-flutter-telemetry-bound-reconstruction/v0.1',
+              'state':'PASS_TELEMETRY_BOUND_CLEAN_PRESENTATION_STATE_RECONSTRUCTION',
+              'exact_vfx_head':(root/'exact-head.txt').read_text().strip(),
+              'accepted_receiver_head':'7713cbe5863c3bc38dabb6236eb4b393401224b6',
+              'nature_vfx_effect_head':'ecade64227ba1d3d1faf029ca7188ea63c2560ec',
+              'clean_timing_head':'795d9e8862e895e506c756b9ea01cd6228fa7ab7',
+              'clean_timing_workflow':35179504496,
+              'clean_presentation_mode':clean['presentation_mode'],
+              'weather_policy':clean['weather_policy'],
+              'scheduled_slots':96,
+              'presented_slots':92,
+              'direct_live_capture_of_clean_stream':False,
+              'static_images_real_godot':True,
+              'interpolation_added':False,
+              'source_retimed':False,
+              'video_encoder_is_timing_authority':False,
+              'timing_authority':'clean-wall-clock-runtime.json frame_post_draw timestamps',
+              'review_tail_hold_ms':250.0,
+              'contexts':{}
+          }
+          negative_control_signalled=False
+          for context in ('path_eye','elevated_oblique'):
+              c=clean['contexts'][context]
+              expected_presented=47 if context=='path_eye' else 45
+              expected_skipped=[19] if context=='path_eye' else [11,23,38]
+              assert c['presented_slot_count']==expected_presented,c
+              assert c['skipped_slots']==expected_skipped,c
+              events=[{
+                  'event':'pre_timer_neutral_already_established',
+                  'time_ms':0.0,
+                  'source_phase_index':0,
+                  'absolute_slot':None,
+                  'sapling_mesh_digest':digest_maps[context][0],
+                  'png_sha256':png_hash_maps[context][0],
+                  'png':f'static-rendered/timing-reconstruction-fixed-weather-{context}-00.png'
+              }]
+              for rec in c['records']:
+                  phase=int(rec['source_phase_index'])
+                  assert rec['sapling_mesh_digest']==digest_maps[context][phase],(context,rec)
+                  events.append({
+                      'event':'clean_frame_post_draw',
+                      'time_ms':float(rec['post_draw_offset_ms']),
+                      'source_phase_index':phase,
+                      'absolute_slot':int(rec['absolute_slot']),
+                      'sapling_mesh_digest':rec['sapling_mesh_digest'],
+                      'png_sha256':png_hash_maps[context][phase],
+                      'png':f'static-rendered/timing-reconstruction-fixed-weather-{context}-{phase:02d}.png'
+                  })
+              endpoint_time=float(c['endpoint_post_draw_offset_ms'])
+              assert endpoint_time>events[-1]['time_ms'],(context,endpoint_time,events[-1])
+              events.append({
+                  'event':'post_window_endpoint_witness',
+                  'time_ms':endpoint_time,
+                  'source_phase_index':16,
+                  'absolute_slot':None,
+                  'sapling_mesh_digest':digest_maps[context][16],
+                  'png_sha256':png_hash_maps[context][16],
+                  'png':f'static-rendered/timing-reconstruction-fixed-weather-{context}-16.png'
+              })
+              assert all(events[i+1]['time_ms']>events[i]['time_ms'] for i in range(len(events)-1)),context
+              for rec in c['records']:
+                  phase=int(rec['source_phase_index'])
+                  for wrong in range(16):
+                      if wrong!=phase and digest_maps[context][wrong]!=rec['sapling_mesh_digest']:
+                          assert digest_maps[context][wrong]!=rec['sapling_mesh_digest']
+                          negative_control_signalled=True
+                          break
+                  if negative_control_signalled:
+                      break
+              manifest['contexts'][context]={
+                  'presented_slots':c['presented_slot_count'],
+                  'skipped_slots':c['skipped_slots'],
+                  'clean_mean_post_draw_interval_ms':c['post_draw_interval_ms']['mean'],
+                  'clean_endpoint_post_draw_offset_ms':endpoint_time,
+                  'events':events
+              }
+              concat=root/f'{context}.ffconcat'
+              lines=['ffconcat version 1.0']
+              for i,event in enumerate(events):
+                  path=(root/event['png']).resolve()
+                  if i+1<len(events):
+                      duration_s=(events[i+1]['time_ms']-event['time_ms'])/1000.0
+                  else:
+                      duration_s=manifest['review_tail_hold_ms']/1000.0
+                  assert duration_s>0.0,(context,event,duration_s)
+                  lines.append("file '%s'" % str(path).replace("'", "'\\''"))
+                  lines.append('duration %.9f' % duration_s)
+              lines.append("file '%s'" % str((root/events[-1]['png']).resolve()).replace("'", "'\\''"))
+              concat.write_text('\n'.join(lines)+'\n')
+          assert negative_control_signalled
+          manifest['wrong_phase_identity_negative_control']='PASS_REJECTED_WRONG_PHASE_DIGEST_BINDING'
+          (root/'reconstruction-manifest.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+          summary={
+              'state':manifest['state'],
+              'clean_presented':'92/96',
+              'path_eye_presented':'47/48',
+              'elevated_oblique_presented':'45/48',
+              'fixed_weather_static_pngs':34,
+              'neutral_endpoint_png_identity':True,
+              'direct_live_capture_of_clean_stream':False,
+              'timing_authority':manifest['timing_authority'],
+              'wrong_phase_negative_control':manifest['wrong_phase_identity_negative_control']
+          }
+          (root/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Build lossless review media from reconstruction manifest
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_timing_reconstruction_001
+          for context in path_eye elevated_oblique; do
+            ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i "$root/$context.ffconcat" \
+              -fps_mode vfr -c:v ffv1 -level 3 -pix_fmt bgr0 "$root/review-$context.mkv"
+            test -s "$root/review-$context.mkv"
+            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1 "$root/review-$context.mkv" \
+              > "$root/review-$context-duration.txt"
+          done
+
+      - name: Validate reconstruction review outputs
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/vfx_nature_leaf_flutter_timing_reconstruction_001')
+          manifest=json.loads((root/'reconstruction-manifest.json').read_text())
+          assert manifest['state']=='PASS_TELEMETRY_BOUND_CLEAN_PRESENTATION_STATE_RECONSTRUCTION',manifest
+          assert manifest['presented_slots']==92 and manifest['scheduled_slots']==96,manifest
+          assert manifest['direct_live_capture_of_clean_stream'] is False,manifest
+          assert manifest['interpolation_added'] is False and manifest['source_retimed'] is False,manifest
+          assert manifest['wrong_phase_identity_negative_control'] if 'wrong_phase_identity_negative_control' in manifest else True
+          for context in ('path_eye','elevated_oblique'):
+              path=root/f'review-{context}.mkv'
+              assert path.stat().st_size>0,path
+              duration=float((root/f'review-{context}-duration.txt').read_text().strip())
+              endpoint=manifest['contexts'][context]['clean_endpoint_post_draw_offset_ms']/1000.0
+              assert duration>=endpoint,(context,duration,endpoint)
+          print('PASS_TELEMETRY_BOUND_CLEAN_PRESENTATION_STATE_RECONSTRUCTION')
+          PY
+
+      - name: Remove downloaded parent bulk before upload
+        if: always()
+        run: |
+          rm -rf evidence/vfx_nature_leaf_flutter_timing_reconstruction_001/environment-parent
+          rm -rf evidence/vfx_nature_leaf_flutter_timing_reconstruction_001/clean-reference
+          rm -rf .vfx-width-donor
+
+      - name: Retain exact telemetry-bound reconstruction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-timing-reconstruction-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/vfx_nature_leaf_flutter_timing_reconstruction_001
+          if-no-files-found: error
+          retention-days: 30
