@@ -8,10 +8,10 @@ import statistics
 from pathlib import Path
 from PIL import Image, ImageChops
 
-SCHEMA = "axm.runtime-building-planar-role-direct-indexed-import-budget/v0.1"
+SCHEMA = "axm.runtime-building-planar-role-direct-indexed-import-budget/v0.2"
 ENVIRONMENT_HEAD = "038925282240441c475651bdc3737d1749c31d06"
 REPRESENTATION_ID = "boundary-only-planar-role-rectangle-render-001"
-DIRECT_SCHEMA = "axm.runtime-building-planar-role-direct-indexed-receiver/v0.1"
+DIRECT_SCHEMA = "axm.runtime-building-planar-role-direct-indexed-receiver/v0.2"
 BUILDING_ID = "source:building:service-pavilion-001"
 
 
@@ -111,7 +111,7 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
         if c_row.get("runtime_building_prepare_mode") != "POST_NORMAL_SURFACETOOL_INDEX_CONTROL":
             raise ValueError("control timing marker drift")
         direct = d_row.get("runtime_building_direct_indexed", {})
-        if d_row.get("runtime_building_prepare_mode") != "DIRECT_FINAL_POSITION_NORMAL_INDEX_ARRAYS":
+        if d_row.get("runtime_building_prepare_mode") != "DIRECT_INDEXED_POSITION_DOMAIN_THEN_GENERATE_NORMALS":
             raise ValueError("candidate timing marker drift")
         if direct.get("schema") != DIRECT_SCHEMA:
             raise ValueError("candidate direct receipt schema drift")
@@ -156,16 +156,16 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
 
     preparation_improved = d_median < c_median
     if preparation_improved:
-        state = "PASS_BUILDING_DIRECT_INDEXED_RECEIVER_REDUCES_PROOF_HOST_PREPARATION_COST__HOLD_ART_QA_AND_TARGET_DEVICE"
-        decision = "DIRECT_FINAL_ARRAY_HANDOFF_IS_A_REAL_PROOF_HOST_PREPARATION_WIN__RENDERER_AND_VISUAL_GATES_REMAIN_SEPARATE"
+        state = "PASS_BUILDING_INDEX_BEFORE_NORMAL_RECEIVER_REDUCES_PROOF_HOST_PREPARATION_COST__HOLD_ART_QA_AND_TARGET_DEVICE"
+        decision = "INDEX_FINAL_POSITION_DOMAIN_BEFORE_NORMAL_GENERATION_IS_A_REAL_PROOF_HOST_PREPARATION_WIN__RENDERER_AND_VISUAL_GATES_REMAIN_SEPARATE"
     else:
-        state = "HOLD_BUILDING_DIRECT_INDEXED_RECEIVER_PREPARATION_WIN_NOT_REPRODUCED"
-        decision = "KEEP_POST_NORMAL_INDEX_CONTROL__DIRECT_ARRAY_HANDOFF_DID_NOT_REDUCE_MEDIAN_PREPARATION_ON_THIS_HOST"
+        state = "HOLD_BUILDING_INDEX_BEFORE_NORMAL_RECEIVER_PREPARATION_WIN_NOT_REPRODUCED"
+        decision = "KEEP_POST_NORMAL_INDEX_CONTROL__INDEX_BEFORE_NORMAL_DID_NOT_REDUCE_MEDIAN_PREPARATION_ON_THIS_HOST"
 
     tradeoff = (
         "NONE_OBSERVED__68_FRAMES_BYTE_IDENTICAL"
         if not changed
-        else f"MEASURED_DIRECT_ARRAY_RENDER_DELTA__CHANGED_FRAMES_{len(changed)}__MAX_PIXELS_{max_pixels}__MAX_OVER_1_LSB_{max_over_one}__MAX_LSB_{max_lsb}__ART_QA_REVIEW_REQUIRED"
+        else f"MEASURED_INDEX_BEFORE_NORMAL_RENDER_DELTA__CHANGED_FRAMES_{len(changed)}__MAX_PIXELS_{max_pixels}__MAX_OVER_1_LSB_{max_over_one}__MAX_LSB_{max_lsb}__ART_QA_REVIEW_REQUIRED"
     )
 
     report = {
@@ -194,8 +194,8 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
             "stored_vertices": 312,
             "indices": 1008,
             "source_payload_vertices": 672,
-            "control_path": "build unindexed triangle-corner surfaces -> generate normals -> create_from -> SurfaceTool.index -> commit",
-            "candidate_path": "consume exact source triangles -> emit final cardinal normal domain -> direct indexed ArrayMesh arrays",
+            "control_path": "build 1008 unindexed triangle-corner vertices -> generate normals -> create_from -> SurfaceTool.index -> commit",
+            "candidate_path": "deduplicate exact per-material position domain to 312 vertices -> add 1008 indices -> same SurfaceTool.generate_normals -> commit",
         },
         "proof_host_renderer_delta_sets_candidate_minus_control": counter_delta,
         "visuals": {
@@ -209,14 +209,15 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
         "truth_boundary": (
             "This compares only two receiver-construction paths for the exact five-surface / 336-triangle planar-role Building on the pinned Godot proof host. "
             "The candidate does not alter Building semantic source authority, material roles/scalars, current-world composition or triangle membership. "
+            "It creates the exact per-material unique-position index domain before the same Godot normal-generation step instead of after it. "
             "Preparation microseconds are proof-host construction timing, not frame time, FPS, GPU cost, target-device CPU acceptance or import/export transport acceptance. "
-            "The direct path assumes this exact cardinal-normal position+normal seam domain and proves no UV/tangent/color/skin/morph/custom-channel safety."
+            "The candidate proves no UV/tangent/color/skin/morph/custom-channel safety."
         ),
         "four_root_gate": {
             "truth": "Preparation, renderer counters and visual deltas are reported separately; a faster constructor cannot silently become a visual or production PASS.",
             "agency_non_domination": "Runtime owns this receiver-cost experiment only; Environment, Art/QA, Hard Surface, Materials and Technical Art retain adoption authority.",
             "continuity": "The post-normal indexed receiver remains the rollback control and exact parent identity is retained.",
-            "wisdom_before_speed": "Prefer direct final arrays only if the measured host actually benefits and downstream seam/transport gates remain explicit."
+            "wisdom_before_speed": "Prefer index-before-normal construction only if the measured host benefits and downstream attribute/transport gates remain explicit."
         },
     }
     output.parent.mkdir(parents=True, exist_ok=True)
