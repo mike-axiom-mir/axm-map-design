@@ -149,14 +149,19 @@ func _build_current_world()->Dictionary:
         return {}
     await settle()
 
-    var container := _motion_find_node(static_root, OBJECT_ASSET_ID)
-    if container == null:
-        _animation_fail("Animation current-world Object rigid receiver missing")
-        return {}
-    var player := _find_animation_player(container)
+    # Technical Art owns receiver construction. Bind Animation to its uniquely named
+    # inherited player, then derive the receiver from that player's direct parent.
+    # This avoids assuming the source asset ID survives Godot Node-name sanitization.
+    var player := _find_animation_player(static_root)
     if player == null:
         _animation_fail("Animation current-world owner AnimationPlayer missing")
         return {}
+    var player_parent := player.get_parent()
+    if not (player_parent is Node3D):
+        _animation_fail("Animation current-world owner AnimationPlayer parent is not the rigid receiver")
+        return {}
+    var container := player_parent as Node3D
+
     var plan := _motion_read_json(MOTION_PLAN_PATH)
     if plan.is_empty():
         _animation_fail("Animation current-world exact motion plan missing")
