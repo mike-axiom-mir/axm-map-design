@@ -1,0 +1,134 @@
+name: Runtime Weather source-width budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-weather-width-budget-001]
+    paths:
+      - "tools/environment_weather_width_runtime_budget.py"
+      - "tests/test_environment_weather_width_runtime_budget.py"
+      - "docs/RUNTIME_WEATHER_SOURCE_WIDTH_BUDGET_001.md"
+      - ".github/workflows/runtime-weather-source-width-budget.yml"
+  pull_request:
+    paths:
+      - "tools/environment_weather_width_runtime_budget.py"
+      - "tests/test_environment_weather_width_runtime_budget.py"
+      - "docs/RUNTIME_WEATHER_SOURCE_WIDTH_BUDGET_001.md"
+      - ".github/workflows/runtime-weather-source-width-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m unittest discover -s tests -p 'test_environment_weather_width_runtime_budget.py' -v
+
+  exact-budget:
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Runtime head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment donor and prove Runtime changed no producer path
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 0d8b2279ecbba47b9696a951db9513883fbef6c5^{commit}
+          git merge-base --is-ancestor 0d8b2279ecbba47b9696a951db9513883fbef6c5 HEAD
+          git diff --exit-code 0d8b2279ecbba47b9696a951db9513883fbef6c5 -- \
+            tools/environment_building_successor_weather_width_current_world.py \
+            environment-proof/atmosphere_current_world_building_successor_weather_width_observe.gd \
+            .github/workflows/environment-building-successor-weather-width-composition.yml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download exact retained Environment source-width artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARTIFACT_URL: https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10452505109/zip
+          ARTIFACT_SHA256: 4ffc52fc421d38a92829d3bf663ab5a48dfc144d16f31028f742ce19855512f4
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_source_width_budget_001
+          mkdir -p "$out/parent"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "$ARTIFACT_URL" \
+            --output "$out/parent.zip"
+          echo "$ARTIFACT_SHA256  $out/parent.zip" | sha256sum --check --strict
+          unzip -q "$out/parent.zip" -d "$out/parent"
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = 0d8b2279ecbba47b9696a951db9513883fbef6c5
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/parent/runtime.json"
+          test -f "$out/parent/target_host.json"
+          test -d "$out/parent/rendered"
+
+      - name: Derive exact Weather source-width Runtime budget
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_weather_source_width_budget_001
+          python tools/environment_weather_width_runtime_budget.py \
+            --payload "$out/parent/combined_current_world.json" \
+            --runtime "$out/parent/runtime.json" \
+            --target-host "$out/parent/target_host.json" \
+            --render-root "$out/parent/rendered" \
+            --output "$out/runtime_budget.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('evidence/runtime_weather_source_width_budget_001/runtime_budget.json')
+          d=json.loads(p.read_text())
+          assert d['state']=='PASS_WEATHER_SOURCE_WIDTH_FIXED_CAMERA_RUNTIME_BUDGET_CHARACTERIZED',d
+          assert all(d['checks'].values()),d
+          expected={
+              'draw_calls_in_frame':0,
+              'objects_in_frame':0,
+              'primitives_in_frame':144,
+              'buffer_mem_bytes':2304,
+              'texture_mem_bytes':0,
+          }
+          assert d['contexts']['path_eye']['delta']==expected,d['contexts']['path_eye']
+          assert d['contexts']['elevated_oblique']['delta']==expected,d['contexts']['elevated_oblique']
+          print(json.dumps({
+              'state':d['state'],
+              'budget_decision':d['budget_decision'],
+              'contexts':d['contexts'],
+              'visual_comparison':d['visual_comparison'],
+          },indent=2,sort_keys=True))
+          PY
+
+      - name: Upload exact Runtime source-width budget evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-weather-source-width-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/runtime_weather_source_width_budget_001/exact-head.txt
+            evidence/runtime_weather_source_width_budget_001/runtime_budget.json
+            evidence/runtime_weather_source_width_budget_001/parent/combined_current_world.json
+            evidence/runtime_weather_source_width_budget_001/parent/runtime.json
+            evidence/runtime_weather_source_width_budget_001/parent/target_host.json
+          if-no-files-found: warn
+          retention-days: 30
