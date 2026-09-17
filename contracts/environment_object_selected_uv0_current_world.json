@@ -1,0 +1,65 @@
+{
+  "schema": "axm.environment-object-selected-uv0-current-world/v0.1",
+  "asset_id": "source:object:modular-equipment-case-001",
+  "parent_environment_head": "8856745aa0f3de626599afa35fe16a92ae68fa50",
+  "intent": "bind only the exact Technical-Art-proven TEXCOORD_0 identity onto the two already-segmented source-owned Object service faces inside the real current-world receiver, while leaving the selected roughness field unadopted so UV receiving correctness is proven independently from material appearance",
+  "reusable_rule": "EXACT_RECEIVER_UV_BINDING_MUST_MATCH_PINNED_SOURCE_SURFACE_POSITION_TO_TEXCOORD_IDENTITY_BEFORE_SPATIAL_MATERIAL_FIELD_REVIEW",
+  "technical_art": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 28,
+    "head": "1bcdbae786e02f3ca46a89e4e0ff608d74f364b4",
+    "workflow": 35207908611,
+    "artifact_id": 10490650986,
+    "artifact_archive_sha256": "0e24efcbfefb129ef24c153b50020ac321a9789dbf8c148794dfc45f5c9f5f90",
+    "surface_spec_sha256": "1f87a7b287c7caa138deee64b687d0aba67a3485ddeae6f80a38ebd906a86aec",
+    "selected_glb_sha256": "9327291569a04bcb22016dc2ac4292499531b141a19e4bfceb291122e20ac3f4",
+    "accepted_result": "PASS_OBJECT_SERVICE_DARK_SELECTED_ROUGHNESS_SCALAR_TO_CURRENT_UC_TEXTURED_GLB_TO_GODOT_FRONT_VIEWS"
+  },
+  "materials": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 6,
+    "head": "0515a2d5ad2c7a1eb545f2b7b327b7367530dfca",
+    "selected_scalar_r8_sha256": "b8d13c07f9b71278042b0d42d44b84579a3f327c6adf6723cae4c8c8f06dd38e",
+    "historical_png_sha256": "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949",
+    "atlas": {
+      "width_px": 512,
+      "height_px": 512,
+      "pixels_per_meter": 500,
+      "padding_px": 16,
+      "repeat": false
+    }
+  },
+  "selected_surfaces": {
+    "lid_inner_service_surface": {
+      "receiver_surface_index": 1,
+      "source_triangle_indices": [12, 13]
+    },
+    "front_service_panel_outer_service_surface": {
+      "receiver_surface_index": 3,
+      "source_triangle_indices": [28, 29]
+    }
+  },
+  "decision": {
+    "pass_state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_SERVICE_SURFACE_UV0_BOUND__ROUGHNESS_ADOPTION_HELD",
+    "environment_adoption": false,
+    "selected_roughness_adopted": false,
+    "next_receiving_requirement": "Render the exact Materials-selected roughness field through these proven UV-bound selected faces in the retained full current world as a separate appearance candidate; preserve the active untextured receiver as rollback and send representation cost to Runtime plus appearance judgment to Art Direction and independent Visual QA."
+  },
+  "truth_boundary": {
+    "source_geometry_changed": false,
+    "source_surface_identity_changed": false,
+    "source_triangle_membership_changed": false,
+    "parent_material_objects_changed": false,
+    "material_scalars_changed": false,
+    "texture_content_adopted": false,
+    "selected_roughness_adopted": false,
+    "uv0_added_only_to_exact_selected_faces": true,
+    "technical_art_position_to_texcoord_identity_reused": true,
+    "runtime_cost_accepted": false,
+    "target_device_accepted": false,
+    "art_direction_final_accepted": false,
+    "visual_qa_final_accepted": false,
+    "canon": false,
+    "production_ready": false
+  }
+}
