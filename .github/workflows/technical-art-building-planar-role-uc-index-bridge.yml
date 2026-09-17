@@ -156,7 +156,7 @@ jobs:
           test -f environment-proof/technical-art-building-planar-role-index-bundle.json
           cp environment-proof/technical-art-building-planar-role-index-bundle.json evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
 
-      - name: Prove exact Godot index stream through pinned UC observer
+      - name: Prove exact decoded tuple-stream isomorphism through pinned UC observer
         run: |
           set -euo pipefail
           out=evidence/technical_art_building_uc_index_bridge/final
@@ -174,15 +174,17 @@ jobs:
           python - <<'PY'
           import json
           p=json.load(open('evidence/technical_art_building_uc_index_bridge/final/receipt.json'))
-          assert p['result']=='PASS_BUILDING_EXACT_GODOT_POST_NORMAL_PER_SURFACE_INDEX_MATCHES_UC_CROSS_SOURCE_TUPLE_CANDIDATE',p
+          assert p['result']=='PASS_BUILDING_EXACT_GODOT_POST_NORMAL_PER_SURFACE_INDEX_ISOMORPHIC_TO_UC_CROSS_SOURCE_TUPLE_CANDIDATE',p
           assert p['uc_candidate']['candidate_vertices']==312,p
           assert p['uc_candidate']['candidate_indices']==1008,p
-          assert p['uc_candidate']['exact_index_stream_match_all_surfaces'] is True,p
+          assert p['uc_candidate']['exact_decoded_position_normal_triangle_corner_stream_match_all_surfaces'] is True,p
+          assert p['uc_candidate']['exact_unique_position_normal_tuple_domain_match_all_surfaces'] is True,p
+          assert p['uc_candidate']['raw_index_numbering_or_vertex_order_claimed'] is False,p
           assert p['negative_controls']['default_source_lineage_mode_preserves_all_1008_triangle_corners'] is True,p
           print(p['result'])
           PY
 
-      - name: Deliberate fail-closed exact-index mutation
+      - name: Deliberate fail-closed decoded-stream mutation
         run: |
           set -euo pipefail
           cp evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json /tmp/mutated-bundle.json
@@ -201,17 +203,22 @@ jobs:
             --technical-art-head "$(cat exact-head.txt)" \
             --uc-head "$UC_HEAD" \
             --uc-observer ".uc/$UC_OBSERVER_PATH"; then
-            echo 'ERROR: exact-index mutation unexpectedly passed' >&2
+            echo 'ERROR: decoded-stream mutation unexpectedly passed' >&2
             exit 1
           fi
-          echo PASS_FAIL_CLOSED_EXACT_INDEX_MUTATION
+          echo PASS_FAIL_CLOSED_DECODED_STREAM_MUTATION
 
       - name: Upload retained Technical Art bridge evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: technical-art-building-planar-role-uc-index-bridge-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             evidence/technical_art_building_uc_index_bridge/final/
+            evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
+            evidence/technical_art_building_uc_index_bridge/runtime-report.json
+            evidence/technical_art_building_uc_index_bridge/uc-head.txt
+            evidence/technical_art_building_uc_index_bridge/uc-observer.sha256
             evidence/technical_art_building_uc_index_bridge/godot.log
           if-no-files-found: error
           retention-days: 30
