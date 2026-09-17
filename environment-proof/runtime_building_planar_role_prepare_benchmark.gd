@@ -119,14 +119,12 @@ func valid_final(mesh:ArrayMesh)->bool:
     return int(diag.get("surface_count",0))==5 and int(diag.get("total_vertices",0))==312 and int(diag.get("total_indices",0))==1008 and int(diag.get("total_primitives",0))==336
 
 func measure_once(proof:Dictionary,candidate:bool)->Dictionary:
-    RenderingServer.sync()
     var started:=Time.get_ticks_usec()
     var mesh:ArrayMesh=build_candidate(proof) if candidate else build_control(proof)
     var elapsed:=int(Time.get_ticks_usec()-started)
     if not valid_final(mesh):
         return {"ok":false,"elapsed_usec":elapsed,"diag":mesh_diag(mesh)}
     mesh=null
-    RenderingServer.sync()
     return {"ok":true,"elapsed_usec":elapsed}
 
 func median(values:Array[int])->float:
@@ -188,10 +186,10 @@ func _initialize()->void:
         "representation_id":REPRESENTATION_ID,
         "trials":TRIALS,
         "warmups":WARMUPS,
-        "ordering":"alternating control-first/candidate-first pairs with RenderingServer.sync outside timed boundary",
+        "ordering":"alternating control-first/candidate-first measured pairs after five alternating warmup pairs",
         "control_path":"1008 unindexed triangle-corner vertices -> generate normals -> create_from/index -> 312 stored vertices / 1008 indices",
         "candidate_path":"deduplicate position domain in receiver -> 312 vertices / 1008 indices -> generate normals",
-        "timing_boundary":"Godot proof-host microseconds around geometry receiver construction only; no material creation, node insertion, PNG readback, whole-scene render, target-device frame time or GPU timing",
+        "timing_boundary":"Godot proof-host wall-clock microseconds around CPU-side geometry receiver construction and ArrayMesh commits only; no material creation, node insertion, PNG readback, whole-scene render, target-device frame time or GPU timing",
         "control_usec":control_usec,
         "candidate_usec":candidate_usec,
         "paired_delta_candidate_minus_control_usec":paired_delta_candidate_minus_control,
