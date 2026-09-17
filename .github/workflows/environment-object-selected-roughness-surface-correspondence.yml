@@ -1,0 +1,216 @@
+name: Environment Object selected roughness surface correspondence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_object_selected_roughness_surface_correspondence.json"
+      - "tools/environment_object_selected_roughness_surface_correspondence.py"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_SURFACE_CORRESPONDENCE_001.md"
+      - ".github/workflows/environment-object-selected-roughness-surface-correspondence.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_object_selected_roughness_surface_correspondence.json"
+      - "tools/environment_object_selected_roughness_surface_correspondence.py"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_SURFACE_CORRESPONDENCE_001.md"
+      - ".github/workflows/environment-object-selected-roughness-surface-correspondence.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-correspondence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact Environment head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33^{commit}
+          git merge-base --is-ancestor 1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33 HEAD
+          python -m py_compile tools/environment_object_selected_roughness_surface_correspondence.py
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact Object source-surface owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: f7c64d08e4e2a0d6954291d8b4e064d7345ab658
+          path: .object-owner
+          fetch-depth: 1
+
+      - name: Checkout exact selected Materials authority
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: 0515a2d5ad2c7a1eb545f2b7b327b7367530dfca
+          path: .object-materials
+          fetch-depth: 1
+
+      - name: Verify exact upstream identities
+        run: |
+          set -euo pipefail
+          test "$(git -C .object-owner rev-parse HEAD)" = f7c64d08e4e2a0d6954291d8b4e064d7345ab658
+          test "$(git -C .object-materials rev-parse HEAD)" = 0515a2d5ad2c7a1eb545f2b7b327b7367530dfca
+          test "$(git -C .object-owner hash-object assets/modular-equipment-case-001/source.json)" = 018e36bb08539f212d2c65e6408566e3540fd983
+          test "$(git -C .object-owner hash-object tools/build_modular_case.py)" = 55c03ceb38e337b2bdc31bb66795d25f5bfbac10
+          test "$(git -C .object-owner hash-object assets/modular-equipment-case-001/lid-inner-surface-identity-001.json)" = 873c03a73042213255c65df63cdff49edcf10a6c
+          test "$(git -C .object-owner hash-object assets/modular-equipment-case-001/front-service-panel-outer-surface-identity-001.json)" = 503b0179f20351a66668cbad3122e5dea26957b9
+          test "$(git -C .object-owner hash-object assets/modular-equipment-case-001/service-surface-reference-frames-001.json)" = ffb0671eac025f0d39eeb412b58e0ae017e21d99
+          test "$(git -C .object-owner hash-object assets/modular-equipment-case-001/service-surface-metric-domains-001.json)" = 2b425e2a12c648c20c2ad948f44489c4ac1a51e6
+          test "$(git -C .object-materials hash-object lookdev/service_dark_atlas_pack_review_001.json)" = 2b95fcc1fcc523576eca08dbf47a140a727ab598
+
+      - name: Download exact accepted multi-asset current-world evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/environment_object_selected_roughness_surface_correspondence_001/parent
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35174899697
+
+      - name: Download exact real receiver readiness evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-object-selected-roughness-receiver-readiness-001-1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33
+          path: evidence/environment_object_selected_roughness_surface_correspondence_001/readiness
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35211529232
+
+      - name: Verify retained real-scene prerequisites
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_surface_correspondence_001
+          test "$(cat "$root/parent/exact-head.txt" | tr -d '\n\r')" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test "$(cat "$root/readiness/exact-head.txt" | tr -d '\n\r')" = 1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33
+          test -f "$root/parent/combined_current_world.json"
+          test -f "$root/readiness/readiness-report.json"
+          test -f "$root/readiness/candidate/runtime.json"
+          python - <<'PY'
+          import json
+          parent=json.load(open('evidence/environment_object_selected_roughness_surface_correspondence_001/parent/report.json'))
+          ready=json.load(open('evidence/environment_object_selected_roughness_surface_correspondence_001/readiness/readiness-report.json'))
+          assert parent['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',parent
+          assert parent['matched_frames']==68 and parent['weather_width_measurements']==1224,parent
+          assert ready['state']=='HOLD_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_RECEIVER__EXACT_UV0_BINDING_NOT_PRESENT',ready
+          assert ready['real_scene_frame_continuity']['byte_identical_frames']==68,ready
+          assert ready['weather_width_continuity']['measurements']==1224,ready
+          assert ready['receiver_uv0']['total_uv0_count']==0,ready
+          print('PASS_EXACT_REAL_SCENE_PREREQUISITES')
+          PY
+
+      - name: Prove exact source-surface correspondence against current receiver
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_surface_correspondence_001
+          python tools/environment_object_selected_roughness_surface_correspondence.py verify \
+            --contract contracts/environment_object_selected_roughness_surface_correspondence.json \
+            --object-source .object-owner/assets/modular-equipment-case-001/source.json \
+            --object-generator .object-owner/tools/build_modular_case.py \
+            --lid-contract .object-owner/assets/modular-equipment-case-001/lid-inner-surface-identity-001.json \
+            --front-contract .object-owner/assets/modular-equipment-case-001/front-service-panel-outer-surface-identity-001.json \
+            --frames-contract .object-owner/assets/modular-equipment-case-001/service-surface-reference-frames-001.json \
+            --metric-contract .object-owner/assets/modular-equipment-case-001/service-surface-metric-domains-001.json \
+            --atlas-contract .object-materials/lookdev/service_dark_atlas_pack_review_001.json \
+            --combined-world "$root/parent/combined_current_world.json" \
+            --readiness-report "$root/readiness/readiness-report.json" \
+            --readiness-runtime "$root/readiness/candidate/runtime.json" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/correspondence-report.json" \
+            | tee "$root/verify.log"
+          cp exact-head.txt "$root/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_selected_roughness_surface_correspondence_001/correspondence-report.json'))
+          assert p['state']=='HOLD_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_RECEIVER__SOURCE_SERVICE_SURFACE_SEGMENTATION_AND_UV0_BINDING_NOT_PRESENT',p
+          assert p['source_surface_triangle_indices']['lid_inner_service_surface']==[12,13],p
+          assert p['source_surface_triangle_indices']['front_service_panel_outer_service_surface']==[28,29],p
+          c=p['current_world_receiver_correspondence']
+          assert c['current_service_dark_triangle_count']==12,c
+          assert c['current_service_dark_selected_target_triangle_count']==2,c
+          assert c['current_service_dark_extra_nonselected_triangle_count']==10,c
+          assert c['lid_inner_currently_in_service_dark'] is False,c
+          assert c['exact_two_surface_material_segmentation_present'] is False,c
+          assert p['real_scene_evidence']['real_godot_frames']==68,p
+          assert p['real_scene_evidence']['weather_width_measurements']==1224,p
+          assert p['environment_adoption'] is False,p
+          assert all(p['checks'].values()),p
+          print('PASS_EXACT_CURRENT_WORLD_SOURCE_SURFACE_CORRESPONDENCE_HOLD')
+          PY
+
+      - name: Negative control rejects partition drift
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_surface_correspondence_001
+          cp "$root/parent/combined_current_world.json" "$root/negative-combined.json"
+          python - <<'PY'
+          import json
+          p='evidence/environment_object_selected_roughness_surface_correspondence_001/negative-combined.json'
+          d=json.load(open(p))
+          for state in d['states']:
+              for row in state['scene']['additional_source_meshes']:
+                  if row.get('asset_id')=='source:object:modular-equipment-case-001':
+                      part=row['object_material_family_receiving']['surface_triangle_indices']
+                      part['shell_coating'].remove(12)
+                      part['service_dark'].append(12)
+          open(p,'w').write(json.dumps(d))
+          PY
+          set +e
+          python tools/environment_object_selected_roughness_surface_correspondence.py verify \
+            --contract contracts/environment_object_selected_roughness_surface_correspondence.json \
+            --object-source .object-owner/assets/modular-equipment-case-001/source.json \
+            --object-generator .object-owner/tools/build_modular_case.py \
+            --lid-contract .object-owner/assets/modular-equipment-case-001/lid-inner-surface-identity-001.json \
+            --front-contract .object-owner/assets/modular-equipment-case-001/front-service-panel-outer-surface-identity-001.json \
+            --frames-contract .object-owner/assets/modular-equipment-case-001/service-surface-reference-frames-001.json \
+            --metric-contract .object-owner/assets/modular-equipment-case-001/service-surface-metric-domains-001.json \
+            --atlas-contract .object-materials/lookdev/service_dark_atlas_pack_review_001.json \
+            --combined-world "$root/negative-combined.json" \
+            --readiness-report "$root/readiness/readiness-report.json" \
+            --readiness-runtime "$root/readiness/candidate/runtime.json" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/negative-report.json" \
+            > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -q "material partition cardinality drift" "$root/negative.log"
+          echo "PASS_REJECTED_CURRENT_WORLD_OBJECT_PARTITION_DRIFT"
+
+      - name: Retain compact evidence only
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_surface_correspondence_001
+          mkdir -p "$root/donor-receipts"
+          cp .object-owner/assets/modular-equipment-case-001/lid-inner-surface-identity-001.json "$root/donor-receipts/" 2>/dev/null || true
+          cp .object-owner/assets/modular-equipment-case-001/front-service-panel-outer-surface-identity-001.json "$root/donor-receipts/" 2>/dev/null || true
+          cp .object-owner/assets/modular-equipment-case-001/service-surface-reference-frames-001.json "$root/donor-receipts/" 2>/dev/null || true
+          cp .object-owner/assets/modular-equipment-case-001/service-surface-metric-domains-001.json "$root/donor-receipts/" 2>/dev/null || true
+          cp .object-materials/lookdev/service_dark_atlas_pack_review_001.json "$root/donor-receipts/" 2>/dev/null || true
+          cp "$root/readiness/readiness-report.json" "$root/donor-receipts/receiver-readiness-report.json" 2>/dev/null || true
+          cp "$root/parent/report.json" "$root/donor-receipts/accepted-world-report.json" 2>/dev/null || true
+          rm -rf "$root/parent" "$root/readiness" "$root/negative-combined.json" "$root/negative-report.json"
+
+      - name: Upload retained Environment correspondence evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-selected-roughness-surface-correspondence-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_object_selected_roughness_surface_correspondence_001
+          if-no-files-found: error
+          retention-days: 30
