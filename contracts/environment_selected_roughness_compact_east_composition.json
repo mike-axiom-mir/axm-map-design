@@ -1,0 +1,61 @@
+{
+  "accepted_world_parent": {
+    "artifact_name": "environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6",
+    "head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+    "workflow_run": 35174899697
+  },
+  "compact_east_vfx_receiver": {
+    "artifact_id": 10506765610,
+    "artifact_sha256": "3b7ee551d21b88e8568b88194a804459a77774d08103bc11f5b53756df9fd588",
+    "map_head": "29ef2d4cc4398b3f26290e4e1f1f10398ca9898c",
+    "nature_vfx_head": "cef2ad78d8e36a55ada5dad07329f1a7125d48de",
+    "observer_blob": "67a3aa1f1932a99de1b6e835ad308630bff282a5",
+    "state": "PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_TARGET_HOST",
+    "weather_semantics": "VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED",
+    "workflow_run": 35243081614
+  },
+  "composition": {
+    "bounded_question": "Can the exact green compact-east Nature visual response coexist with the exact already-reviewable Object selected-roughness candidate while Building, west-sapling Nature, footprint cue, Weather, cameras, lights and route remain inherited?",
+    "comparison": "exact selected-roughness current-world parent versus selected-roughness plus compact-east response",
+    "expected_observability": {
+      "elevated_oblique": "all 15 compact-east interior phases visible in both retained Weather presentation modes",
+      "path_eye": "legitimate non-observing context, pixel-exact for compact-east"
+    },
+    "observer_composition_policy": "reuse exact VFX observer body; change only its parent receiver to the exact selected-roughness receiver"
+  },
+  "decision": {
+    "art_qa_acceptance_required": true,
+    "environment_compact_east_adoption": false,
+    "environment_selected_roughness_adoption": false,
+    "runtime_acceptance_required": true
+  },
+  "four_root_gate": [
+    "Truth",
+    "Agency / non-domination",
+    "Continuity",
+    "Wisdom before speed"
+  ],
+  "non_claims": [
+    "final Object roughness preference",
+    "final compact-east Nature motion preference",
+    "physical wind, force or biomechanics",
+    "continuous wall-clock playback quality",
+    "target-device CPU/GPU/FPS/VRAM/thermal/battery acceptance",
+    "gameplay, collision or navigation behavior",
+    "CANON",
+    "production or game readiness",
+    "Environment mastery"
+  ],
+  "reusable_rule": "CROSS_ASSET_WORLD_STACKING_SHOULD_HOLD_ONE_REVIEW_CANDIDATE_EXACT_WHILE_PROVING_THE_SECOND_AGAINST_THE_EXACT_ALREADY_REVIEWABLE_PARENT",
+  "schema": "axm.environment-selected-roughness-compact-east-composition/v0.1",
+  "selected_roughness_parent": {
+    "artifact_id": 10502588586,
+    "artifact_sha256": "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e",
+    "head": "d8a1d950ed5f21e6ad356404f46407c99c160017",
+    "selected_png_sha256": "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949",
+    "selected_scalar_r8_sha256": "b8d13c07f9b71278042b0d42d44b84579a3f327c6adf6723cae4c8c8f06dd38e",
+    "state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_CANDIDATE_REVIEW_READY__ENVIRONMENT_ADOPTION_HELD",
+    "workflow_run": 35235994153
+  },
+  "status": "REVIEW_CANDIDATE_ONLY"
+}
