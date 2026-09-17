@@ -32,7 +32,19 @@ func _motion_find_node(root:Node,wanted:String)->Node3D:
             return found
     return null
 
-func _motion_receiver_local_mesh_center(container:Node3D,node:Node3D)->Vector3:
+func _motion_point_to_container(container:Node3D,node:Node3D,point:Vector3)->Vector3:
+    var cursor:Node3D=node
+    var result:=point
+    while cursor!=container:
+        result=cursor.transform*result
+        var parent:=cursor.get_parent()
+        if not (parent is Node3D):
+            fail("Technical Art Object motion node escaped receiver hierarchy")
+            return Vector3.ZERO
+        cursor=parent as Node3D
+    return result
+
+func _motion_receiver_local_component_center(container:Node3D,node:Node3D)->Vector3:
     if not (node is MeshInstance3D):
         fail("Technical Art Object motion expected MeshInstance3D: "+String(node.name))
         return Vector3.ZERO
@@ -40,16 +52,34 @@ func _motion_receiver_local_mesh_center(container:Node3D,node:Node3D)->Vector3:
     if instance.mesh==null:
         fail("Technical Art Object motion mesh missing: "+String(node.name))
         return Vector3.ZERO
-    var point:=instance.mesh.get_aabb().get_center()
-    var cursor:Node3D=node
-    while cursor!=container:
-        point=cursor.transform*point
-        var parent:=cursor.get_parent()
-        if not (parent is Node3D):
-            fail("Technical Art Object motion node escaped receiver hierarchy")
+    var minimum:=Vector3(INF,INF,INF)
+    var maximum:=Vector3(-INF,-INF,-INF)
+    var referenced:=0
+    for surface_index in range(instance.mesh.get_surface_count()):
+        var arrays:=instance.mesh.surface_get_arrays(surface_index)
+        if arrays.size()<=Mesh.ARRAY_INDEX:
+            fail("Technical Art Object motion component array layout drift")
             return Vector3.ZERO
-        cursor=parent as Node3D
-    return point
+        var raw_positions=arrays[Mesh.ARRAY_VERTEX]
+        var raw_indices=arrays[Mesh.ARRAY_INDEX]
+        if typeof(raw_positions)!=TYPE_PACKED_VECTOR3_ARRAY or typeof(raw_indices)!=TYPE_PACKED_INT32_ARRAY:
+            fail("Technical Art Object motion component requires indexed PackedVector3 geometry")
+            return Vector3.ZERO
+        var positions:=raw_positions as PackedVector3Array
+        var indices:=raw_indices as PackedInt32Array
+        for raw_index in indices:
+            var index:=int(raw_index)
+            if index<0 or index>=positions.size():
+                fail("Technical Art Object motion component index out of range")
+                return Vector3.ZERO
+            var point:=_motion_point_to_container(container,node,positions[index])
+            minimum=Vector3(minf(minimum.x,point.x),minf(minimum.y,point.y),minf(minimum.z,point.z))
+            maximum=Vector3(maxf(maximum.x,point.x),maxf(maximum.y,point.y),maxf(maximum.z,point.z))
+            referenced+=1
+    if referenced<=0:
+        fail("Technical Art Object motion component has no referenced vertices")
+        return Vector3.ZERO
+    return (minimum+maximum)*0.5
 
 func _motion_vec3(values:Array)->Vector3:
     if values.size()!=3:
@@ -227,9 +257,9 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         return {}
     var hinge_local:=_motion_vec3(hinge_local_values)
     var hinge_world:=_motion_owner_receiver_point_to_world_receiver(hinge_local,placement)
-    var neutral_lid_center:=_motion_receiver_local_mesh_center(container,lid)
+    var neutral_lid_center:=_motion_receiver_local_component_center(container,lid)
     var lid_pivot:=_motion_wrap_at_world_pivot(container,lid,hinge_world,"technical_art_motion_hinge_world_pivot")
-    var neutral_lid_wrapper_drift:=neutral_lid_center.distance_to(_motion_receiver_local_mesh_center(container,lid))
+    var neutral_lid_wrapper_drift:=neutral_lid_center.distance_to(_motion_receiver_local_component_center(container,lid))
     if neutral_lid_wrapper_drift>EPS_M:
         fail("Technical Art Object motion world hinge pivot insertion changed neutral lid geometry")
         return {}
@@ -250,7 +280,7 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         if lever==null:
             fail("Technical Art Object motion lever missing: "+lever_name)
             return {}
-        neutral_lever_centers[lever_name]=_motion_receiver_local_mesh_center(container,lever)
+        neutral_lever_centers[lever_name]=_motion_receiver_local_component_center(container,lever)
         var local_pivot:=_motion_vec3(station.get("pivot_receiver_xyz_m",[]) as Array)
         var world_pivot:=_motion_owner_receiver_point_to_world_receiver(local_pivot,placement)
         var pivot:=_motion_wrap_at_world_pivot(container,lever,world_pivot,"technical_art_motion_latch_world_pivot_"+sid)
@@ -261,7 +291,7 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
     var neutral_pivot_drift:=neutral_lid_wrapper_drift
     for sid in latch_pivots.keys():
         var lever=levers[sid] as Node3D
-        neutral_pivot_drift=maxf(neutral_pivot_drift,(neutral_lever_centers[String(lever.name)] as Vector3).distance_to(_motion_receiver_local_mesh_center(container,lever)))
+        neutral_pivot_drift=maxf(neutral_pivot_drift,(neutral_lever_centers[String(lever.name)] as Vector3).distance_to(_motion_receiver_local_component_center(container,lever)))
     if neutral_pivot_drift>EPS_M:
         fail("Technical Art Object motion world-placement pivot insertion changed neutral geometry")
         return {}
@@ -289,35 +319,35 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
     library.add_animation("owner_samples",animation)
     player.add_animation_library("",library)
 
-    var start_keeper0:=_motion_receiver_local_mesh_center(container,keeper0)
-    var start_keeper1:=_motion_receiver_local_mesh_center(container,keeper1)
+    var start_keeper0:=_motion_receiver_local_component_center(container,keeper0)
+    var start_keeper1:=_motion_receiver_local_component_center(container,keeper1)
     var start_levers:Dictionary={}
     for sid in levers.keys():
-        start_levers[sid]=_motion_receiver_local_mesh_center(container,levers[sid] as Node3D)
+        start_levers[sid]=_motion_receiver_local_component_center(container,levers[sid] as Node3D)
     var probes:Array=[]
     probes.append(_motion_apply_sample(plan,0,lid_pivot,latch_pivots,axis))
     probes.append(_motion_apply_sample(plan,10,lid_pivot,latch_pivots,axis))
-    var release_keeper_drift:=maxf(start_keeper0.distance_to(_motion_receiver_local_mesh_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_mesh_center(container,keeper1)))
+    var release_keeper_drift:=maxf(start_keeper0.distance_to(_motion_receiver_local_component_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_component_center(container,keeper1)))
     var release_min_lever_move:=999.0
     for sid in levers.keys():
-        release_min_lever_move=minf(release_min_lever_move,(start_levers[sid] as Vector3).distance_to(_motion_receiver_local_mesh_center(container,levers[sid] as Node3D)))
+        release_min_lever_move=minf(release_min_lever_move,(start_levers[sid] as Vector3).distance_to(_motion_receiver_local_component_center(container,levers[sid] as Node3D)))
     var owner_release:=float(owner_invariants.get("release_min_lever_move_m",-1.0))
     var release_owner_residual:=absf(release_min_lever_move-owner_release)
     if release_keeper_drift>EPS_M or release_owner_residual>OWNER_DISTANCE_EPS_M:
         fail("Technical Art Object motion release sample diverged from rigid-placement-invariant owner target")
         return {}
     probes.append(_motion_apply_sample(plan,50,lid_pivot,latch_pivots,axis))
-    var peak_min_keeper_move:=minf(start_keeper0.distance_to(_motion_receiver_local_mesh_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_mesh_center(container,keeper1)))
+    var peak_min_keeper_move:=minf(start_keeper0.distance_to(_motion_receiver_local_component_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_component_center(container,keeper1)))
     var owner_peak:=float(owner_invariants.get("peak_min_keeper_move_m",-1.0))
     var peak_owner_residual:=absf(peak_min_keeper_move-owner_peak)
     if peak_owner_residual>OWNER_DISTANCE_EPS_M:
         fail("Technical Art Object motion peak sample diverged from rigid-placement-invariant owner target")
         return {}
     probes.append(_motion_apply_sample(plan,100,lid_pivot,latch_pivots,axis))
-    var endpoint_keeper_drift:=maxf(start_keeper0.distance_to(_motion_receiver_local_mesh_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_mesh_center(container,keeper1)))
+    var endpoint_keeper_drift:=maxf(start_keeper0.distance_to(_motion_receiver_local_component_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_component_center(container,keeper1)))
     var endpoint_lever_drift:=0.0
     for sid in levers.keys():
-        endpoint_lever_drift=maxf(endpoint_lever_drift,(start_levers[sid] as Vector3).distance_to(_motion_receiver_local_mesh_center(container,levers[sid] as Node3D)))
+        endpoint_lever_drift=maxf(endpoint_lever_drift,(start_levers[sid] as Vector3).distance_to(_motion_receiver_local_component_center(container,levers[sid] as Node3D)))
     if endpoint_keeper_drift>EPS_M or endpoint_lever_drift>EPS_M:
         fail("Technical Art Object motion endpoint closure drift")
         return {}
@@ -339,6 +369,7 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         "sequence_digest":EXACT_SEQUENCE_DIGEST,
         "track_count":3,
         "key_counts":[101,101,101],
+        "component_center_observer":"referenced_indexed_vertices_only",
         "current_world_state_count":placement["state_count"],
         "current_world_placement_policy":placement["placement_policy"],
         "current_world_source_translation_xyz_m":[translation.x,translation.y,translation.z],
@@ -364,7 +395,7 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         "environment_adoption":false,
         "art_qa_acceptance":false,
         "canon":false,
-        "truth_boundary":"Exact Object Animation owner samples are adapted onto the already-proven current-world rigid component receiver after applying Environment's exact rigid placement to owner pivots and hinge axis. Owner-target center-displacement distances are checked as rigid-placement invariants. The proof applies selected discrete samples before scene attachment and retains a 3x101 AnimationPlayer representation, but does not claim wall-clock playback. Technical Art does not retime motion, infer mechanics, adopt VFX, claim Runtime/device performance, Environment adoption, final visual acceptance, CANON or production readiness."
+        "truth_boundary":"Exact Object Animation owner samples are adapted onto the already-proven current-world rigid component receiver after applying Environment's exact rigid placement to owner pivots and hinge axis. Component-center evidence observes only referenced indexed vertices, because each receiver component intentionally reuses a parent-sized vertex array with a component-only index subset. Owner-target center-displacement distances are checked as rigid-placement invariants. The proof applies selected discrete samples before scene attachment and retains a 3x101 AnimationPlayer representation, but does not claim wall-clock playback. Technical Art does not retime motion, infer mechanics, adopt VFX, claim Runtime/device performance, Environment adoption, final visual acceptance, CANON or production readiness."
     }
     return result
 
@@ -374,6 +405,7 @@ func write_receipt()->void:
     receipt["technical_art_object_motion_animation_head"]=EXACT_ANIMATION_HEAD
     receipt["technical_art_object_motion_sequence_digest"]=EXACT_SEQUENCE_DIGEST
     receipt["technical_art_object_motion_world_placement_adapted"]=true
+    receipt["technical_art_object_motion_component_center_observer"]="referenced_indexed_vertices_only"
     receipt["technical_art_object_motion_vfx_adoption"]=false
     receipt["technical_art_object_motion_runtime_acceptance"]=false
     receipt["technical_art_object_motion_environment_adoption"]=false
