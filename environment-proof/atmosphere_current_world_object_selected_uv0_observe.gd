@@ -49,6 +49,14 @@ func _vector3_from_array(values:Array)->Vector3:
         return Vector3.ZERO
     return Vector3(float(values[0]),float(values[1]),float(values[2]))
 
+func _ta_uc_position_to_current_world_godot(values:Array)->Vector3:
+    # Technical Art's pinned donor explicitly records source +X right/+Y forward/+Z up
+    # -> UC/glTF +X right/+Y up/+Z forward. The current Map receiver uses gvec(),
+    # source -> Godot [x,z,-y]. Therefore exact TA UC positions map to [x,y,-z]
+    # before a receiver-space position/UV identity comparison is meaningful.
+    var uc:=_vector3_from_array(values)
+    return Vector3(uc.x,uc.y,-uc.z)
+
 func _vector2_from_array(values:Array)->Vector2:
     if values.size()!=2:
         fail("selected UV0 Technical Art texcoord cardinality drift")
@@ -122,13 +130,13 @@ func _bind_selected_surface_uv(
         for corner in range(ta_positions.size()):
             if matched_ta.has(corner):
                 continue
-            var ta_position:=_vector3_from_array(ta_positions[corner] as Array)
+            var ta_position:=_ta_uc_position_to_current_world_godot(ta_positions[corner] as Array)
             var delta:=position.distance_to(ta_position)
             if delta<best_delta:
                 best_delta=delta
                 best_corner=corner
         if best_corner<0 or best_delta>0.000001:
-            fail("selected UV0 receiver position cannot bind exact Technical Art texcoord identity")
+            fail("selected UV0 receiver position cannot bind exact Technical Art texcoord identity after pinned UC-to-Godot coordinate conversion")
             return {}
         matched_ta[best_corner]=true
         maximum_delta=max(maximum_delta,best_delta)
@@ -137,7 +145,8 @@ func _bind_selected_surface_uv(
         pairs.append({
             "receiver_vertex_index":vertex_index,
             "technical_art_corner_index":best_corner,
-            "position":[position.x,position.y,position.z],
+            "position_godot":[position.x,position.y,position.z],
+            "technical_art_position_uc":ta_positions[best_corner],
             "texcoord":[texcoord.x,texcoord.y],
             "position_delta_m":best_delta
         })
@@ -166,6 +175,9 @@ func _bind_selected_surface_uv(
             "matched_ta_corner_count":matched_ta.size(),
             "maximum_position_match_delta_m":maximum_delta,
             "exact_position_to_texcoord_pairs_bound":true,
+            "technical_art_position_space":"UC_GLTF__X_RIGHT_Y_UP_Z_FORWARD",
+            "receiver_position_space":"GODOT_CURRENT_WORLD__X_RIGHT_Y_UP_Z_BACK_FROM_SOURCE_FORWARD",
+            "coordinate_conversion":"TA_UC_XYZ_TO_GODOT_X_Y_NEG_Z",
             "uv0_array_count":uv.size(),
             "unused_uv_values_zero":unused_zero,
             "position_to_texcoord_pairs":pairs
@@ -244,7 +256,7 @@ func _build_uv0_receiver(parent_mesh:ArrayMesh,spec:Dictionary)->Dictionary:
             "environment_adoption":false,
             "parent_material_objects_reused":true,
             "position_normal_index_fields_reused":true,
-            "truth_boundary":"Exact UV0 receiving identity only. The two already-segmented source-owned faces receive the exact Technical Art position-to-texcoord pairs while all material objects, scalar values, textures, positions, normals and triangle/index membership remain unchanged. Selected roughness is intentionally not adopted in this pass."
+            "truth_boundary":"Exact UV0 receiving identity only. The two already-segmented source-owned faces receive the exact Technical Art position-to-texcoord pairs after explicit pinned UC/glTF-to-current-world Godot coordinate conversion, while all material objects, scalar values, textures, positions, normals and triangle/index membership remain unchanged. Selected roughness is intentionally not adopted in this pass."
         }
     }
 
@@ -280,5 +292,5 @@ func write_receipt()->void:
     receipt["environment_object_selected_uv0_current_world_rule"]=SELECTED_UV0_RULE
     receipt["environment_object_selected_uv0_technical_art_head"]=TECHNICAL_ART_HEAD
     receipt["environment_object_selected_uv0_materials_authority_head"]=MATERIALS_AUTHORITY_HEAD
-    receipt["environment_object_selected_uv0_truth_boundary"]="Exact receiving UV0 only. The real Building + Nature + Object + footprint + Weather scene is rerendered before any selected roughness texture/material adoption."
+    receipt["environment_object_selected_uv0_truth_boundary"]="Exact receiving UV0 only. TA positions are explicitly converted from pinned UC/glTF coordinates into the current-world Godot receiver frame; the real Building + Nature + Object + footprint + Weather scene is rerendered before any selected roughness texture/material adoption."
     super.write_receipt()
