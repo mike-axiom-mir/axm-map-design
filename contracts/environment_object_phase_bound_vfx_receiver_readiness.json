@@ -1,0 +1,75 @@
+{
+  "schema": "axm.environment-object-phase-bound-vfx-receiver-readiness/v0.1",
+  "asset_id": "source:object:modular-equipment-case-001",
+  "parent_environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "head": "d0461a787525d19004d83334c282adacaa06afed",
+    "retained_artifact_id": 10516853353,
+    "retained_artifact_archive_sha256": "f879277d1e4b3c37b9a7fc491d992e520345a8642f56d0ae17abfcd9957444c0",
+    "required_state": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_RECEIVER__VISUAL_OBSERVABILITY_CHARACTERIZED__ADOPTION_HELD",
+    "required_real_scene_frames": 68,
+    "required_world_states": 17,
+    "required_weather_width_measurements": 1224
+  },
+  "object_source_identity": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "source_head": "d3fa10a270faae7925811f44f03381fe5c5d0215",
+    "source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a",
+    "source_path": "assets/modular-equipment-case-001/source.json",
+    "source_blob": "018e36bb08539f212d2c65e6408566e3540fd983",
+    "builder_path": "tools/build_modular_case.py",
+    "builder_blob": "55c03ceb38e337b2bdc31bb66795d25f5bfbac10"
+  },
+  "phase_bound_vfx_donor": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "vfx_head": "5f8b7bef1a8a0d1babeba7945962c83cd938529b",
+    "effect_path": "assets/modular-equipment-case-001/lid-open-release-motes-001.json",
+    "effect_blob": "83c41db21e16847ac0a69215facd8697853eeb4f",
+    "animation_sequence_path": "assets/modular-equipment-case-001/lid-latch-motion-sequence-001.json",
+    "animation_sequence_blob": "d79a4063944b98d66d3667220b58d60d99e489a1",
+    "animation_base_head": "07130d3481d69b5a4d8a399e86bd207d623dc87c",
+    "required_effect_id": "lid-open-release-motes-001",
+    "required_sequence_id": "lid-latch-open-hold-close-001",
+    "required_trigger_phase_id": "play_exact_lid_clip",
+    "required_trigger_time_s": 0.25,
+    "required_owner_seed": 41027
+  },
+  "current_world_receiver_requirement": {
+    "required_source_scope": "EXACT_STATIC_HOST_ONLY__NO_UTILITY_MODULE__NO_INNER_LID_REVIEW_SLOT",
+    "required_vertices": 468,
+    "required_triangles": 812,
+    "required_surfaces": 7,
+    "required_selected_roughness_state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_CANDIDATE_BOUND__ENVIRONMENT_ADOPTION_HELD",
+    "required_selected_uv0_state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_SERVICE_SURFACE_UV0_BOUND__ROUGHNESS_ADOPTION_HELD",
+    "required_selected_surface_state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_SERVICE_SURFACES_INDEPENDENTLY_ADDRESSABLE__UV0_AND_SELECTED_ROUGHNESS_ADOPTION_HELD"
+  },
+  "minimum_animation_owned_source_groups": [
+    {
+      "group": "lid_shell",
+      "expected_first_face": 12,
+      "expected_face_count": 12,
+      "reason": "the phase-bound VFX is triggered by the exact lid clip and cannot be reviewed honestly if the current-world receiver cannot move the lid source group"
+    },
+    {
+      "group": "latch_0_lever",
+      "expected_first_face": 48,
+      "expected_face_count": 12,
+      "reason": "the authoritative sequence releases the front latch levers before the lid phase"
+    },
+    {
+      "group": "latch_1_lever",
+      "expected_first_face": 72,
+      "expected_face_count": 12,
+      "reason": "the authoritative sequence releases the front latch levers before the lid phase"
+    }
+  ],
+  "decision": {
+    "state": "HOLD_CURRENT_WORLD_OBJECT_PHASE_BOUND_VFX_RECEIVER__STATIC_HOST_LACKS_ANIMATION_OWNED_COMPONENT_BOUNDARY",
+    "environment_adoption": false,
+    "vfx_adoption": false,
+    "animation_adoption": false,
+    "next_receiving_requirement": "Either expose the exact Animation/Rigging-owned moving Object components as transformable current-world receiver nodes while preserving the current Map material/UV/roughness identity, or receive the exact Technical-Art/Animation rigid scene after proving exact geometry/material/roughness/world-transform equivalence. In either path, first prove the neutral real-world frame set remains unchanged before phase-bound VFX is rendered."
+  },
+  "reusable_rule": "PHASE_BOUND_OBJECT_VFX_MUST_NOT_ENTER_WORLD_COMPOSITION_UNTIL_THE_WORLD_RECEIVER_PRESERVES_THE_ANIMATION_OWNED_MOVING_COMPONENT_BOUNDARIES",
+  "truth_boundary": "This contract does not reject the VFX source and does not retime or redesign it. It binds the exact already-green multi-asset current-world parent to the exact Object source/VFX/Animation identities and asks one narrower question: can the Map receiver currently represent the source-owned motion that the effect is phase-bound to? A HOLD is the expected truthful result while the Object remains an exact static host. No Art/QA, Animation, Rigging, Technical Art, Runtime, gameplay or CANON authority is transferred to Environment."
+}
