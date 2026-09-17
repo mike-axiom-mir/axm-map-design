@@ -4,7 +4,7 @@ Status: BOUNDED CROSS-REPO TECHNICAL-ART EVIDENCE LANE
 
 This lane answers one narrow question:
 
-> Does the generic Universal Creation indexed-surface observer, when explicitly asked to evaluate exact render tuples rather than source-vertex identity, produce the same per-surface post-normal index representation that the real Godot `SurfaceTool.index()` receiver produces for the exact Building planar-role current-world path?
+> Does the generic Universal Creation indexed-surface observer, when explicitly asked to evaluate exact render tuples rather than source-vertex identity, produce a per-surface post-normal indexed representation that is exactly render-tuple isomorphic to the real Godot `SurfaceTool.index()` receiver for the exact Building planar-role current-world path?
 
 ## Exact owners
 
@@ -61,11 +61,13 @@ For every one of the five exact Godot surfaces, the proof requires:
 - UC result `POST_ATTRIBUTE_TUPLE_DEDUP_CANDIDATE`;
 - UC render state `RENDER_DOMAIN_CROSS_SOURCE_DEDUP_CANDIDATE`;
 - UC candidate vertex count exactly equals the real Godot indexed surface vertex count;
-- UC candidate index stream exactly equals the real Godot `SurfaceTool.index()` stream;
-- UC candidate POSITION first-occurrence order exactly equals the real indexed vertex order;
-- UC candidate NORMAL first-occurrence order exactly equals the real indexed normal order.
+- decoding the UC candidate indices through the UC candidate POSITION/NORMAL domain reproduces the exact original triangle-corner tuple stream;
+- decoding the Godot indices through the real Godot indexed POSITION/NORMAL domain reproduces that same exact triangle-corner tuple stream;
+- the UC and Godot indexed domains contain the same exact unique POSITION/NORMAL tuples.
 
-Aggregate expected identity is therefore exactly 312 vertices / 1,008 indices / 336 triangles across five surfaces.
+Raw index numbers and stored vertex order are deliberately **not** required to match. They are local labels for an indexed representation; requiring the same numbering would confuse byte/layout identity with geometric/render-tuple equivalence. The first attempted proof is retained as a useful failed gate because it made exactly that over-strong assumption.
+
+Aggregate expected identity remains exactly 312 vertices / 1,008 indices / 336 triangles across five surfaces.
 
 ## Negative controls
 
@@ -73,7 +75,7 @@ The same exact input is also evaluated with UC's conservative default. It must p
 
 The explicit cross-source policy is then rerun with the protected-split declaration removed. It must return `HOLD_CROSS_SOURCE_SPLIT_DECLARATION_REQUIRED` with no candidate.
 
-Finally, the workflow mutates the real Godot indexed output by swapping two indices. The Technical Art verifier must reject the mutated receiver instead of accepting a count-only match.
+Finally, the workflow mutates the real Godot indexed output by swapping two triangle-corner indices. The decoded render-tuple stream must change and the Technical Art verifier must reject the mutated receiver instead of accepting a count-only match.
 
 ## Truth boundary
 
@@ -81,6 +83,7 @@ This lane does **not** claim:
 
 - automatic Building, Environment or Runtime adoption;
 - that UC should own Building material, topology or representation semantics;
+- raw index-ID or stored vertex-order identity between independent indexers;
 - visual equality or independent Visual QA acceptance;
 - removal or acceptance of the residual Runtime primitive cost;
 - target-device CPU/GPU/FPS/VRAM/heap behavior;
