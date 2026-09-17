@@ -51,6 +51,7 @@ jobs:
           artifact-ids: ${{ env.PARENT_ARTIFACT_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: evidence/parent
+          merge-multiple: true
 
       - name: Download exact compact-v2 Environment artifact
         uses: actions/download-artifact@v4
@@ -60,6 +61,7 @@ jobs:
           artifact-ids: ${{ env.COMPACT_ARTIFACT_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: evidence/compact
+          merge-multiple: true
 
       - name: Install bounded visual comparison dependency
         run: python -m pip install --disable-pip-version-check pillow==11.3.0
