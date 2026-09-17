@@ -1,0 +1,36 @@
+{
+  "schema": "axm.vfx-object-current-world-receiving-contract/v0.1",
+  "contract_id": "object-lid-release-motes-irregularity-v2-current-world-001",
+  "exact_animation_parent_head": "c2695f654f9dd44312ca5d205eceb27f7c2680ee",
+  "exact_object_vfx_head": "bc114ee7ec876107892ccedeefc8e5020315488a",
+  "effect_id": "lid-open-release-motes-001-irregularity-repair-candidate-v2",
+  "owner_seed": 41027,
+  "particle_count": 18,
+  "trigger_time_s": 0.25,
+  "trigger_semantics": "EXACT_ANIMATION_PHASE_BOUNDARY_NOT_GAMEPLAY_EVENT",
+  "effect_semantics": "STYLIZED_VISUAL_RELEASE_MOTES_NOT_DUST_OR_FLUID_SIMULATION",
+  "existing_camera_contexts": [
+    "path_eye",
+    "elevated_oblique"
+  ],
+  "static_ab_times_s": [
+    0.2,
+    0.3,
+    0.4,
+    0.52,
+    0.8
+  ],
+  "inactive_changed_pixels_max": 0,
+  "maximum_active_changed_frame_fraction": 0.08,
+  "observability_policy": "EXISTING_CAMERAS_ONLY__ZERO_DELTA_IS_HOLD_NOT_PERMISSION_TO_AMPLIFY_OR_MOVE_CAMERA",
+  "ownership": {
+    "vfx": "effect identity, phase binding transport and visual evidence",
+    "animation": "sequence timing, easing, phase order and owner AnimationPlayer",
+    "environment": "current-world composition and camera contexts",
+    "runtime": "production particle representation and performance",
+    "art_qa": "perceptual acceptance",
+    "gameplay_physics": "unchanged and unclaimed"
+  },
+  "automatic_adoption": false,
+  "truth_boundary": "A PASS may prove only that the exact unchanged Object irregularity-v2 visual cue can be transported into the exact Map PR46 current-world Object receiver, follows the real owner AnimationPlayer phase, closes before/after its active interval, remains bounded in raster contribution, and is or is not observable from the two already-existing review cameras. It does not adopt the VFX successor, authorize camera movement or effect amplification, establish physical dust/airflow/pressure, gameplay/collision/damage, Runtime or target-device performance, Art Direction/Visual QA acceptance, CANON or production readiness."
+}

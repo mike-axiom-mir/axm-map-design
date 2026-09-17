@@ -1,0 +1,275 @@
+name: VFX Object release motes current-world proof
+
+on:
+  push:
+    branches: [studio/vfx-object-release-motes-current-world-001]
+    paths:
+      - "contracts/vfx_object_release_motes_current_world.json"
+      - "environment-proof/vfx_object_release_motes_current_world_observe.gd"
+      - "tools/verify_vfx_object_release_motes_current_world.py"
+      - ".github/workflows/vfx-object-release-motes-current-world.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  object-vfx-current-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact VFX current-world head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact Animation parent and syntax
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/verify_vfx_object_release_motes_current_world.py tools/verify_animation_object_current_world_wallclock.py tools/technical_art_object_motion_current_world_bridge.py
+          python -m json.tool contracts/vfx_object_release_motes_current_world.json >/dev/null
+          git merge-base --is-ancestor c2695f654f9dd44312ca5d205eceb27f7c2680ee HEAD
+          git diff --exit-code c2695f654f9dd44312ca5d205eceb27f7c2680ee -- \
+            environment-proof/animation_object_current_world_wallclock_observe.gd \
+            environment-proof/atmosphere_current_world_object_motion_observe.gd \
+            environment-proof/atmosphere_current_world_object_rigid_component_observe.gd \
+            tools/technical_art_object_motion_current_world_bridge.py \
+            contracts/animation_object_current_world_wallclock.json \
+            contracts/technical_art_object_motion_current_world_bridge.json
+          git rev-parse HEAD > vfx-current-world-exact-head.txt
+          echo PASS_EXACT_ANIMATION_PARENT_UNMODIFIED
+
+      - name: Checkout exact Object VFX v2 donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: bc114ee7ec876107892ccedeefc8e5020315488a
+          path: .object-vfx
+          fetch-depth: 1
+
+      - name: Validate exact VFX donor contract
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          p=Path('.object-vfx/assets/modular-equipment-case-001/lid-open-release-motes-001-irregularity-candidate-v2.json')
+          d=json.loads(p.read_text())
+          assert d['schema']=='axm.object-reactive-vfx/v0.1', d
+          assert d['effect_id']=='lid-open-release-motes-001-irregularity-repair-candidate-v2', d
+          assert d['source_sha256']=='49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a', d
+          assert d['animation_dependency']['trigger_time_s']==0.25, d
+          assert d['animation_dependency']['trigger_semantics']=='EXACT_ANIMATION_PHASE_BOUNDARY_NOT_GAMEPLAY_EVENT', d
+          assert d['visual_source']['seed']==41027 and d['visual_source']['particle_count']==18, d
+          assert d['visual_source']['source_label']=='STYLIZED_VISUAL_RELEASE_MOTES_NOT_DUST_OR_FLUID_SIMULATION', d
+          assert d['visual_source']['parameter_sampling']=='DECORRELATED_INTEGER_MIX_V2_IRREGULAR_MARKS', d
+          assert d['candidate_relationship']['not_adopted'] is True, d
+          print('PASS_EXACT_OBJECT_VFX_V2_DONOR')
+          print('effect_sha256', hashlib.sha256(p.read_bytes()).hexdigest())
+          PY
+
+      - name: Download exact Technical Art current-world motion parent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          mkdir -p "$root/ta-parent" environment-proof/generated
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10520039600/zip" -o "$root/ta-parent.zip"
+          echo "ed7acb94e1b10d7b8abe50a7b5ee0c79393cfa1e91e33b18dddd91c96eb3cc0b  $root/ta-parent.zip" | sha256sum --check --strict
+          unzip -q "$root/ta-parent.zip" -d "$root/ta-parent"
+          python - <<'PY'
+          import json
+          p='evidence/vfx_object_release_motes_current_world/ta-parent/final-receipt.json'
+          d=json.load(open(p))
+          assert d['exact_head']=='d2974dec5043ed9afad346574b23ef8bd4438a76', d
+          assert d['result']=='PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLES_THROUGH_RIGID_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD', d
+          assert d['animation_head']=='c688936a84f80f292e43587c9d3386bd717f8178', d
+          print('PASS_EXACT_TECHNICAL_ART_MOTION_PARENT')
+          PY
+          cp "$root/ta-parent/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
+          cp "$root/ta-parent/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
+          python tools/technical_art_object_motion_current_world_bridge.py validate-plan \
+            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --plan environment-proof/generated/object-motion-receiver-plan.json
+
+      - name: Download exact current-world payload and selected roughness inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          mkdir -p "$root/world-input" "$root/roughness" "$root/receipts"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" -o "$root/world-input.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world-input.zip" | sha256sum --check --strict
+          unzip -q "$root/world-input.zip" -d "$root/world-input"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" -o "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          cp "$root/world-input/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+          cp .object-vfx/assets/modular-equipment-case-001/lid-open-release-motes-001-irregularity-candidate-v2.json environment-proof/generated/object-vfx-lid-release-motes-v2.json
+
+      - name: Checkout exact retained current-world receiver dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Compose exact current-world observer dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/receipts/observer-composition.json"
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Run real current-world Object VFX receiving proof
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+          AXM_OBJECT_MOTION_SAMPLE_INDEX: "0"
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          rm -f environment-proof/vfx-current-world-*.png environment-proof/vfx-object-release-motes-current-world-runtime.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script vfx_object_release_motes_current_world_observe.gd 2>&1 | tee "$root/godot.log"
+          test -f environment-proof/vfx-object-release-motes-current-world-runtime.json
+          cp environment-proof/vfx-object-release-motes-current-world-runtime.json "$root/runtime.json"
+          mkdir -p "$root/rendered"
+          cp environment-proof/vfx-current-world-*.png "$root/rendered/"
+          image_count="$(find "$root/rendered" -maxdepth 1 -name 'vfx-current-world-*.png' -type f | wc -l | tr -d ' ')"
+          test "$image_count" -eq 20
+          python tools/verify_vfx_object_release_motes_current_world.py \
+            --receipt "$root/runtime.json" \
+            --contract contracts/vfx_object_release_motes_current_world.json
+
+      - name: Fail closed on gameplay semantic promotion
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          python - <<'PY'
+          import json
+          src='evidence/vfx_object_release_motes_current_world/runtime.json'
+          out='evidence/vfx_object_release_motes_current_world/negative-gameplay-authority.json'
+          d=json.load(open(src)); d['gameplay_event_semantics_claimed']=True
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_vfx_object_release_motes_current_world.py --receipt "$root/negative-gameplay-authority.json" --contract contracts/vfx_object_release_motes_current_world.json > "$root/negative-gameplay-authority.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_GAMEPLAY_AUTHORITY_PROMOTION
+
+      - name: Fail closed on Art acceptance inflation
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          python - <<'PY'
+          import json
+          src='evidence/vfx_object_release_motes_current_world/runtime.json'
+          out='evidence/vfx_object_release_motes_current_world/negative-art-acceptance.json'
+          d=json.load(open(src)); d['art_direction_accepted']=True
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_vfx_object_release_motes_current_world.py --receipt "$root/negative-art-acceptance.json" --contract contracts/vfx_object_release_motes_current_world.json > "$root/negative-art-acceptance.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_ART_ACCEPTANCE_INFLATION
+
+      - name: Build exact-head summary
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_object_release_motes_current_world
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('evidence/vfx_object_release_motes_current_world')
+          d=json.load(open(root/'runtime.json'))
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          peak={}
+          for row in d['static_ab_checks']:
+              if abs(float(row['time_s'])-0.4)<1e-9:
+                  peak[row['context_id']]={
+                      'active_particle_count':row['active_particle_count'],
+                      'changed_pixels':row['diff']['changed_pixels'],
+                      'changed_fraction':row['diff']['changed_fraction'],
+                      'bbox_half_open':row['diff']['bbox_half_open'],
+                  }
+          summary={
+              'schema':'axm.vfx-object-current-world-receiving-summary/v0.1',
+              'result':d['state'],
+              'decision':d['decision'],
+              'exact_head':head,
+              'animation_parent_head':d['animation_parent_head'],
+              'object_vfx_head':d['object_vfx_head'],
+              'owner_seed':d['owner_seed'],
+              'observing_existing_camera_contexts':d['visually_observing_existing_camera_contexts'],
+              'timed_vfx_maximum_active_count':d['timed_playback']['vfx_maximum_active_count'],
+              'peak_0400ms':peak,
+              'art_direction_accepted':False,
+              'visual_qa_accepted':False,
+              'runtime_performance_accepted':False,
+              'gameplay_accepted':False,
+              'physics_accepted':False,
+              'canon':False,
+          }
+          (root/'SUMMARY.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload retained VFX current-world evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-object-release-motes-current-world-${{ github.sha }}
+          path: |
+            evidence/vfx_object_release_motes_current_world/SUMMARY.json
+            evidence/vfx_object_release_motes_current_world/runtime.json
+            evidence/vfx_object_release_motes_current_world/godot.log
+            evidence/vfx_object_release_motes_current_world/ta-parent/final-receipt.json
+            evidence/vfx_object_release_motes_current_world/receipts/observer-composition.json
+            evidence/vfx_object_release_motes_current_world/negative-gameplay-authority.json
+            evidence/vfx_object_release_motes_current_world/negative-gameplay-authority.log
+            evidence/vfx_object_release_motes_current_world/negative-art-acceptance.json
+            evidence/vfx_object_release_motes_current_world/negative-art-acceptance.log
+            evidence/vfx_object_release_motes_current_world/rendered/*.png
+            contracts/vfx_object_release_motes_current_world.json
+            environment-proof/generated/object-vfx-lid-release-motes-v2.json
+            vfx-current-world-exact-head.txt
+          retention-days: 30
