@@ -55,6 +55,15 @@ func _vector2_from_array(values:Array)->Vector2:
         return Vector2.ZERO
     return Vector2(float(values[0]),float(values[1]))
 
+func _exact_ta_index_topology(indices:Array)->bool:
+    var expected:=[0,2,1,0,3,2]
+    if indices.size()!=expected.size():
+        return false
+    for i in range(expected.size()):
+        if int(indices[i])!=expected[i] or float(indices[i])!=float(expected[i]):
+            return false
+    return true
+
 func _bind_selected_surface_uv(
     source_arrays:Array,
     primitive:Dictionary,
@@ -83,7 +92,7 @@ func _bind_selected_surface_uv(
     var ta_positions=primitive.get("positions",[]) as Array
     var ta_texcoords=primitive.get("texcoords",[]) as Array
     var ta_indices=primitive.get("indices",[]) as Array
-    if ta_positions.size()!=4 or ta_texcoords.size()!=4 or ta_indices!=[0,2,1,0,3,2]:
+    if ta_positions.size()!=4 or ta_texcoords.size()!=4 or not _exact_ta_index_topology(ta_indices):
         fail("selected UV0 Technical Art primitive exact four-corner identity drift")
         return {}
 
