@@ -1,79 +1,50 @@
 extends "res://atmosphere_current_world_building_planar_role_observe.gd"
 
-const RUNTIME_DIRECT_INDEX_SCHEMA := "axm.runtime-building-planar-role-direct-indexed-receiver/v0.1"
-const RUNTIME_DIRECT_INDEX_MODE := "DIRECT_FINAL_POSITION_NORMAL_INDEX_ARRAYS"
-
-func _cardinal_normal(a:Vector3,b:Vector3,c:Vector3)->Vector3:
-    var cross:Vector3=(b-a).cross(c-a)
-    if cross.length_squared()<=1e-18:
-        return Vector3.ZERO
-    var n:=cross.normalized()
-    var ax:=absf(n.x)
-    var ay:=absf(n.y)
-    var az:=absf(n.z)
-    if ax>=ay and ax>=az and ay<=1e-6 and az<=1e-6:
-        return Vector3(1.0 if n.x>0.0 else -1.0,0.0,0.0)
-    if ay>=ax and ay>=az and ax<=1e-6 and az<=1e-6:
-        return Vector3(0.0,1.0 if n.y>0.0 else -1.0,0.0)
-    if az>=ax and az>=ay and ax<=1e-6 and ay<=1e-6:
-        return Vector3(0.0,0.0,1.0 if n.z>0.0 else -1.0)
-    return Vector3.ZERO
-
-func _normal_code(n:Vector3)->float:
-    if n.x>0.5: return 1.0
-    if n.x<-0.5: return -1.0
-    if n.y>0.5: return 2.0
-    if n.y<-0.5: return -2.0
-    if n.z>0.5: return 3.0
-    if n.z<-0.5: return -3.0
-    return 0.0
+const RUNTIME_DIRECT_INDEX_SCHEMA := "axm.runtime-building-planar-role-direct-indexed-receiver/v0.2"
+const RUNTIME_DIRECT_INDEX_MODE := "DIRECT_INDEXED_POSITION_DOMAIN_THEN_GENERATE_NORMALS"
 
 func _add_direct_surface(mesh:ArrayMesh,vertices:Array,surface:Dictionary)->Dictionary:
     var triangles:=surface.get("triangles",[]) as Array
-    var packed_vertices:=PackedVector3Array()
-    var packed_normals:=PackedVector3Array()
-    var packed_indices:=PackedInt32Array()
+    var unique_points:Array[Vector3]=[]
+    var indices:Array[int]=[]
     var lookup:Dictionary={}
     for tri_value in triangles:
         var tri:=tri_value as Array
         if tri.size()!=3:
             fail("Runtime direct-indexed Building triangle arity drift")
             return {}
-        var source_indices:Array[int]=[]
-        var points:Array[Vector3]=[]
         for raw_index in tri:
             var index:=int(raw_index)
             if index<0 or index>=vertices.size():
                 fail("Runtime direct-indexed Building triangle index drift")
                 return {}
-            source_indices.append(index)
-            points.append(gvec(vertices[index] as Array))
-        var normal:=_cardinal_normal(points[0],points[1],points[2])
-        var normal_code:=_normal_code(normal)
-        if normal_code==0.0:
-            fail("Runtime direct-indexed Building expected exact cardinal face normal")
-            return {}
-        for point in points:
-            var key:=Vector4(point.x,point.y,point.z,normal_code)
+            var point:Vector3=gvec(vertices[index] as Array)
             var final_index:int
-            if lookup.has(key):
-                final_index=int(lookup[key])
+            if lookup.has(point):
+                final_index=int(lookup[point])
             else:
-                final_index=packed_vertices.size()
-                lookup[key]=final_index
-                packed_vertices.append(point)
-                packed_normals.append(normal)
-            packed_indices.append(final_index)
-    var arrays:Array=[]
-    arrays.resize(Mesh.ARRAY_MAX)
-    arrays[Mesh.ARRAY_VERTEX]=packed_vertices
-    arrays[Mesh.ARRAY_NORMAL]=packed_normals
-    arrays[Mesh.ARRAY_INDEX]=packed_indices
-    mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+                final_index=unique_points.size()
+                lookup[point]=final_index
+                unique_points.append(point)
+            indices.append(final_index)
+
+    var st:=SurfaceTool.new()
+    st.begin(Mesh.PRIMITIVE_TRIANGLES)
+    for point in unique_points:
+        st.add_vertex(point)
+    for index in indices:
+        st.add_index(index)
+    st.generate_normals()
+    st.commit(mesh)
+    var surface_index:=mesh.get_surface_count()-1
+    var arrays:=mesh.surface_get_arrays(surface_index)
+    var stored_vertices:int=(arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+    var stored_indices:int=(arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size()
     return {
-        "stored_vertices":packed_vertices.size(),
-        "indices":packed_indices.size(),
-        "triangles":packed_indices.size()/3,
+        "stored_vertices":stored_vertices,
+        "indices":stored_indices,
+        "triangles":stored_indices/3,
+        "position_domain_vertices":unique_points.size(),
     }
 
 func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
@@ -136,7 +107,7 @@ func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
         fail("Runtime direct-indexed Building five-role/triangle identity drift")
         return {}
     if total_stored_vertices!=312 or total_indices!=1008:
-        fail("Runtime direct-indexed Building final storage identity drift")
+        fail("Runtime direct-indexed Building final storage identity drift: vertices=%d indices=%d metrics=%s" % [total_stored_vertices,total_indices,JSON.stringify(surface_metrics)])
         return {}
 
     var node:=MeshInstance3D.new()
@@ -165,13 +136,13 @@ func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
             "triangles":total_triangles,
             "source_payload_vertices":vertices.size(),
             "surface_metrics":surface_metrics,
-            "truth_boundary":"Direct final position+cardinal-normal+index ArrayMesh construction for the exact Environment-reviewed planar-role Building only. Same five source material roles/scalars, 336 triangles, transform and current-world inputs; no UV/tangent/color/skin/morph/custom-channel inference and no default adoption."
+            "truth_boundary":"Directly constructs the exact per-material unique-position index domain first, then lets the same pinned Godot SurfaceTool.generate_normals() define final normals. This skips the control's 1,008-corner temporary mesh and second create_from/index rewrite while preserving the same five source material roles/scalars, 336 triangles, transform and current-world inputs. No UV/tangent/color/skin/morph/custom-channel inference and no default adoption."
         }
     }
 
 func write_receipt()->void:
     receipt["runtime_building_direct_indexed_schema"]=RUNTIME_DIRECT_INDEX_SCHEMA
     receipt["runtime_building_direct_indexed_mode"]=RUNTIME_DIRECT_INDEX_MODE
-    receipt["runtime_building_direct_indexed_result"]="CANDIDATE_DIRECT_FINAL_ARRAY_RECEIVER"
-    receipt["runtime_building_direct_indexed_truth_boundary"]="This candidate skips the control's temporary unindexed triangle-corner mesh plus generate_normals/create_from/index rewrite and instead emits the exact final seam/material-domain position+cardinal-normal+index arrays directly. It is a receiver/import-preparation experiment, not source or Environment adoption."
+    receipt["runtime_building_direct_indexed_result"]="CANDIDATE_INDEX_POSITION_DOMAIN_BEFORE_NORMAL_GENERATION"
+    receipt["runtime_building_direct_indexed_truth_boundary"]="This candidate skips the control's temporary unindexed triangle-corner mesh plus create_from/index rewrite. It constructs the already-proven per-material unique-position index domain before the same Godot normal-generation step. It is a receiver/import-preparation experiment, not source or Environment adoption."
     super.write_receipt()
