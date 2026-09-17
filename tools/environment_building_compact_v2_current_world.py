@@ -211,7 +211,7 @@ def build(parent: dict[str, Any], packet: dict[str, Any], receipt: dict[str, Any
         receiving = copy.deepcopy(old)
         receiving["vertices_source_xyz_m"] = copy.deepcopy(world_vertices)
         receiving["surfaces"] = copy.deepcopy(compact_surfaces)
-        receiving["source_geometry_digest"] = parent_tool.digest({"vertices": world_vertices, "triangles": grouped})
+        receiving["source_geometry_digest"] = parent_tool.parent_tool.digest({"vertices": world_vertices, "triangles": grouped})
         receiving["receiving_policy"] = "EXPLICIT_SOURCE_OWNED_COMPACT_V2_RECEIVER_WITH_EXACT_MATERIAL_REBIND__REVIEW_ONLY"
         receiving["environment_building_compact_v2_receiving"] = {
             "schema": "axm.environment-building-compact-v2-receiving/v0.1",
