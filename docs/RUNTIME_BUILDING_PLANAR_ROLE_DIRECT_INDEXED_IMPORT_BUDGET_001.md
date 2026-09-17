@@ -1,6 +1,6 @@
 # Runtime Building planar-role direct indexed import budget 001
 
-This bounded Runtime lane stacks on the exact Environment indexed planar-role review head `038925282240441c475651bdc3737d1749c31d06`.
+This bounded Runtime lane stacks on the exact Environment indexed-planar review head `038925282240441c475651bdc3737d1749c31d06` and runs on branch `studio/runtime-building-planar-role-direct-indexed-import-budget-001`.
 
 It does not change Building semantic source authority, the five material roles/scalars, the 336-triangle planar-role representation, current-world composition, or `axm-create-me` product code.
 
