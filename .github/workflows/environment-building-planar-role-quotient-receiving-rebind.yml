@@ -1,0 +1,187 @@
+name: Environment Building planar-role quotient receiving rebind evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_building_planar_role_quotient_receiving.json"
+      - "tools/environment_building_planar_role_quotient_receiving_rebind.py"
+      - "environment-proof/atmosphere_current_world_building_planar_role_quotient_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_PLANAR_ROLE_QUOTIENT_RECEIVING_REBIND_001.md"
+      - ".github/workflows/environment-building-planar-role-quotient-receiving-rebind.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_building_planar_role_quotient_receiving.json"
+      - "tools/environment_building_planar_role_quotient_receiving_rebind.py"
+      - "environment-proof/atmosphere_current_world_building_planar_role_quotient_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_PLANAR_ROLE_QUOTIENT_RECEIVING_REBIND_001.md"
+      - ".github/workflows/environment-building-planar-role-quotient-receiving-rebind.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-position-quotient-rebind-current-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      GEOMETRY_QUOTIENT_HEAD: 7dfb1153dc5f80bcbf1b48803f044236d4ebb030
+      PRIOR_CONSUMER_HEAD: 55e10a4fa700fb81020a95bd5143deca6a09f208
+      PRIOR_CONSUMER_RUN: "35190228022"
+      PRIOR_CONSUMER_ARTIFACT_NAME: environment-building-planar-role-consumer-identity-rebind-001-55e10a4fa700fb81020a95bd5143deca6a09f208
+      UNINDEXED_ENVIRONMENT_HEAD: b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      ACTIVE_HEAD: 7713cbe5863c3bc38dabb6236eb4b393401224b6
+      WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+      ACTIVE_RUN: "35174899697"
+      ACTIVE_ARTIFACT_NAME: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+      UNINDEXED_RUN: "35182784756"
+      UNINDEXED_ARTIFACT_NAME: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - name: Bind exact gate
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          python -m py_compile tools/runtime_building_planar_role_surface_index_budget.py tools/environment_building_planar_role_quotient_receiving_rebind.py
+      - name: Checkout exact Building Geometry quotient donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.GEOMETRY_QUOTIENT_HEAD }}
+          path: .building-geometry
+          fetch-depth: 1
+      - name: Rebuild exact Geometry quotient
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/evidence/environment_building_planar_role_quotient_receiving_rebind_001/geometry-quotient"
+          python .building-geometry/tools/analyze_service_pavilion_planar_role_normal_boundary_quotient.py --exact-head "$GEOMETRY_QUOTIENT_HEAD" --output-dir "$out"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_planar_role_quotient_receiving_rebind_001/geometry-quotient/normal-boundary-quotient-evidence.json'))
+          assert p['result']=='PASS_HARD_NORMAL_IDENTITY_REMOVAL_YIELDS_EXACT_312_GROUP_STRUCTURAL_QUOTIENT' and p['quotient_sha256']=='7d9e0babf605e31ecb3e4edc92d06bd5460cf52a27f02ccbf32bbae44464688f'
+          PY
+      - name: Download active segmented evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ACTIVE_ARTIFACT_NAME }}
+          path: evidence/environment_building_planar_role_quotient_receiving_rebind_001/active
+          github-token: ${{ github.token }}
+          run-id: ${{ env.ACTIVE_RUN }}
+      - name: Download unindexed planar-role evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.UNINDEXED_ARTIFACT_NAME }}
+          path: evidence/environment_building_planar_role_quotient_receiving_rebind_001/unindexed
+          github-token: ${{ github.token }}
+          run-id: ${{ env.UNINDEXED_RUN }}
+      - name: Download prior 312-consumer evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PRIOR_CONSUMER_ARTIFACT_NAME }}
+          path: evidence/environment_building_planar_role_quotient_receiving_rebind_001/prior-consumer
+          github-token: ${{ github.token }}
+          run-id: ${{ env.PRIOR_CONSUMER_RUN }}
+      - name: Verify retained parents and install payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_quotient_receiving_rebind_001
+          test "$(tr -d '\n\r' < "$out/active/exact-head.txt")" = "$ACTIVE_HEAD"
+          test "$(tr -d '\n\r' < "$out/unindexed/exact-head.txt")" = "$UNINDEXED_ENVIRONMENT_HEAD"
+          test "$(tr -d '\n\r' < "$out/prior-consumer/exact-head.txt")" = "$PRIOR_CONSUMER_HEAD"
+          mkdir -p environment-proof/generated
+          cp "$out/unindexed/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+      - name: Checkout Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.WEATHER_WIDTH_OBSERVER_HEAD }}
+          path: .vfx-width-donor
+          fetch-depth: 1
+      - name: Restore observer-chain donor
+        run: cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+      - name: Install proof dependencies
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          command -v xvfb-run >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y xvfb; }
+      - name: Observe exact quotient-rebound current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_quotient_receiving_rebind_001/current
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility --path environment-proof --script atmosphere_current_world_building_planar_role_quotient_observe.gd 2>&1 | tee "$out/godot.log"
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json"
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/"
+      - name: Prove receipt-only instrumentation preserves raster
+        run: |
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          r=Path('evidence/environment_building_planar_role_quotient_receiving_rebind_001'); a=r/'prior-consumer/indexed/rendered'; b=r/'current/rendered'
+          names=sorted(x.name for x in a.glob('atmosphere-width-*.png')); assert len(names)==68 and names==sorted(x.name for x in b.glob('atmosphere-width-*.png'))
+          rows={n:{'prior_sha256':hashlib.sha256((a/n).read_bytes()).hexdigest(),'current_sha256':hashlib.sha256((b/n).read_bytes()).hexdigest()} for n in names}
+          assert all(x['prior_sha256']==x['current_sha256'] for x in rows.values())
+          (r/'prior-frame-identity.json').write_text(json.dumps({'frame_count':68,'byte_identical_frame_count':68,'rows':rows},indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Reprove Runtime trade space
+        run: |
+          out=evidence/environment_building_planar_role_quotient_receiving_rebind_001
+          python tools/runtime_building_planar_role_surface_index_budget.py --active-root "$out/active" --unindexed-root "$out/unindexed" --indexed-root "$out/current" --exact-head "$(cat exact-head.txt)" --output "$out/runtime-report.json"
+      - name: Gate exact quotient against real receiver
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_quotient_receiving_rebind_001
+          python tools/environment_building_planar_role_quotient_receiving_rebind.py --contract contracts/environment_building_planar_role_quotient_receiving.json --quotient-evidence "$out/geometry-quotient/normal-boundary-quotient-evidence.json" --quotient-groups "$out/geometry-quotient/normal-boundary-quotient-groups.json" --prior-environment-report "$out/prior-consumer/environment-report.json" --runtime "$out/current/runtime.json" --runtime-report "$out/runtime-report.json" --exact-head "$(cat exact-head.txt)" --output "$out/environment-report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_planar_role_quotient_receiving_rebind_001/environment-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_BUILDING_312_CONSUMER_EXACT_POSITION_QUOTIENT_REBIND'
+          assert p['geometry_quotient']['quotient_groups']==312 and p['geometry_quotient']['hard_normal_crossing_groups']==188
+          assert p['current_world_consumer']['exact_role_position_partition_matches_geometry_quotient'] is True and p['environment_adoption'] is False
+          PY
+      - name: Deliberate fail-closed source-normal authority mutation
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_quotient_receiving_rebind_001
+          cp contracts/environment_building_planar_role_quotient_receiving.json "$out/mutated-contract.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('evidence/environment_building_planar_role_quotient_receiving_rebind_001/mutated-contract.json'); d=json.loads(p.read_text()); d['source_hard_normal_identity_preserved_by_consumer']=True; d['consumer_generated_normals_are_source_normals']=True; p.write_text(json.dumps(d,indent=2)+'\n')
+          PY
+          if python tools/environment_building_planar_role_quotient_receiving_rebind.py --contract "$out/mutated-contract.json" --quotient-evidence "$out/geometry-quotient/normal-boundary-quotient-evidence.json" --quotient-groups "$out/geometry-quotient/normal-boundary-quotient-groups.json" --prior-environment-report "$out/prior-consumer/environment-report.json" --runtime "$out/current/runtime.json" --runtime-report "$out/runtime-report.json" --exact-head "$(cat exact-head.txt)" --output "$out/mutated-report.json"; then exit 1; fi
+      - name: Upload exact Environment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-planar-role-quotient-receiving-rebind-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/exact-head.txt
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/geometry-quotient/normal-boundary-quotient-*.json
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/prior-frame-identity.json
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/runtime-report.json
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/environment-report.json
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/current/runtime.json
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/current/godot.log
+            evidence/environment_building_planar_role_quotient_receiving_rebind_001/current/rendered/*.png
+          if-no-files-found: error
+          retention-days: 30

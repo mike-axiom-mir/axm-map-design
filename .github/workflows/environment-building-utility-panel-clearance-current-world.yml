@@ -1,0 +1,285 @@
+name: Environment Building utility-panel clearance current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_building_utility_panel_clearance_current_world.json"
+      - "environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd"
+      - "tools/environment_building_utility_panel_clearance_current_world.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-utility-panel-clearance-current-world.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_building_utility_panel_clearance_current_world.json"
+      - "environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd"
+      - "tools/environment_building_utility_panel_clearance_current_world.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-utility-panel-clearance-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-clearance-rebind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 53441702924f6238e6632b19f94fa112c53d4d58^{commit}
+          git merge-base --is-ancestor 53441702924f6238e6632b19f94fa112c53d4d58 HEAD
+          python -m py_compile tools/environment_building_utility_panel_clearance_current_world.py
+          python -m json.tool contracts/environment_building_utility_panel_clearance_current_world.json >/dev/null
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install proof dependencies
+        run: python -m pip install --disable-pip-version-check --no-input pillow
+
+      - name: Checkout exact Building source and Procedural authorities
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: fbfa3b47048755b45dac91451171d5511c8d4f47
+          path: .building-current
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 32bbdd54f00aaac87ba8139bf932d8aff6109a66
+          path: .building-source-content
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 0c458e19cda73e26e90531d24fe7697b5a8d14fc
+          path: .building-procedural
+          fetch-depth: 1
+
+      - name: Verify exact Building owner and Procedural derivation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          mkdir -p "$root/donor-receipts"
+          test "$(git -C .building-current rev-parse HEAD)" = "fbfa3b47048755b45dac91451171d5511c8d4f47"
+          test "$(git -C .building-source-content rev-parse HEAD)" = "32bbdd54f00aaac87ba8139bf932d8aff6109a66"
+          test "$(git -C .building-procedural rev-parse HEAD)" = "0c458e19cda73e26e90531d24fe7697b5a8d14fc"
+          test "$(git -C .building-current rev-parse HEAD:assets/utility_access_panel_001.json)" = "51b7fa61dd87934a89e033a2fdf5cc3b99992454"
+          test "$(git -C .building-current rev-parse HEAD:assets/service_pavilion_001.json)" = "5a5ec3ce6ee4e9b111db086ba93038a75c482a2e"
+          diff_names="$(git -C .building-current diff --name-only 32bbdd54f00aaac87ba8139bf932d8aff6109a66..HEAD)"
+          test "$diff_names" = ".github/workflows/hard-surface-building-utility-panel-receiver-clearance.yml"
+          (
+            cd .building-current
+            AXM_EXACT_OWNER_HEAD=fbfa3b47048755b45dac91451171d5511c8d4f47 \
+              python tools/verify_utility_panel_receiver_clearance_envelope.py \
+              --output ../"$root"/donor-receipts/hard-surface-clearance.json
+          )
+          python .building-procedural/tools/build_pavilion_utility_panel_clearance_rebind_family.py \
+            --donor-root .building-source-content \
+            --output "$root/donor-receipts/procedural-clearance-rebind.json"
+          python - <<'PY'
+          import json
+          r=json.load(open('evidence/environment_building_utility_panel_clearance_001/donor-receipts/hard-surface-clearance.json'))
+          assert r['result']=='PASS_SOURCE_OWNED_BUILDING_UTILITY_PANEL_RECEIVER_CLEARANCE_ENVELOPE',r
+          assert r['panel_source_blob']=='51b7fa61dd87934a89e033a2fdf5cc3b99992454',r
+          assert r['downstream_adoption_authorized'] is False,r
+          p=json.load(open('evidence/environment_building_utility_panel_clearance_001/donor-receipts/procedural-clearance-rebind.json'))
+          assert p['result']=='PASS_BOUNDED_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_FAMILY',p
+          assert p['standoff_delta_m']==0.02 and p['receiver_count']==2,p
+          assert p['automatic_receiver_adoption'] is False,p
+          print('PASS_EXACT_BUILDING_CLEARANCE_AUTHORITIES')
+          PY
+          cp .building-current/assets/service_pavilion_001.json "$root/donor-receipts/"
+          cp .building-current/assets/utility_access_panel_001.json "$root/donor-receipts/"
+          cp .building-procedural/procedural/service_pavilion_utility_panel_clearance_rebind_family_001.json "$root/donor-receipts/procedural-profile.json"
+
+      - name: Download exact retained multi-asset parent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          mkdir -p "$root/parent"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" \
+            --output "$root/parent.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/parent.zip" | sha256sum --check --strict
+          unzip -q "$root/parent.zip" -d "$root/parent"
+          test -f "$root/parent/combined_current_world.json"
+          test -f "$root/parent/candidate/runtime.json"
+          test "$(find "$root/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_utility_panel_clearance_001/parent/composition-report.json'))
+          assert p['environment_head']=='4bd7eaf6970716dde4159448c92556785f47e954',p
+          assert p['state']=='PASS_CURRENT_WORLD_SELECTED_ROUGHNESS_PLUS_COMPACT_EAST_COMPOSITION_REVIEW_READY__DUAL_ADOPTION_HELD',p
+          assert p['environment_selected_roughness_adoption'] is False,p
+          assert p['environment_compact_east_adoption'] is False,p
+          print('PASS_EXACT_MULTI_ASSET_PARENT')
+          PY
+
+      - name: Download exact selected-roughness transport inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          mkdir -p "$root/roughness"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" \
+            --output "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          test -f "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json"
+          test -f "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png"
+
+      - name: Checkout exact compact-east and Weather-width receiver code
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Install exact retained world and receiver dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          mkdir -p environment-proof/generated "$root/candidate/rendered"
+          cp "$root/parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+          test "$(sha256sum environment-proof/generated/object-selected-roughness.png | cut -d' ' -f1)" = "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949"
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/observer-composition.json"
+          grep -F 'extends "res://atmosphere_current_world_selected_roughness_compact_east_observe.gd"' \
+            environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact Building clearance candidate in real retained world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_utility_panel_clearance_observe.gd \
+            2>&1 | tee "$root/candidate/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$root/candidate/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$root/candidate/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify bounded real-world receiving candidate
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          test "$(find "$root/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python tools/environment_building_utility_panel_clearance_current_world.py verify \
+            --contract contracts/environment_building_utility_panel_clearance_current_world.json \
+            --pavilion .building-current/assets/service_pavilion_001.json \
+            --panel .building-current/assets/utility_access_panel_001.json \
+            --procedural-profile .building-procedural/procedural/service_pavilion_utility_panel_clearance_rebind_family_001.json \
+            --parent-runtime "$root/parent/candidate/runtime.json" \
+            --candidate-runtime "$root/candidate/runtime.json" \
+            --parent-frames "$root/parent/candidate/rendered" \
+            --candidate-frames "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/report.json" | tee "$root/verify.log"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_utility_panel_clearance_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_RECEIVER__VISUAL_OBSERVABILITY_CHARACTERIZED__ADOPTION_HELD',p
+          assert p['real_world_scope']['matched_frames']==68,p
+          assert p['runtime_continuity']['building_rebound_states']==17,p
+          assert p['runtime_continuity']['object_roughness_exact_states']==17,p
+          assert p['runtime_continuity']['compact_east_phase_indices']==list(range(17)),p
+          assert p['runtime_continuity']['weather_width_measurements']==1224,p
+          assert p['environment_building_clearance_adoption'] is False,p
+          print(p['state'])
+          PY
+
+      - name: Negative control rejects one-centimeter placement regression
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          python tools/environment_building_utility_panel_clearance_current_world.py negative-control \
+            --contract contracts/environment_building_utility_panel_clearance_current_world.json \
+            --parent-runtime "$root/parent/candidate/runtime.json" \
+            --candidate-runtime "$root/candidate/runtime.json" \
+            | tee "$root/negative-control.log"
+          grep -F 'PASS_REJECTED_MUTATED_BUILDING_CLEARANCE_CURRENT_RECEIVER' "$root/negative-control.log"
+
+      - name: Retain exact evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_001
+          mkdir -p "$root/retained"
+          cp "$root/report.json" "$root/retained/" 2>/dev/null || true
+          cp "$root/verify.log" "$root/retained/" 2>/dev/null || true
+          cp "$root/negative-control.log" "$root/retained/" 2>/dev/null || true
+          cp "$root/observer-composition.json" "$root/retained/" 2>/dev/null || true
+          cp -r "$root/donor-receipts" "$root/retained/" 2>/dev/null || true
+          cp contracts/environment_building_utility_panel_clearance_current_world.json "$root/retained/" 2>/dev/null || true
+          cp docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_CURRENT_WORLD_001.md "$root/retained/" 2>/dev/null || true
+          cp exact-head.txt "$root/retained/" 2>/dev/null || true
+          cp -r "$root/candidate" "$root/retained/" 2>/dev/null || true
+          rm -rf "$root/parent" "$root/roughness" "$root/parent.zip" "$root/roughness.zip"
+
+      - name: Upload exact Environment Building clearance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-utility-panel-clearance-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_building_utility_panel_clearance_001/retained
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,35 @@
+{
+  "schema": "axm.environment-object-selected-roughness-multiscale-review/v0.1",
+  "source_environment_head": "d8a1d950ed5f21e6ad356404f46407c99c160017",
+  "source_state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_CANDIDATE_REVIEW_READY__ENVIRONMENT_ADOPTION_HELD",
+  "parent_environment_head": "4eed6da68f746ca2849c89fa88533f82bc836b26",
+  "reusable_rule": "SUBTLE_WORLD_SURFACE_CHANGE_REVIEW_SHOULD_PRESERVE_FULL_SCENE_AUTHORITY_AND_ADD_DERIVED_MULTI_SCALE_INSPECTION_WITHOUT_REAUTHORING_CAMERA_LIGHT_OR_ASSET_STATE",
+  "evidence": {
+    "parent_artifact_id": 10501901585,
+    "parent_artifact_sha256": "a3e3c3adc794877d84f3735f4f4ff69e3120843588da5c8aaa259d7ab7b965e3",
+    "candidate_artifact_id": 10502588586,
+    "candidate_artifact_sha256": "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e",
+    "candidate_run_id": 35235994153,
+    "matched_frames": 68,
+    "changed_pixels_raw_total": 6426,
+    "changed_pixels_gt_1lsb_total": 1666,
+    "maximum_channel_delta_lsb": 7,
+    "weather_width_measurements": 1224,
+    "weather_maximum_projected_width_residual_px": 0.00974698571769128
+  },
+  "localized_raw_delta_envelopes": {
+    "path_eye": [314, 440, 342, 448],
+    "elevated_oblique": [549, 307, 559, 313]
+  },
+  "review": {
+    "representative_states": [0, 8, 16],
+    "local_padding_px": 24,
+    "neighborhood_padding_px": 96,
+    "difference_amplification": 32,
+    "preserve_original_full_frames": true,
+    "derived_review_only": true,
+    "environment_adoption": false,
+    "art_qa_acceptance_required": true,
+    "runtime_acceptance_required": true
+  }
+}

@@ -1,0 +1,319 @@
+name: Environment selected roughness + compact-east current-world composition
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_selected_roughness_compact_east_composition.json"
+      - "tools/environment_selected_roughness_compact_east_composition.py"
+      - "docs/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_COMPOSITION_001.md"
+      - ".github/workflows/environment-selected-roughness-compact-east-composition.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_selected_roughness_compact_east_composition.json"
+      - "tools/environment_selected_roughness_compact_east_composition.py"
+      - "docs/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_COMPOSITION_001.md"
+      - ".github/workflows/environment-selected-roughness-compact-east-composition.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-cross-asset-composition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e d8a1d950ed5f21e6ad356404f46407c99c160017^{commit}
+          git merge-base --is-ancestor d8a1d950ed5f21e6ad356404f46407c99c160017 HEAD
+          test "$(git hash-object environment-proof/atmosphere_current_world_object_selected_roughness_observe.gd)" = "15291ae2c03bea1c67c14776568795d6e139e3d2"
+          python -m py_compile tools/environment_selected_roughness_compact_east_composition.py
+          python -m json.tool contracts/environment_selected_roughness_compact_east_composition.json >/dev/null
+
+      - name: Checkout exact green compact-east VFX receiver
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - name: Checkout exact Nature VFX owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cef2ad78d8e36a55ada5dad07329f1a7125d48de
+          path: .nature-vfx
+          fetch-depth: 1
+
+      - name: Checkout exact inherited Weather-width observer
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width-donor
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify exact donor identities and rebuild compact-east source
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-map rev-parse HEAD)" = "29ef2d4cc4398b3f26290e4e1f1f10398ca9898c"
+          test "$(git -C .nature-vfx rev-parse HEAD)" = "cef2ad78d8e36a55ada5dad07329f1a7125d48de"
+          test "$(git -C .vfx-map hash-object environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd)" = "67a3aa1f1932a99de1b6e835ad308630bff282a5"
+          rm -rf .compact-vfx-evidence
+          python .nature-vfx/tools/build_compact_east_tree_wind_candidate.py .compact-vfx-evidence
+          python - <<'PY'
+          import json
+          s=json.load(open('.compact-vfx-evidence/summary.json'))
+          assert s['state']=='PASS_COMPACT_EAST_TREE_BOUNDED_VISUAL_RESPONSE_CANDIDATE',s
+          assert s['source_head']=='64116d63fc76daa1623b5fd5046a4e6074100bda',s
+          assert s['source_digest']=='9c87cf26f02f7adee832908652942218ec779c9029a0611aae1fb66eb0f62f54',s
+          assert s['migrated_neutral_mesh_digest']=='420135f6effbadb1b344675948b9ddc471dcb83177702888f0b32327c5121c18',s
+          assert s['weather_semantics']=='VISUAL_DIRECTION_ONLY_NOT_PHYSICAL_WIND_SPEED',s
+          assert s['sample_count']==17 and len(s['samples'])==17,s
+          print('PASS_EXACT_COMPACT_EAST_SOURCE_REBUILD')
+          PY
+
+      - name: Download exact accepted real current-world parent
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/environment_selected_roughness_compact_east_001/world-parent
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35174899697
+
+      - name: Download and SHA-bind exact selected-roughness real-world parent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          mkdir -p "$root/roughness-parent"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" \
+            --output "$root/roughness-parent.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness-parent.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness-parent.zip" -d "$root/roughness-parent"
+          test -f "$root/roughness-parent/selected-roughness-report.json"
+          test -f "$root/roughness-parent/candidate/runtime.json"
+          test "$(find "$root/roughness-parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test -f "$root/roughness-parent/donor-receipts/service-dark-selected-roughness-two-surface.surface.json"
+          test -f "$root/roughness-parent/donor-receipts/service-dark-roughness-selected-field.png"
+          python - <<'PY'
+          import json
+          root='evidence/environment_selected_roughness_compact_east_001/roughness-parent'
+          p=json.load(open(root+'/selected-roughness-report.json'))
+          assert p['environment_head']=='d8a1d950ed5f21e6ad356404f46407c99c160017',p
+          assert p['state']=='PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_CANDIDATE_REVIEW_READY__ENVIRONMENT_ADOPTION_HELD',p
+          assert p['environment_adoption'] is False,p
+          print('PASS_EXACT_SELECTED_ROUGHNESS_PARENT')
+          PY
+
+      - name: Verify accepted world and build exact compact-east phased payload
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          test "$(cat "$root/world-parent/exact-head.txt" | tr -d '\n\r')" = "7713cbe5863c3bc38dabb6236eb4b393401224b6"
+          test -f "$root/world-parent/combined_current_world.json"
+          mkdir -p environment-proof/generated
+          python .vfx-map/tools/environment_compact_east_visual_response_current_world.py build \
+            --parent "$root/world-parent/combined_current_world.json" \
+            --source-root .compact-vfx-evidence \
+            --environment-head "$(cat exact-head.txt)" \
+            --output environment-proof/generated/current_world_nature_winding_migration.json
+          cp environment-proof/generated/current_world_nature_winding_migration.json "$root/combined_current_world.json"
+          cp .compact-vfx-evidence/summary.json "$root/compact-east-vfx-summary.json"
+
+      - name: Install exact selected-roughness receiver data and inherited Weather observer
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          cp "$root/roughness-parent/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" \
+            environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness-parent/donor-receipts/service-dark-roughness-selected-field.png" \
+            environment-proof/generated/object-selected-roughness.png
+          test "$(sha256sum environment-proof/generated/object-selected-roughness.png | cut -d' ' -f1)" = "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949"
+          cp .weather-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd \
+            environment-proof/atmosphere_current_world_weather_width_observe.gd
+
+      - name: Compose exact VFX observer over selected-roughness receiver
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/observer-composition.json"
+          grep -F 'extends "res://atmosphere_current_world_object_selected_roughness_observe.gd"' \
+            environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact selected-roughness plus compact-east composition
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          out="$root/candidate"
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact compact-east target-host behavior over roughness parent
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          python .vfx-map/tools/environment_compact_east_visual_response_current_world.py verify \
+            --payload "$root/combined_current_world.json" \
+            --parent-root "$root/roughness-parent/candidate" \
+            --candidate-root "$root/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/compact-east-vfx-report.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_selected_roughness_compact_east_001/compact-east-vfx-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_TARGET_HOST',p
+          assert p['matched_frames']==68 and p['neutral_endpoint_changed_pixels']==0,p
+          assert p['interior_changed_frames']==30,p
+          assert p['fully_observing_contexts']==['elevated_oblique'],p
+          assert p['non_observing_contexts']==['path_eye'],p
+          print('PASS_EXACT_COMPACT_EAST_OVER_SELECTED_ROUGHNESS_PARENT')
+          PY
+
+      - name: Verify bounded Environment cross-asset composition
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          python tools/environment_selected_roughness_compact_east_composition.py verify \
+            --contract contracts/environment_selected_roughness_compact_east_composition.json \
+            --roughness-report "$root/roughness-parent/selected-roughness-report.json" \
+            --vfx-report "$root/compact-east-vfx-report.json" \
+            --parent-runtime "$root/roughness-parent/candidate/runtime.json" \
+            --runtime "$root/candidate/runtime.json" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/composition-report.json" \
+            | tee "$root/verify.log"
+          cp exact-head.txt "$root/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_selected_roughness_compact_east_001/composition-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_SELECTED_ROUGHNESS_PLUS_COMPACT_EAST_COMPOSITION_REVIEW_READY__DUAL_ADOPTION_HELD',p
+          assert p['real_world_scope']['states']==17 and p['real_world_scope']['matched_target_host_frames']==68,p
+          assert p['selected_roughness_continuity']['exact_runtime_observation_matches']==17,p
+          assert p['compact_east_continuity']['phase_indices']==list(range(17)),p
+          assert p['compact_east_continuity']['interior_changed_frames']==30,p
+          assert p['weather_width_continuity']['measurements']==1224,p
+          assert p['environment_selected_roughness_adoption'] is False,p
+          assert p['environment_compact_east_adoption'] is False,p
+          for k in ('draw_calls_in_frame','objects_in_frame','primitives_in_frame'):
+              assert p['proof_host_runtime_trade_vs_exact_selected_roughness_parent'][k]['unique_deltas']==[0],(k,p)
+          assert all(p['checks'].values()),p
+          print(p['state'])
+          PY
+
+      - name: Negative control rejects selected-roughness identity loss while stacking Nature
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          python - <<'PY'
+          import json
+          src='evidence/environment_selected_roughness_compact_east_001/candidate/runtime.json'
+          dst='evidence/environment_selected_roughness_compact_east_001/negative-runtime.json'
+          p=json.load(open(src))
+          rows=p['samples'][8]['static_source_meshes']
+          object_row=next(row for row in rows if row.get('asset_id')=='source:object:modular-equipment-case-001')
+          object_row['environment_object_selected_roughness_current_world']['selected_png_sha256']='mutated'
+          json.dump(p,open(dst,'w'),indent=2,sort_keys=True)
+          PY
+          set +e
+          python tools/environment_selected_roughness_compact_east_composition.py verify \
+            --contract contracts/environment_selected_roughness_compact_east_composition.json \
+            --roughness-report "$root/roughness-parent/selected-roughness-report.json" \
+            --vfx-report "$root/compact-east-vfx-report.json" \
+            --parent-runtime "$root/roughness-parent/candidate/runtime.json" \
+            --runtime "$root/negative-runtime.json" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/negative-report.json" \
+            > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -q "selected-roughness PNG identity drift" "$root/negative.log"
+          echo "PASS_REJECTED_SELECTED_ROUGHNESS_IDENTITY_LOSS_DURING_CROSS_ASSET_STACK"
+
+      - name: Retain bounded composition evidence only
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_001
+          mkdir -p "$root/retained"
+          cp "$root/composition-report.json" "$root/retained/" 2>/dev/null || true
+          cp "$root/compact-east-vfx-report.json" "$root/retained/" 2>/dev/null || true
+          cp "$root/observer-composition.json" "$root/retained/" 2>/dev/null || true
+          cp "$root/combined_current_world.json" "$root/retained/" 2>/dev/null || true
+          cp "$root/compact-east-vfx-summary.json" "$root/retained/" 2>/dev/null || true
+          cp "$root/roughness-parent/selected-roughness-report.json" "$root/retained/source-selected-roughness-report.json" 2>/dev/null || true
+          cp contracts/environment_selected_roughness_compact_east_composition.json "$root/retained/" 2>/dev/null || true
+          cp docs/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_COMPOSITION_001.md "$root/retained/" 2>/dev/null || true
+          cp "$root/exact-head.txt" "$root/retained/" 2>/dev/null || true
+          cp "$root/negative.log" "$root/retained/negative-control.log" 2>/dev/null || true
+          cp -r "$root/candidate" "$root/retained/candidate" 2>/dev/null || true
+          rm -rf "$root/world-parent" "$root/roughness-parent" "$root/roughness-parent.zip" "$root/negative-runtime.json" "$root/negative-report.json"
+          rm -rf .compact-vfx-evidence
+
+      - name: Upload exact Environment cross-asset composition evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-selected-roughness-compact-east-composition-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_selected_roughness_compact_east_001/retained
+          if-no-files-found: error
+          retention-days: 30

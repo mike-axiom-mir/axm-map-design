@@ -1,0 +1,250 @@
+name: Environment Building planar-role current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_building_planar_role_current_world.py"
+      - "environment-proof/atmosphere_current_world_building_planar_role_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_PLANAR_ROLE_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-planar-role-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_building_planar_role_current_world.py"
+      - "environment-proof/atmosphere_current_world_building_planar_role_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_PLANAR_ROLE_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-planar-role-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-building-planar-role:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      PARENT_HEAD: 7713cbe5863c3bc38dabb6236eb4b393401224b6
+      HARD_SURFACE_HEAD: 93f22e4eeb9bb32516d4b11f8d8bcf47d9792910
+      MATERIALS_HEAD: 4179aa1401f5a9114399e2f998c96809d4b8ed2e
+      MATERIAL_PROFILE_BLOB: f7945f4c17b7720f176c1b0ac4e1baa298691b25
+    steps:
+      - name: Checkout exact Environment head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact current-world parent and verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$PARENT_HEAD^{commit}"
+          git merge-base --is-ancestor "$PARENT_HEAD" HEAD
+          python -m py_compile tools/environment_building_planar_role_current_world.py
+          grep -F 'BUILDING_PLANAR_REPRESENTATION_ID := "boundary-only-planar-role-rectangle-render-001"' environment-proof/atmosphere_current_world_building_planar_role_observe.gd
+
+      - name: Checkout exact Building Hard-Surface planar-role donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.HARD_SURFACE_HEAD }}
+          path: .building-planar-role
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Rebuild and verify exact Building planar-role donor
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-planar-role rev-parse HEAD)" = "$HARD_SURFACE_HEAD"
+          rm -rf .building-planar-role/evidence/environment-planar-role-rebuild
+          python .building-planar-role/tools/build_service_pavilion_planar_role_render_receiver.py \
+            --exact-head "$HARD_SURFACE_HEAD" \
+            --output-dir .building-planar-role/evidence/environment-planar-role-rebuild
+          python - <<'PY'
+          import json
+          root='.building-planar-role/evidence/environment-planar-role-rebuild'
+          c=json.load(open(root+'/planar-role-render-receiver.json'))
+          e=json.load(open(root+'/planar-role-render-receiver-evidence.json'))
+          p=json.load(open(root+'/policy.json'))
+          assert e['result']=='PASS_STRUCTURAL_PLANAR_ROLE_RECTANGLE_RENDER_RECEIVER_CANDIDATE',e
+          assert e['exact_hard_surface_head']=='93f22e4eeb9bb32516d4b11f8d8bcf47d9792910',e
+          assert e['representation_id']=='boundary-only-planar-role-rectangle-render-001',e
+          assert e['candidate']['vertex_count']==672 and e['candidate']['triangle_count']==336,e
+          assert e['candidate']['rectangle_count']==168 and e['candidate']['source_owner_count']==19,e
+          assert e['candidate']['role_count']==5 and e['candidate']['atomic_coverage_complete'] is True,e
+          assert e['candidate']['atomic_overlap_count']==0 and e['candidate']['cardinal_hard_normals_only'] is True,e
+          assert p['material_role_binding']['donor_head']=='4179aa1401f5a9114399e2f998c96809d4b8ed2e',p
+          assert p['material_role_binding']['profile_git_blob_sha']=='f7945f4c17b7720f176c1b0ac4e1baa298691b25',p
+          assert p['evidence_transfer_policy']=='NO_PASS_TRANSFER_FROM_COMPACT_V2_OR_SEGMENTED_RECEIVER__EXACT_ENVIRONMENT_RUNTIME_ART_QA_REBIND_REQUIRED',p
+          assert len(c['vertices'])==672 and len(c['triangles'])==336 and len(c['rectangles'])==168,c
+          print('PASS_EXACT_BUILDING_PLANAR_ROLE_DONOR_REBUILD')
+          PY
+
+      - name: Download exact accepted current-world parent evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/environment_building_planar_role_current_world_001/parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Download exact held compact-v2 current-world evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-building-compact-v2-current-world-001-ef2cb9cc84edc10ab66c2230daca625623e0b00d
+          path: evidence/environment_building_planar_role_current_world_001/compact
+          github-token: ${{ github.token }}
+          run-id: 35179857530
+
+      - name: Verify exact current-world comparison identities
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_current_world_001
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = "$PARENT_HEAD"
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/compact/combined_current_world.json"
+          test -f "$out/parent/candidate/runtime.json"
+          test -f "$out/compact/candidate/runtime.json"
+          test "$(find "$out/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$out/compact/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_planar_role_current_world_001/parent/combined_current_world.json'))
+          c=json.load(open('evidence/environment_building_planar_role_current_world_001/compact/combined_current_world.json'))
+          assert p['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',p
+          assert p['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',p
+          assert c['environment_head']=='ef2cb9cc84edc10ab66c2230daca625623e0b00d',c
+          assert c['building_compact_v2_structure_result']=='PASS_CURRENT_WORLD_BUILDING_COMPACT_V2_STRUCTURE',c
+          print('PASS_EXACT_ACTIVE_AND_COMPACT_CURRENT_WORLD_COMPARATORS')
+          PY
+
+      - name: Build exact current-world Building planar-role receiving payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_current_world_001
+          donor=.building-planar-role/evidence/environment-planar-role-rebuild
+          mkdir -p environment-proof/generated "$out"
+          python tools/environment_building_planar_role_current_world.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --candidate "$donor/planar-role-render-receiver.json" \
+            --evidence "$donor/planar-role-render-receiver-evidence.json" \
+            --policy "$donor/policy.json" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output environment-proof/generated/current_world_nature_winding_migration.json
+          cp environment-proof/generated/current_world_nature_winding_migration.json "$out/combined_current_world.json"
+          cp "$donor/planar-role-render-receiver.json" "$out/building-planar-role-render-receiver.json"
+          cp "$donor/planar-role-render-receiver-evidence.json" "$out/building-planar-role-evidence.json"
+          cp "$donor/policy.json" "$out/building-planar-role-policy.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('environment-proof/generated/current_world_nature_winding_migration.json'))
+          assert p['building_planar_role_structure_result']=='PASS_CURRENT_WORLD_BUILDING_PLANAR_ROLE_RENDER_RECEIVER_STRUCTURE',p
+          assert p['building_planar_role_selected_representation_id']=='boundary-only-planar-role-rectangle-render-001',p
+          assert p['building_planar_role_semantic_source_variant_id']=='header-segmented-23',p
+          assert sum(p['building_planar_role_material_triangle_counts'].values())==336,p
+          assert len(p['states'])==17 and all(p['checks'].values()),p
+          print('PASS_CURRENT_WORLD_BUILDING_PLANAR_ROLE_STRUCTURE')
+          PY
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify inherited observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_planar_role_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow numpy
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact current world with Building planar-role receiver
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_planar_role_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact multi-asset Building planar-role receiving result
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_planar_role_current_world_001
+          python tools/environment_building_planar_role_current_world.py verify \
+            --payload "$out/combined_current_world.json" \
+            --parent-root "$out/parent/candidate" \
+            --compact-root "$out/compact/candidate" \
+            --candidate-root "$out/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_planar_role_current_world_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_BUILDING_PLANAR_ROLE_RENDER_RECEIVER_REVIEW_READY',p
+          assert p['matched_active_vs_planar_frames']==68 and p['matched_compact_vs_planar_frames']==68,p
+          assert p['weather_width_measurements']==1224,p
+          assert p['maximum_weather_width_residual_px'] <= 0.05,p
+          assert all(p['checks'].values()),p
+          print(json.dumps(p,indent=2))
+          PY
+
+      - name: Remove downloaded comparators and donor before upload
+        if: always()
+        run: |
+          rm -rf evidence/environment_building_planar_role_current_world_001/parent
+          rm -rf evidence/environment_building_planar_role_current_world_001/compact
+          rm -rf .building-planar-role .vfx-width-donor
+
+      - name: Upload retained Environment Building planar-role evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-planar-role-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_building_planar_role_current_world_001
+          if-no-files-found: error
+          retention-days: 30

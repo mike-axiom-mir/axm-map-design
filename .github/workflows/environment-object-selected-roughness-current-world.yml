@@ -1,0 +1,257 @@
+name: Environment Object selected roughness current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_object_selected_roughness_current_world.json"
+      - "tools/environment_object_selected_roughness_current_world.py"
+      - "environment-proof/atmosphere_current_world_object_selected_roughness_observe.gd"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-object-selected-roughness-current-world.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_object_selected_roughness_current_world.json"
+      - "tools/environment_object_selected_roughness_current_world.py"
+      - "environment-proof/atmosphere_current_world_object_selected_roughness_observe.gd"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_ROUGHNESS_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-object-selected-roughness-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-selected-roughness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind lineage and compile verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 4eed6da68f746ca2849c89fa88533f82bc836b26^{commit}
+          git merge-base --is-ancestor 4eed6da68f746ca2849c89fa88533f82bc836b26 HEAD
+          python -m py_compile tools/environment_object_selected_roughness_current_world.py
+
+      - name: Install image-analysis dependencies
+        run: python -m pip install --disable-pip-version-check --no-input pillow numpy
+
+      - name: Download exact UV0-only current-world parent
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-object-selected-uv0-current-world-001-4eed6da68f746ca2849c89fa88533f82bc836b26
+          path: evidence/environment_object_selected_roughness_current_world_001/parent
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35231809078
+
+      - name: Download exact accepted real current-world payload
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/environment_object_selected_roughness_current_world_001/world-parent
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35174899697
+
+      - name: Download exact Technical Art selected-roughness transport evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_current_world_001
+          mkdir -p "$root/ta-donor"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-object-design/actions/artifacts/10490650986/zip" \
+            --output "$root/ta.zip"
+          echo "0e24efcbfefb129ef24c153b50020ac321a9789dbf8c148794dfc45f5c9f5f90  $root/ta.zip" | sha256sum --check --strict
+          unzip -q "$root/ta.zip" -d "$root/ta-donor"
+
+      - name: Verify donor identities and install world/material payloads
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_current_world_001
+          test -f "$root/parent/selected-uv0-report.json"
+          test -f "$root/parent/candidate/runtime.json"
+          test "$(find "$root/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(cat "$root/world-parent/exact-head.txt" | tr -d '\n\r')" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test -f "$root/world-parent/combined_current_world.json"
+          ta="$root/ta-donor"
+          test "$(cat "$ta/technical-art-proof/technical-art-head.txt" | tr -d '\n\r')" = 1bcdbae786e02f3ca46a89e4e0ff608d74f364b4
+          receipt="$ta/creations/technical-art-proof/selected-roughness-generated/technical-art-selected-roughness-uc-transport-receipt.json"
+          surface="$ta/creations/technical-art-proof/selected-roughness-generated/service-dark-selected-roughness-two-surface.surface.json"
+          selected_png="$ta/_donor/materials/lookdev-proof/service-dark-roughness-selected-field.png"
+          test -f "$receipt" && test -f "$surface" && test -f "$selected_png"
+          echo "1f87a7b287c7caa138deee64b687d0aba67a3485ddeae6f80a38ebd906a86aec  $surface" | sha256sum --check --strict
+          echo "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949  $selected_png" | sha256sum --check --strict
+          python - <<'PY'
+          import json
+          root='evidence/environment_object_selected_roughness_current_world_001'
+          parent=json.load(open(f'{root}/parent/selected-uv0-report.json'))
+          assert parent['environment_head']=='4eed6da68f746ca2849c89fa88533f82bc836b26',parent
+          assert parent['state']=='PASS_CURRENT_WORLD_OBJECT_SELECTED_SERVICE_SURFACE_UV0_BOUND__ROUGHNESS_ADOPTION_HELD',parent
+          receipt=json.load(open(f'{root}/ta-donor/creations/technical-art-proof/selected-roughness-generated/technical-art-selected-roughness-uc-transport-receipt.json'))
+          assert receipt['technical_art_head']=='1bcdbae786e02f3ca46a89e4e0ff608d74f364b4',receipt
+          assert receipt['materials_authority_head']=='0515a2d5ad2c7a1eb545f2b7b327b7367530dfca',receipt
+          assert receipt['result']=='PASS_OBJECT_SERVICE_DARK_SELECTED_ROUGHNESS_SCALAR_TO_CURRENT_UC_TEXTURED_GLB',receipt
+          assert receipt['selected_scalar_r8_sha256']=='b8d13c07f9b71278042b0d42d44b84579a3f327c6adf6723cae4c8c8f06dd38e',receipt
+          print('PASS_EXACT_SELECTED_ROUGHNESS_DONOR_IDENTITIES')
+          PY
+          mkdir -p environment-proof/generated
+          cp "$root/world-parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$surface" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$selected_png" environment-proof/generated/object-selected-roughness.png
+
+      - name: Install exact inherited Weather-width observer
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Copy exact inherited Weather-width observer
+        run: |
+          set -euo pipefail
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_selected_roughness_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render exact selected roughness candidate in real current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_current_world_001
+          out="$root/candidate"
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_object_selected_roughness_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify appearance delta, continuity and proof-host cost
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_current_world_001
+          ta="$root/ta-donor/creations/technical-art-proof/selected-roughness-generated"
+          selected_png="$root/ta-donor/_donor/materials/lookdev-proof/service-dark-roughness-selected-field.png"
+          python tools/environment_object_selected_roughness_current_world.py verify \
+            --contract contracts/environment_object_selected_roughness_current_world.json \
+            --selected-png "$selected_png" \
+            --ta-receipt "$ta/technical-art-selected-roughness-uc-transport-receipt.json" \
+            --ta-surface "$ta/service-dark-selected-roughness-two-surface.surface.json" \
+            --parent-report "$root/parent/selected-uv0-report.json" \
+            --parent-runtime "$root/parent/candidate/runtime.json" \
+            --parent-rendered "$root/parent/candidate/rendered" \
+            --runtime "$root/candidate/runtime.json" \
+            --candidate-rendered "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/selected-roughness-report.json" \
+            | tee "$root/verify.log"
+          cp exact-head.txt "$root/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_selected_roughness_current_world_001/selected-roughness-report.json'))
+          assert p['state'] in {
+              'PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_CANDIDATE_REVIEW_READY__ENVIRONMENT_ADOPTION_HELD',
+              'HOLD_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_NOT_RESOLVED_ABOVE_1LSB__ENVIRONMENT_ADOPTION_HELD'
+          },p
+          assert p['real_scene_appearance_delta']['matched_frames']==68,p
+          assert p['weather_width_continuity']['measurements']==1224,p
+          assert p['environment_adoption'] is False,p
+          for k in ('draw_calls_in_frame','objects_in_frame','primitives_in_frame'):
+              assert p['proof_host_runtime_trade'][k]['unique_deltas']==[0],(k,p)
+          assert all(p['checks'].values()),p
+          print(p['state'])
+          print('CHANGED_GT1',p['real_scene_appearance_delta']['changed_pixels_gt_1lsb_total'])
+          print('MAX_LSB',p['real_scene_appearance_delta']['maximum_channel_delta_lsb'])
+          print('BUFFER',p['proof_host_runtime_trade']['buffer_mem_bytes'])
+          print('TEXTURE',p['proof_host_runtime_trade']['texture_mem_bytes'])
+          PY
+
+      - name: Negative control rejects mutated selected field
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_current_world_001
+          ta="$root/ta-donor/creations/technical-art-proof/selected-roughness-generated"
+          cp "$root/ta-donor/_donor/materials/lookdev-proof/service-dark-roughness-selected-field.png" "$root/negative-selected-roughness.png"
+          printf '\0' >> "$root/negative-selected-roughness.png"
+          set +e
+          python tools/environment_object_selected_roughness_current_world.py verify \
+            --contract contracts/environment_object_selected_roughness_current_world.json \
+            --selected-png "$root/negative-selected-roughness.png" \
+            --ta-receipt "$ta/technical-art-selected-roughness-uc-transport-receipt.json" \
+            --ta-surface "$ta/service-dark-selected-roughness-two-surface.surface.json" \
+            --parent-report "$root/parent/selected-uv0-report.json" \
+            --parent-runtime "$root/parent/candidate/runtime.json" \
+            --parent-rendered "$root/parent/candidate/rendered" \
+            --runtime "$root/candidate/runtime.json" \
+            --candidate-rendered "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/negative-report.json" \
+            > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -q "selected roughness PNG identity drift" "$root/negative.log"
+          echo "PASS_REJECTED_MUTATED_SELECTED_ROUGHNESS_FIELD"
+
+      - name: Retain bounded evidence only
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_roughness_current_world_001
+          mkdir -p "$root/donor-receipts"
+          cp "$root/parent/selected-uv0-report.json" "$root/donor-receipts/parent-selected-uv0-report.json" 2>/dev/null || true
+          cp "$root/world-parent/report.json" "$root/donor-receipts/accepted-world-report.json" 2>/dev/null || true
+          ta="$root/ta-donor/creations/technical-art-proof/selected-roughness-generated"
+          cp "$ta/technical-art-selected-roughness-uc-transport-receipt.json" "$root/donor-receipts/" 2>/dev/null || true
+          cp "$ta/service-dark-selected-roughness-two-surface.surface.json" "$root/donor-receipts/" 2>/dev/null || true
+          cp "$root/ta-donor/_donor/materials/lookdev/service_dark_roughness_selected_field_001.json" "$root/donor-receipts/" 2>/dev/null || true
+          cp "$root/ta-donor/_donor/materials/lookdev-proof/service-dark-roughness-selected-field.png" "$root/donor-receipts/" 2>/dev/null || true
+          rm -rf "$root/parent" "$root/world-parent" "$root/ta-donor" "$root/ta.zip" "$root/negative-selected-roughness.png" "$root/negative-report.json"
+
+      - name: Upload exact Environment selected roughness current-world evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-selected-roughness-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_object_selected_roughness_current_world_001
+          if-no-files-found: error
+          retention-days: 30

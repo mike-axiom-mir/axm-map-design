@@ -1,0 +1,269 @@
+name: Environment Building-successor Weather source-width composition evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_building_successor_weather_width_current_world.py"
+      - "environment-proof/atmosphere_current_world_building_successor_weather_width_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_SUCCESSOR_WEATHER_SOURCE_WIDTH_COMPOSITION_001.md"
+      - ".github/workflows/environment-building-successor-weather-width-composition.yml"
+  pull_request:
+    paths:
+      - "tools/environment_building_successor_weather_width_current_world.py"
+      - "environment-proof/atmosphere_current_world_building_successor_weather_width_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_SUCCESSOR_WEATHER_SOURCE_WIDTH_COMPOSITION_001.md"
+      - ".github/workflows/environment-building-successor-weather-width-composition.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-environment-building-successor-weather-width:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment lane head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment successor ancestry
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 43d89a7cac48e57ebede0db8fc9983e8144222a0^{commit}
+          git merge-base --is-ancestor 43d89a7cac48e57ebede0db8fc9983e8144222a0 HEAD
+          python -m py_compile tools/environment_building_successor_weather_width_current_world.py
+
+      - name: Checkout exact VFX source-width implementation donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify exact VFX donor implementation identity
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          test -f .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f .vfx-width-donor/tools/environment_weather_width_current_world.py
+
+      - name: Download exact retained Environment source-successor parent
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_successor_weather_width_001
+          mkdir -p "$out/environment-parent"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10448628965/zip" \
+            --output "$out/environment-parent.zip"
+          echo "7d48e308e62eec1d0e9f0e072d05f3d45411810ce17a3141f0bc4a32b79cda33  $out/environment-parent.zip" | sha256sum --check --strict
+          unzip -q "$out/environment-parent.zip" -d "$out/environment-parent"
+          test "$(cat "$out/environment-parent/exact-head.txt" | tr -d '\n\r')" = 43d89a7cac48e57ebede0db8fc9983e8144222a0
+          test -f "$out/environment-parent/successor_current_world.json"
+          test -f "$out/environment-parent/target_host.json"
+          test -d "$out/environment-parent/rendered-successor"
+
+      - name: Download exact retained VFX source-width donor evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_successor_weather_width_001
+          mkdir -p "$out/vfx-donor"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10449666486/zip" \
+            --output "$out/vfx-donor.zip"
+          echo "c1143322dc974ad21cff4e3baa53697cc4a58fc42caf55627077703f131011b5  $out/vfx-donor.zip" | sha256sum --check --strict
+          unzip -q "$out/vfx-donor.zip" -d "$out/vfx-donor"
+          test "$(cat "$out/vfx-donor/exact-head.txt" | tr -d '\n\r')" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          test -f "$out/vfx-donor/current_world_weather_width.json"
+          test -f "$out/vfx-donor/target_host.json"
+
+      - name: Verify both retained parents are exact PASS evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_successor_weather_width_001')
+          env=json.loads((root/'environment-parent/successor_current_world.json').read_text())
+          env_target=json.loads((root/'environment-parent/target_host.json').read_text())
+          vfx=json.loads((root/'vfx-donor/current_world_weather_width.json').read_text())
+          vfx_target=json.loads((root/'vfx-donor/target_host.json').read_text())
+          assert env['schema']=='axm.environment-current-world-building-source-successor-evidence/v0.1',env
+          assert env['status']=='PASS_CURRENT_WORLD_BUILDING_SOURCE_SUCCESSOR_STRUCTURE' and all(env['checks'].values()),env
+          assert env['receiving_head']=='43d89a7cac48e57ebede0db8fc9983e8144222a0',env
+          assert env['composition_digest']=='f1507e8969a0343bcabad3078136a29f99d670b9261750e001f0ed500b4c8f6d',env
+          assert env_target['status']=='PASS_CURRENT_WORLD_BUILDING_SOURCE_SUCCESSOR_TARGET_HOST' and all(env_target['checks'].values()),env_target
+          assert vfx['schema']=='axm.environment-current-world-weather-width-evidence/v0.1',vfx
+          assert vfx['status']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_STRUCTURE' and all(vfx['checks'].values()),vfx
+          assert vfx['receiving_head']=='15a03b7c3ba3aaa7c0475ca1a3091c15581f559b',vfx
+          assert vfx_target['state']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_LIVE_TARGET_HOST' and all(vfx_target['checks'].values()),vfx_target
+          print(json.dumps({'environment':env['status'],'vfx':vfx['status'],'vfx_target':vfx_target['state']},indent=2))
+          PY
+
+      - name: Compose exact source-width presentation over exact Environment source-successor world
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_successor_weather_width_001
+          mkdir -p environment-proof/generated
+          python tools/environment_building_successor_weather_width_current_world.py build \
+            --environment "$out/environment-parent/successor_current_world.json" \
+            --vfx "$out/vfx-donor/current_world_weather_width.json" \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/combined_current_world.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          cp "$out/combined_current_world.json" environment-proof/generated/current_world_building_successor_weather_width.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_successor_weather_width_001')
+          data=json.loads((root/'combined_current_world.json').read_text())
+          assert data['status']=='PASS_CURRENT_WORLD_BUILDING_SUCCESSOR_WEATHER_WIDTH_STRUCTURE' and all(data['checks'].values()),data
+          assert data['receiving_head']==(root/'exact-head.txt').read_text().strip(),data
+          assert len(data['states'])==17 and data['source_width_summary']['count']==36,data
+          print(json.dumps({'status':data['status'],'composition_digest':data['composition_digest'],'checks':data['checks']},indent=2))
+          PY
+
+      - name: Exercise fail-closed cross-parent controls
+        run: |
+          python - <<'PY'
+          import copy, json
+          from pathlib import Path
+          import tools.environment_building_successor_weather_width_current_world as m
+          root=Path('evidence/environment_building_successor_weather_width_001')
+          env=json.loads((root/'environment-parent/successor_current_world.json').read_text())
+          vfx=json.loads((root/'vfx-donor/current_world_weather_width.json').read_text())
+          cases=[]
+          bad=copy.deepcopy(env); bad['receiving_head']='drifted'; cases.append(('environment head drift',bad,vfx))
+          bad=copy.deepcopy(vfx); bad['receiving_head']='drifted'; cases.append(('vfx head drift',env,bad))
+          bad=copy.deepcopy(env); bad['states'][0]['scene']['weather_lines'][0]['opacity']=0.123456; cases.append(('weather non-width drift',bad,vfx))
+          bad=copy.deepcopy(env); bad['building_source_head']='drifted'; cases.append(('building source drift',bad,vfx))
+          for label,e,v in cases:
+              try:
+                  m.build(e,v,'NEGATIVE')
+              except ValueError:
+                  print('PASS_NEGATIVE_CONTROL',label)
+              else:
+                  raise AssertionError(label)
+          PY
+
+      - name: Install exact VFX observer implementation into receiving proof host
+        run: |
+          set -euo pipefail
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_successor_weather_width_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Observe exact combined world in real Godot target host
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_successor_weather_width_001
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_building_successor_weather_width_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact combined target-host evidence and parent-control identity
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_successor_weather_width_001
+          python tools/environment_building_successor_weather_width_current_world.py verify \
+            --payload "$out/combined_current_world.json" \
+            --receipt "$out/runtime.json" \
+            --image-root environment-proof \
+            --parent-frame-root "$out/environment-parent/rendered-successor" \
+            --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_successor_weather_width_001')
+          target=json.loads((root/'target_host.json').read_text())
+          assert target['state']=='PASS_CURRENT_WORLD_BUILDING_SUCCESSOR_WEATHER_WIDTH_TARGET_HOST',target
+          assert all(target['checks'].values()),target
+          print(json.dumps({
+              'state':target['state'],
+              'maximum_projected_width_residual_px':target['maximum_projected_width_residual_px'],
+              'measured_width_count':target['measured_width_count'],
+              'near_clipped_endpoint_count':target['near_clipped_endpoint_count'],
+              'near_clipped_streak_ids':target['near_clipped_streak_ids'],
+              'changed_pair_counts':target['changed_pair_counts'],
+              'exact_parent_control_match_counts':target['exact_parent_control_match_counts'],
+              'control_runtime_counter_sets':target['control_runtime_counter_sets'],
+              'candidate_runtime_counter_sets':target['candidate_runtime_counter_sets'],
+          },indent=2))
+          PY
+
+      - name: Retain exact combined control and source-width frames
+        if: always()
+        run: |
+          out=evidence/environment_building_successor_weather_width_001
+          mkdir -p "$out/rendered"
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+
+      - name: Upload exact Environment combined evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-successor-weather-width-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_building_successor_weather_width_001/exact-head.txt
+            evidence/environment_building_successor_weather_width_001/environment-parent.zip
+            evidence/environment_building_successor_weather_width_001/environment-parent/exact-head.txt
+            evidence/environment_building_successor_weather_width_001/environment-parent/successor_current_world.json
+            evidence/environment_building_successor_weather_width_001/environment-parent/target_host.json
+            evidence/environment_building_successor_weather_width_001/environment-parent/rendered-successor/*.png
+            evidence/environment_building_successor_weather_width_001/vfx-donor.zip
+            evidence/environment_building_successor_weather_width_001/vfx-donor/exact-head.txt
+            evidence/environment_building_successor_weather_width_001/vfx-donor/current_world_weather_width.json
+            evidence/environment_building_successor_weather_width_001/vfx-donor/target_host.json
+            evidence/environment_building_successor_weather_width_001/combined_current_world.json
+            evidence/environment_building_successor_weather_width_001/godot.log
+            evidence/environment_building_successor_weather_width_001/runtime.json
+            evidence/environment_building_successor_weather_width_001/target_host.json
+            evidence/environment_building_successor_weather_width_001/rendered/*.png
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,35 @@
+{
+  "schema": "axm.environment-building-planar-role-quotient-receiving/v0.1",
+  "owner": "Map Environment / World Art",
+  "consumer_representation_id": "map-consumer:service-pavilion-001:planar-role-post-normal-indexed-001",
+  "geometry_quotient_head": "7dfb1153dc5f80bcbf1b48803f044236d4ebb030",
+  "geometry_parent_head": "b9b4ab63e23b9756ab79597e86ecc41ea75ea8b7",
+  "geometry_quotient_sha256": "7d9e0babf605e31ecb3e4edc92d06bd5460cf52a27f02ccbf32bbae44464688f",
+  "prior_environment_head": "55e10a4fa700fb81020a95bd5143deca6a09f208",
+  "active_segmented_rollback_head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+  "placement_translation_source_xyz_m": [0.0, 7.2, 0.0],
+  "placement_translation_godot_xyz_m": [0.0, 0.0, -7.2],
+  "exact_position_partition_rebind": true,
+  "source_hard_normal_identity_preserved_by_consumer": false,
+  "consumer_generated_normals_are_source_normals": false,
+  "quotient_authorizes_source_collapse": false,
+  "environment_adoption": false,
+  "review_target_only": true,
+  "expected_role_vertex_counts": {
+    "frame_galvanized": 200,
+    "infill_coating": 24,
+    "roof_membrane": 36,
+    "slab_mineral": 36,
+    "utility_panel_ochre": 16
+  },
+  "authority": {
+    "hard_surface": "source representation and source hard-normal intent",
+    "geometry_topology": "604 source-intent indexed identity and 312-group hard-normal quotient diagnostic",
+    "environment": "current-world consumer receiving identity, composition proof and rollback",
+    "technical_art": "normal/index transport and import exactness",
+    "runtime": "storage, primitive and target-device cost",
+    "art_direction": "visual preference",
+    "visual_qa": "independent visual acceptance"
+  },
+  "truth_boundary": "This contract binds the current Map consumer to the Geometry diagnostic only at the exact material-role + transformed-position partition. It does not claim that the consumer preserves the 604 source hard-normal identities, does not equate generated consumer normals with source normals, does not authorize a source collapse, and does not adopt the consumer as the default Building."
+}

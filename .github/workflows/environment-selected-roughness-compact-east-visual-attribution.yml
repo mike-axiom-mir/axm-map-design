@@ -1,0 +1,192 @@
+name: Environment selected roughness + compact-east visual attribution
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_selected_roughness_compact_east_visual_attribution.json"
+      - "tools/environment_selected_roughness_compact_east_visual_attribution.py"
+      - "docs/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_VISUAL_ATTRIBUTION_001.md"
+      - ".github/workflows/environment-selected-roughness-compact-east-visual-attribution.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_selected_roughness_compact_east_visual_attribution.json"
+      - "tools/environment_selected_roughness_compact_east_visual_attribution.py"
+      - "docs/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_VISUAL_ATTRIBUTION_001.md"
+      - ".github/workflows/environment-selected-roughness-compact-east-visual-attribution.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-retained-visual-attribution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 4bd7eaf6970716dde4159448c92556785f47e954^{commit}
+          git merge-base --is-ancestor 4bd7eaf6970716dde4159448c92556785f47e954 HEAD
+          python -m py_compile tools/environment_selected_roughness_compact_east_visual_attribution.py
+          python -m json.tool contracts/environment_selected_roughness_compact_east_visual_attribution.json >/dev/null
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install exact derived-review dependency
+        run: python -m pip install --disable-pip-version-check --no-input pillow
+
+      - name: Download and SHA-bind exact retained current-world artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_visual_attribution_001
+          mkdir -p "$root/uv0" "$root/roughness" "$root/combined"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10501901585/zip" \
+            --output "$root/uv0.zip"
+          echo "a3e3c3adc794877d84f3735f4f4ff69e3120843588da5c8aaa259d7ab7b965e3  $root/uv0.zip" | sha256sum --check --strict
+          unzip -q "$root/uv0.zip" -d "$root/uv0"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" \
+            --output "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" \
+            --output "$root/combined.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/combined.zip" | sha256sum --check --strict
+          unzip -q "$root/combined.zip" -d "$root/combined"
+
+          test "$(cat "$root/uv0/exact-head.txt" | tr -d '\n\r')" = "4eed6da68f746ca2849c89fa88533f82bc836b26"
+          test "$(cat "$root/roughness/exact-head.txt" | tr -d '\n\r')" = "d8a1d950ed5f21e6ad356404f46407c99c160017"
+          test "$(cat "$root/combined/exact-head.txt" | tr -d '\n\r')" = "4bd7eaf6970716dde4159448c92556785f47e954"
+          test "$(find "$root/uv0/candidate/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$root/roughness/candidate/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$root/combined/candidate/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+
+      - name: Verify exact sequential cross-asset visual attribution
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_visual_attribution_001
+          python tools/environment_selected_roughness_compact_east_visual_attribution.py \
+            --contract contracts/environment_selected_roughness_compact_east_visual_attribution.json \
+            --uv0-root "$root/uv0" \
+            --roughness-root "$root/roughness" \
+            --combined-root "$root/combined" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/attribution-report.json" \
+            --review-dir "$root/review" \
+            | tee "$root/verify.log"
+          cp exact-head.txt "$root/exact-head.txt"
+          cp contracts/environment_selected_roughness_compact_east_visual_attribution.json "$root/"
+          cp docs/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_VISUAL_ATTRIBUTION_001.md "$root/"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_selected_roughness_compact_east_visual_attribution_001/attribution-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_SELECTED_ROUGHNESS_COMPACT_EAST_VISUAL_ATTRIBUTION__DUAL_ADOPTION_HELD',p
+          a=p['pixel_attribution']
+          assert a['roughness_vs_uv0_parent']['raw_changed_pixels']==6426,a
+          assert a['roughness_vs_uv0_parent']['pixels_gt_1_lsb']==1666,a
+          assert a['roughness_vs_uv0_parent']['max_lsb']==7,a
+          assert a['compact_east_added_after_roughness']['raw_changed_pixels']==197697,a
+          assert a['compact_east_added_after_roughness']['pixels_gt_1_lsb']==185888,a
+          assert a['compact_east_added_after_roughness']['max_lsb']==191,a
+          assert a['combined_vs_uv0_parent']['raw_changed_pixels']==204123,a
+          assert a['combined_vs_uv0_parent']['pixels_gt_1_lsb']==187554,a
+          assert a['roughness_compact_overlap_pixels']==0,a
+          assert a['combined_emergent_outside_sequential_union_pixels']==0,a
+          assert a['sequential_union_missing_from_combined_pixels']==0,a
+          assert a['exact_disjoint_union'] is True,a
+          assert p['by_context']['path_eye:control']['compact_sequential_raw_changed_pixels']==0,p
+          assert p['by_context']['path_eye:candidate']['compact_sequential_raw_changed_pixels']==0,p
+          assert p['environment_selected_roughness_adoption'] is False,p
+          assert p['environment_compact_east_adoption'] is False,p
+          print(p['state'])
+          PY
+
+      - name: Negative control rejects cross-asset raster overlap
+        run: |
+          set -euo pipefail
+          root=evidence/environment_selected_roughness_compact_east_visual_attribution_001
+          cp -a "$root/combined" "$root/combined-mutated"
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageChops
+          root=Path('evidence/environment_selected_roughness_compact_east_visual_attribution_001')
+          uv0=root/'uv0/candidate/rendered'
+          rough=root/'roughness/candidate/rendered'
+          combined=root/'combined-mutated/candidate/rendered'
+          for a_path in sorted(uv0.glob('atmosphere-width-*.png')):
+              b_path=rough/a_path.name
+              d_path=combined/a_path.name
+              a=Image.open(a_path).convert('RGB')
+              b=Image.open(b_path).convert('RGB')
+              diff=ImageChops.difference(a,b)
+              bbox=diff.getbbox()
+              if bbox is None:
+                  continue
+              found=None
+              for y in range(bbox[1], bbox[3]):
+                  for x in range(bbox[0], bbox[2]):
+                      if a.getpixel((x,y)) != b.getpixel((x,y)):
+                          found=(x,y); break
+                  if found: break
+              if found:
+                  d=Image.open(d_path).convert('RGB')
+                  d.putpixel(found, a.getpixel(found))
+                  d.save(d_path)
+                  print(a_path.name, found)
+                  break
+          else:
+              raise SystemExit('no roughness-changed pixel found for negative control')
+          PY
+          set +e
+          python tools/environment_selected_roughness_compact_east_visual_attribution.py \
+            --contract contracts/environment_selected_roughness_compact_east_visual_attribution.json \
+            --uv0-root "$root/uv0" \
+            --roughness-root "$root/roughness" \
+            --combined-root "$root/combined-mutated" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/negative-should-not-exist.json" \
+            >"$root/negative.log" 2>&1
+          status=$?
+          set -e
+          test "$status" -ne 0
+          grep -F "retained roughness and compact-east raster contributions overlap" "$root/negative.log"
+          rm -rf "$root/combined-mutated" "$root/negative-should-not-exist.json"
+          echo PASS_REJECTED_CROSS_ASSET_ATTRIBUTION_OVERLAP
+
+      - name: Upload exact retained attribution evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-selected-roughness-compact-east-visual-attribution-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/attribution-report.json
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/review/*.png
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/verify.log
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/negative.log
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/exact-head.txt
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/environment_selected_roughness_compact_east_visual_attribution.json
+            evidence/environment_selected_roughness_compact_east_visual_attribution_001/ENVIRONMENT_SELECTED_ROUGHNESS_COMPACT_EAST_VISUAL_ATTRIBUTION_001.md
+          if-no-files-found: error
+          retention-days: 30

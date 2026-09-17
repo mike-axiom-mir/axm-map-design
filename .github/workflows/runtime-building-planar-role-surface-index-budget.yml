@@ -1,0 +1,211 @@
+name: Runtime Building planar-role surface-index budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-building-planar-role-surface-index-budget-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd"
+      - "tools/runtime_building_planar_role_surface_index_budget.py"
+      - "docs/RUNTIME_BUILDING_PLANAR_ROLE_SURFACE_INDEX_BUDGET_001.md"
+      - ".github/workflows/runtime-building-planar-role-surface-index-budget.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd"
+      - "tools/runtime_building_planar_role_surface_index_budget.py"
+      - "docs/RUNTIME_BUILDING_PLANAR_ROLE_SURFACE_INDEX_BUDGET_001.md"
+      - ".github/workflows/runtime-building-planar-role-surface-index-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  planar-role-post-normal-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      ENVIRONMENT_HEAD: b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      ACTIVE_HEAD: 7713cbe5863c3bc38dabb6236eb4b393401224b6
+      WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+      ACTIVE_RUN: "35174899697"
+      ACTIVE_ARTIFACT_NAME: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+      UNINDEXED_RUN: "35182784756"
+      UNINDEXED_ARTIFACT_NAME: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact ancestry and proof files
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$ENVIRONMENT_HEAD^{commit}"
+          git merge-base --is-ancestor "$ENVIRONMENT_HEAD" HEAD
+          python -m py_compile tools/runtime_building_planar_role_surface_index_budget.py
+          grep -F 'RUNTIME_PLANAR_INDEX_SCHEMA := "axm.runtime-building-planar-role-surface-indexing-observation/v0.1"' environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd
+          grep -F 'st.index()' environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd
+
+      - name: Download exact active current-world receiver evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ACTIVE_ARTIFACT_NAME }}
+          path: evidence/runtime_building_planar_role_surface_index_001/active
+          github-token: ${{ github.token }}
+          run-id: ${{ env.ACTIVE_RUN }}
+
+      - name: Download exact unindexed planar-role Environment evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.UNINDEXED_ARTIFACT_NAME }}
+          path: evidence/runtime_building_planar_role_surface_index_001/unindexed
+          github-token: ${{ github.token }}
+          run-id: ${{ env.UNINDEXED_RUN }}
+
+      - name: Verify exact retained before-measure and install payload
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_planar_role_surface_index_001
+          test "$(cat "$out/active/exact-head.txt" | tr -d '\n\r')" = "$ACTIVE_HEAD"
+          test "$(cat "$out/unindexed/exact-head.txt" | tr -d '\n\r')" = "$ENVIRONMENT_HEAD"
+          test -f "$out/active/candidate/runtime.json"
+          test -f "$out/unindexed/candidate/runtime.json"
+          test -f "$out/unindexed/combined_current_world.json"
+          test "$(find "$out/active/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$out/unindexed/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          a=json.load(open('evidence/runtime_building_planar_role_surface_index_001/active/candidate/runtime.json'))
+          u=json.load(open('evidence/runtime_building_planar_role_surface_index_001/unindexed/candidate/runtime.json'))
+          assert len(a['samples'])==17 and len(u['samples'])==17
+          assert u['environment_building_planar_role_representation_id']=='boundary-only-planar-role-rectangle-render-001',u
+          assert u['environment_building_planar_role_hard_surface_head']=='93f22e4eeb9bb32516d4b11f8d8bcf47d9792910',u
+          print('PASS_EXACT_ACTIVE_AND_UNINDEXED_PLANAR_ROLE_INPUTS')
+          PY
+          mkdir -p environment-proof/generated
+          cp "$out/unindexed/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+
+      - name: Checkout exact inherited Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.WEATHER_WIDTH_OBSERVER_HEAD }}
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Restore exact observer-chain setup
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = "$WEATHER_WIDTH_OBSERVER_HEAD"
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_planar_role_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact planar-role current world with post-normal indexing
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_planar_role_surface_index_001/indexed
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_planar_role_surface_index_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify before-after runtime evidence and visual tradeoff
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_planar_role_surface_index_001
+          test -f "$out/indexed/runtime.json"
+          test "$(find "$out/indexed/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python tools/runtime_building_planar_role_surface_index_budget.py \
+            --active-root "$out/active" \
+            --unindexed-root "$out/unindexed" \
+            --indexed-root "$out/indexed" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/runtime_building_planar_role_surface_index_001/report.json'))
+          assert p['state'].startswith('PASS_BUILDING_PLANAR_ROLE_POST_NORMAL_INDEX_'),p
+          assert p['proof_host']['observation_count']==68,p
+          assert max(p['proof_host']['indexed_vs_unindexed_delta_sets']['buffer_mem_bytes'])<0,p
+          print(json.dumps(p,indent=2,sort_keys=True))
+          PY
+
+      - name: Deliberate fail-closed removed-buffer-win mutation
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_planar_role_surface_index_001
+          rm -rf "$out/mutated"
+          cp -a "$out/indexed" "$out/mutated"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/runtime_building_planar_role_surface_index_001')
+          cand_path=root/'mutated/runtime.json'
+          un_path=root/'unindexed/candidate/runtime.json'
+          cand=json.loads(cand_path.read_text())
+          un=json.loads(un_path.read_text())
+          cand['samples'][0]['contexts']['path_eye']['candidate']['runtime']['buffer_mem_bytes']=un['samples'][0]['contexts']['path_eye']['candidate']['runtime']['buffer_mem_bytes']
+          cand_path.write_text(json.dumps(cand,indent=2,sort_keys=True)+'\n')
+          PY
+          if python tools/runtime_building_planar_role_surface_index_budget.py \
+            --active-root "$out/active" \
+            --unindexed-root "$out/unindexed" \
+            --indexed-root "$out/mutated" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/mutated-report.json"; then
+            echo "ERROR: verifier accepted removed buffer reduction" >&2
+            exit 1
+          fi
+          echo PASS_FAIL_CLOSED_REMOVED_BUFFER_REDUCTION
+
+      - name: Upload exact Runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-building-planar-role-surface-index-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/runtime_building_planar_role_surface_index_001/exact-head.txt
+            evidence/runtime_building_planar_role_surface_index_001/report.json
+            evidence/runtime_building_planar_role_surface_index_001/indexed/runtime.json
+            evidence/runtime_building_planar_role_surface_index_001/indexed/godot.log
+            evidence/runtime_building_planar_role_surface_index_001/indexed/rendered/*.png
+          if-no-files-found: error
+          retention-days: 30

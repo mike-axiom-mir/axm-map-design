@@ -1,0 +1,332 @@
+name: Environment current-world Building material convergence evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_building_material_current_world.py"
+      - "environment-proof/atmosphere_current_world_weather_variant_building_material_observe.gd"
+      - "docs/ENVIRONMENT_CURRENT_WORLD_BUILDING_MATERIAL_001.md"
+      - ".github/workflows/environment-current-world-building-material.yml"
+  pull_request:
+    paths:
+      - "tools/environment_building_material_current_world.py"
+      - "environment-proof/atmosphere_current_world_weather_variant_building_material_observe.gd"
+      - "docs/ENVIRONMENT_CURRENT_WORLD_BUILDING_MATERIAL_001.md"
+      - ".github/workflows/environment-current-world-building-material.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-current-world-building-material:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment lane head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact parent and compile new convergence tool
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 94918f362226994e3ff5c2a1412a2bc2a8bce49b^{commit}
+          git merge-base --is-ancestor 94918f362226994e3ff5c2a1412a2bc2a8bce49b HEAD
+          git diff --exit-code 94918f362226994e3ff5c2a1412a2bc2a8bce49b -- \
+            tools/environment_weather_variant_current_world.py \
+            tools/environment_weather_variant_object_current_world.py \
+            environment-proof/atmosphere_current_world_weather_variant_observe.gd
+          python -m py_compile tools/environment_building_material_current_world.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Checkout exact dense VFX donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 6e386d513c0b2e821a89fb066b2e3ab58a0d6868
+          path: .vfx-donor
+          fetch-depth: 1
+      - name: Checkout exact Object Environment donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 85a2a0be959b4e39f9ffcf83da89078b604f9881
+          path: .object-map-donor
+          fetch-depth: 1
+      - name: Checkout exact Map Materials donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 0e2d571af4fd5772e9d48da013dc245914654660
+          path: .materials-map-donor
+          fetch-depth: 1
+      - name: Checkout exact baseline Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: fbc202449981f2bac153951c561ed0ed6120c936
+          path: .nature-base
+      - name: Checkout exact compact Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 64116d63fc76daa1623b5fd5046a4e6074100bda
+          path: .nature-east
+      - name: Checkout exact accepted Nature visual response
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: cee14f5b3feea78b0adcd044bad2ea3c97657fc6
+          path: .nature-response
+      - name: Checkout exact historical rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          path: .nature-rear-historical
+      - name: Checkout exact migrated rear Nature source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          path: .nature-rear-migrated
+      - name: Checkout exact baseline Weather source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: ca2eaba519e8449835b0ea6ef944b7080c3caa6a
+          path: .weather-base
+      - name: Checkout exact Weather variation family
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: 05b26c4e82bbe0a4de0ee7bee34179efc58b9719
+          path: .weather-variant
+      - name: Checkout exact Building source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          path: .building
+      - name: Checkout exact Building material donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+          path: .building-materials
+      - name: Checkout exact Object structural source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-object-design
+          ref: d3fa10a270faae7925811f44f03381fe5c5d0215
+          path: .object
+
+      - name: Verify exact donor heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .materials-map-donor rev-parse HEAD)" = 0e2d571af4fd5772e9d48da013dc245914654660
+          test "$(git -C .building-materials rev-parse HEAD)" = b08f683f1c3f75c474fb347e1d1990c1c4426a33
+          test "$(git -C .object rev-parse HEAD)" = d3fa10a270faae7925811f44f03381fe5c5d0215
+          test "$(git -C .weather-variant rev-parse HEAD)" = 05b26c4e82bbe0a4de0ee7bee34179efc58b9719
+          test "$(git -C .nature-rear-migrated rev-parse HEAD)" = 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+
+      - name: Rebuild exact PR22 Weather-variant donor
+        env:
+          AXM_RECEIVING_HEAD: e482d003853e52fc835f1797ddfb6506a50083ef
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001
+          mkdir -p "$out" environment-proof/generated
+          python tools/environment_weather_variant_current_world.py build \
+            --vfx-donor-root .vfx-donor \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --nature-response-root .nature-response \
+            --weather-base-root .weather-base \
+            --weather-variant-root .weather-variant \
+            --building-root .building \
+            --historical-rear-root .nature-rear-historical \
+            --migrated-rear-root .nature-rear-migrated \
+            --output "$out/weather_variant_pr22.json"
+
+      - name: Rebuild exact PR19 Object donor
+        env:
+          AXM_RECEIVING_HEAD: 85a2a0be959b4e39f9ffcf83da89078b604f9881
+          AXM_BUILDING_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_REAR_NATURE_HEAD: a4e5ee011e1d87f47866a7e6c6f4e66f57b6af12
+          AXM_MIGRATED_REAR_NATURE_HEAD: 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d
+          AXM_OBJECT_HEAD: d3fa10a270faae7925811f44f03381fe5c5d0215
+        run: |
+          python - <<'PY'
+          import json, sys
+          from pathlib import Path
+          root=Path.cwd(); donor=root/'.object-map-donor'
+          sys.path.insert(0,str(donor/'tools'))
+          import environment_object_source_replacement as obj
+          baseline,candidate,report=obj.build_payloads(
+              donor/'examples'/'environment_object_source_replacement_001.json',
+              root/'.nature-base', root/'.nature-east', root/'.weather-base', root/'.building',
+              root/'.nature-rear-historical', root/'.nature-rear-migrated', root/'.object')
+          assert report['status']==obj.STATUS and all(report['checks'].values()), report
+          out=root/'evidence'/'environment_current_world_building_material_001'
+          (out/'object_pr19_candidate.json').write_text(json.dumps(candidate,indent=2,sort_keys=True)+'\n')
+          (out/'object_pr19_report.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Rebuild exact PR24 Environment parent
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001
+          python tools/environment_weather_variant_object_current_world.py build \
+            --weather-variant "$out/weather_variant_pr22.json" \
+            --object-candidate "$out/object_pr19_candidate.json" \
+            --object-report "$out/object_pr19_report.json" \
+            --receiving-head 94918f362226994e3ff5c2a1412a2bc2a8bce49b \
+            --output "$out/parent_pr24.json" \
+            --observer-output "$out/parent_observer.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_current_world_building_material_001/parent_pr24.json'))
+          assert p['status']=='PASS_WEATHER_VARIANT_OBJECT_SOURCE_COMPOSITION_STRUCTURE' and all(p['checks'].values()),p
+          assert p['receiving_head']=='94918f362226994e3ff5c2a1412a2bc2a8bce49b',p
+          PY
+
+      - name: Rebuild exact PR14 Building Materials receiving donor
+        env:
+          AXM_RECEIVING_HEAD: 0e2d571af4fd5772e9d48da013dc245914654660
+          AXM_RECEIVING_BASE_HEAD: c72838eb4b40ee7903a3c3e326a1bf77fa08bee5
+          AXM_BUILDING_SOURCE_HEAD: 4faa769b406bf3ad0ba9489a77141c27f122ce51
+          AXM_BUILDING_MATERIAL_HEAD: b08f683f1c3f75c474fb347e1d1990c1c4426a33
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001/material_donor
+          python .materials-map-donor/tools/environment_building_material_receiving.py \
+            --manifest .materials-map-donor/examples/environment_building_material_receiving_001.json \
+            --base-nature-root .nature-base \
+            --compact-nature-root .nature-east \
+            --weather-root .weather-base \
+            --building-source-root .building \
+            --building-material-root .building-materials \
+            --output "$out"
+          python - <<'PY'
+          import json
+          r=json.load(open('evidence/environment_current_world_building_material_001/material_donor/material_transfer_evidence.json'))
+          assert r['status']=='PASS_RECEIVING_SCENE_BUILDING_MATERIAL_TRANSFER_STRUCTURE' and all(r['checks'].values()),r
+          assert r['receiving_head']=='0e2d571af4fd5772e9d48da013dc245914654660',r
+          PY
+
+      - name: Compose exact Building material response into PR24 current world
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001
+          python tools/environment_building_material_current_world.py build \
+            --parent "$out/parent_pr24.json" \
+            --material-candidate "$out/material_donor/candidate_scene_runtime.json" \
+            --material-report "$out/material_donor/material_transfer_evidence.json" \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/combined_material.json" \
+            --observer-output "$out/candidate_observer.json"
+          cp exact-head.txt "$out/exact-head.txt"
+
+      - name: Exercise fail-closed convergence controls
+        run: |
+          python - <<'PY'
+          import copy, importlib.util, json
+          from pathlib import Path
+          spec=importlib.util.spec_from_file_location('envbm','tools/environment_building_material_current_world.py')
+          m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          root=Path('evidence/environment_current_world_building_material_001')
+          parent=json.loads((root/'parent_pr24.json').read_text())
+          scene=json.loads((root/'material_donor/candidate_scene_runtime.json').read_text())
+          report=json.loads((root/'material_donor/material_transfer_evidence.json').read_text())
+          controls=[]
+          missing=copy.deepcopy(parent); missing['states'][0]['scene']['additional_source_meshes']=[r for r in missing['states'][0]['scene']['additional_source_meshes'] if r.get('asset_id')!=m.BUILDING_ID]; controls.append(('missing Building source',missing,scene,report))
+          drift=copy.deepcopy(report); drift['material_profile_sha256']='0'*64; controls.append(('material profile drift',parent,scene,drift))
+          broken=copy.deepcopy(scene); broken['building_material_receiving']['surfaces'][0]['triangles']=broken['building_material_receiving']['surfaces'][0]['triangles'][:-1]; controls.append(('surface partition drift',parent,broken,report))
+          for label,p,s,r in controls:
+              try: m.build_payload(p,s,r,'NEGATIVE-CONTROL')
+              except ValueError: print('PASS_NEGATIVE_CONTROL',label)
+              else: raise AssertionError(label)
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Render exact PR24 neutral Building control across 17 states
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001
+          cp "$out/parent_observer.json" environment-proof/generated/current_world_weather_variant.json
+          rm -f environment-proof/atmosphere-variant-*.png environment-proof/atmosphere-current-world-weather-variant-runtime.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_weather_variant_observe.gd
+          cp environment-proof/atmosphere-current-world-weather-variant-runtime.json "$out/control_runtime.json"
+          for context in path_eye elevated_oblique; do
+            for i in $(seq -w 0 16); do
+              cp "environment-proof/atmosphere-variant-${context}-${i}.png" "environment-proof/control-${context}-${i}.png"
+            done
+          done
+
+      - name: Render exact five-surface Building candidate across same 17 states
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001
+          cp "$out/candidate_observer.json" environment-proof/generated/current_world_weather_variant.json
+          rm -f environment-proof/building-material-*.png environment-proof/atmosphere-current-world-weather-variant-runtime.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_weather_variant_building_material_observe.gd
+          cp environment-proof/atmosphere-current-world-weather-variant-runtime.json "$out/candidate_runtime.json"
+
+      - name: Verify exact current-world target-host convergence
+        run: |
+          set -euo pipefail
+          out=evidence/environment_current_world_building_material_001
+          python tools/environment_building_material_current_world.py verify \
+            --payload "$out/combined_material.json" \
+            --runtime-receipt "$out/candidate_runtime.json" \
+            --image-root environment-proof \
+            --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          r=json.load(open('evidence/environment_current_world_building_material_001/target_host.json'))
+          assert r['state']=='PASS_CURRENT_WORLD_BUILDING_MATERIAL_CONVERGENCE_TARGET_HOST' and all(r['checks'].values()),r
+          PY
+          mkdir -p "$out/rendered"
+          cp environment-proof/control-*.png "$out/rendered/"
+          cp environment-proof/building-material-*.png "$out/rendered/"
+
+      - name: Retain exact Environment convergence evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-current-world-building-material-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_current_world_building_material_001
+          if-no-files-found: warn
+          retention-days: 30

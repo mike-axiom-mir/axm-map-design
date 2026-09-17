@@ -1,0 +1,240 @@
+name: Environment current-world Nature material-family evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_nature_material_family_current_world.py"
+      - "environment-proof/atmosphere_current_world_nature_material_family_observe.gd"
+      - "docs/ENVIRONMENT_NATURE_MATERIAL_FAMILY_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-nature-material-family-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_material_family_current_world.py"
+      - "environment-proof/atmosphere_current_world_nature_material_family_observe.gd"
+      - "docs/ENVIRONMENT_NATURE_MATERIAL_FAMILY_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-nature-material-family-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-environment-nature-material-family:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment lane head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment predecessor ancestry
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e bd065c8ee23ddee922c4aa9b4aa6e3d9504ffb06^{commit}
+          git merge-base --is-ancestor bd065c8ee23ddee922c4aa9b4aa6e3d9504ffb06 HEAD
+          python -m py_compile tools/environment_nature_material_family_current_world.py
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install image measurement dependencies
+        run: python -m pip install --disable-pip-version-check pillow numpy
+
+      - name: Checkout exact Nature Materials authority
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 8b2e0523d7a2b210c6404f15bafb08fbedcad4dd
+          path: .nature-materials
+          fetch-depth: 1
+
+      - name: Checkout exact Nature geometry reference
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: da3adbef4de8cddb8f3ebe841d39bb31a8936f5f
+          path: .nature-geometry
+          fetch-depth: 1
+
+      - name: Checkout exact inherited Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify exact donor heads and family contract
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature-materials rev-parse HEAD)" = 8b2e0523d7a2b210c6404f15bafb08fbedcad4dd
+          test "$(git -C .nature-geometry rev-parse HEAD)" = da3adbef4de8cddb8f3ebe841d39bb31a8936f5f
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          python - <<'PY'
+          import json
+          p=json.load(open('.nature-materials/lookdev/nature_woody_foliage_family_001.json'))
+          assert p['schema']=='axm.nature-woody-foliage-material-family/v0.1',p
+          assert p['family_id']=='nature-woody-foliage-family-001',p
+          assert p['supported_source_scope']==['sapling-neutral-001','compact-east-tree-neutral-001','east-rear-tree-neutral-001'],p
+          assert p['materials']['woody']=={'color':'#5C3B27FF','metallic':0.0,'roughness':0.84},p
+          assert p['materials']['foliage']=={'color':'#5A823EFF','metallic':0.0,'roughness':0.58},p
+          print('PASS_EXACT_NATURE_MATERIAL_FAMILY_DONOR')
+          PY
+
+      - name: Download exact segmented-Building Environment parent evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_material_family_001
+          mkdir -p "$out/parent"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10460871165/zip" \
+            --output "$out/parent.zip"
+          echo "add8d72e9dee4398ef844892138308022261d2d5a4f22a652f4dda9dbdb26d70  $out/parent.zip" | sha256sum --check --strict
+          unzip -q "$out/parent.zip" -d "$out/parent"
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = dfd4e1d662ab7d6d9f1a5c8dd35b571418154f6e
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/parent/runtime.json"
+          test -d "$out/parent/rendered"
+
+      - name: Verify exact parent live acceptance surface
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_nature_material_family_001/parent')
+          p=json.loads((root/'combined_current_world.json').read_text())
+          r=json.loads((root/'runtime.json').read_text())
+          assert p['schema']=='axm.environment-current-world-building-header-segmentation-composition/v0.1',p
+          assert p['status']=='PASS_CURRENT_WORLD_BUILDING_HEADER_SEGMENTATION_STRUCTURE' and all(p['checks'].values()),p
+          assert p['receiving_head']=='dfd4e1d662ab7d6d9f1a5c8dd35b571418154f6e',p
+          assert p['composition_digest']=='073aaba4066f223be2f298d631550acb724c30f6b17ee1d51a285e4d2bbeb8b2',p
+          assert r['state']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_LIVE_OBSERVATION',r
+          assert r['receiving_head']==p['receiving_head'] and len(r['samples'])==17,r
+          print('PASS_EXACT_SEGMENTED_BUILDING_PARENT_LIVE_SURFACE')
+          PY
+
+      - name: Build exact current-world Nature material-family composition
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_material_family_001
+          mkdir -p environment-proof/generated
+          python tools/environment_nature_material_family_current_world.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --profile .nature-materials/lookdev/nature_woody_foliage_family_001.json \
+            --geometry-root .nature-geometry \
+            --receiving-head "$(cat exact-head.txt)" \
+            --output "$out/combined_current_world.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          cp "$out/combined_current_world.json" environment-proof/generated/current_world_nature_material_family.json
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_nature_material_family_001/combined_current_world.json'))
+          assert p['status']=='PASS_CURRENT_WORLD_NATURE_MATERIAL_FAMILY_STRUCTURE' and all(p['checks'].values()),p
+          assert len(p['states'])==17,p
+          print(json.dumps({'status':p['status'],'composition_digest':p['composition_digest']},indent=2))
+          PY
+
+      - name: Exercise fail-closed receiving controls
+        run: |
+          python - <<'PY'
+          import copy,json
+          from pathlib import Path
+          import tools.environment_nature_material_family_current_world as m
+          root=Path('evidence/environment_nature_material_family_001')
+          parent=json.loads((root/'parent/combined_current_world.json').read_text())
+          profile=json.loads(Path('.nature-materials/lookdev/nature_woody_foliage_family_001.json').read_text())
+          cases=[]
+          bad=copy.deepcopy(parent); bad['composition_digest']='drifted'; cases.append(('parent composition drift',bad,profile))
+          bad=copy.deepcopy(parent); bad['states'][0]['scene']['sapling']['triangles'][0]=[0,1,2]; cases.append(('sapling triangle membership drift',bad,profile))
+          badp=copy.deepcopy(profile); badp['supported_source_scope']=badp['supported_source_scope'][:2]; cases.append(('material family scope drift',parent,badp))
+          for label,env,prof in cases:
+              try: m.build(env,prof,Path('.nature-geometry'),'NEGATIVE')
+              except ValueError: print('PASS_NEGATIVE_CONTROL',label)
+              else: raise AssertionError(label)
+          PY
+
+      - name: Install exact inherited Weather-width observer into proof host
+        run: |
+          set -euo pipefail
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_infill_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_readability_dressing_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_material_family_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact Nature material family in real Godot current world
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_material_family_001
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_nature_material_family_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify all-state full-world visual and runtime consequence
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_material_family_001
+          python tools/environment_nature_material_family_current_world.py verify \
+            --payload "$out/combined_current_world.json" --receipt "$out/runtime.json" \
+            --parent-receipt "$out/parent/runtime.json" --candidate-root environment-proof \
+            --parent-root "$out/parent/rendered" --output "$out/target_host.json"
+          python - <<'PY'
+          import json
+          t=json.load(open('evidence/environment_nature_material_family_001/target_host.json'))
+          assert t['state']=='PASS_CURRENT_WORLD_NATURE_MATERIAL_FAMILY_TARGET_HOST' and all(t['checks'].values()),t
+          assert t['measured_width_count']==1224,t
+          print(json.dumps({'state':t['state'],'changed_pixels_gt_1_lsb':t['changed_pixels_gt_1_lsb'],'max_width_residual':t['maximum_projected_width_residual_px'],'runtime_deltas':t['runtime_counter_deltas_vs_segmented_parent']},indent=2))
+          PY
+
+      - name: Retain exact candidate frames
+        if: always()
+        run: |
+          out=evidence/environment_nature_material_family_001
+          mkdir -p "$out/rendered"
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          rm -rf "$out/parent" "$out/parent.zip"
+
+      - name: Upload retained Environment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-material-family-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_nature_material_family_001
+          if-no-files-found: error

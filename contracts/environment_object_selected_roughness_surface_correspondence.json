@@ -1,0 +1,60 @@
+{
+  "schema": "axm.environment-object-selected-roughness-surface-correspondence/v0.1",
+  "scope_id": "environment-object-selected-roughness-surface-correspondence-001",
+  "object_asset_id": "source:object:modular-equipment-case-001",
+  "accepted_real_scene_evidence": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+    "workflow_run": 35174899697,
+    "artifact_id": 10478103666
+  },
+  "receiver_readiness_evidence": {
+    "head": "1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33",
+    "workflow_run": 35211529232,
+    "artifact_id": 10493255037,
+    "artifact_sha256": "72183856af6ba752c1ab94cfcc9621f6771a93b3d64605393f58110f18e82cb0"
+  },
+  "source_surface_authority": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "head": "f7c64d08e4e2a0d6954291d8b4e064d7345ab658",
+    "pull_request": 26,
+    "source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a",
+    "surface_ids": [
+      "lid_inner_service_surface",
+      "front_service_panel_outer_service_surface"
+    ]
+  },
+  "selected_materials_authority": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "head": "0515a2d5ad2c7a1eb545f2b7b327b7367530dfca",
+    "pull_request": 6,
+    "atlas_contract_blob": "2b95fcc1fcc523576eca08dbf47a140a727ab598",
+    "material_id": "service_dark",
+    "selected_scalar_r8_sha256": "b8d13c07f9b71278042b0d42d44b84579a3f327c6adf6723cae4c8c8f06dd38e"
+  },
+  "current_map_receiver": {
+    "materials_head": "c85517446a769e0d5f880fc0e9e32f47124f7b5e",
+    "material_profile_sha256": "dc200229d6c25fa84063aa51f66103abc022efa54b2167e4432a5b47fc40360c",
+    "material_ids": [
+      "shell_coating",
+      "service_dark",
+      "hardware_steel",
+      "rubber_guard",
+      "interface_orange"
+    ],
+    "expected_surface_triangle_counts": {
+      "shell_coating": 24,
+      "service_dark": 12,
+      "hardware_steel": 656,
+      "rubber_guard": 96,
+      "interface_orange": 24
+    }
+  },
+  "decision": {
+    "state": "HOLD_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_RECEIVER__SOURCE_SERVICE_SURFACE_SEGMENTATION_AND_UV0_BINDING_NOT_PRESENT",
+    "environment_adoption": false,
+    "next_receiving_requirement": "Before any selected roughness current-world render/adoption claim, the receiver must make the exact two source-owned service surfaces independently addressable without broadening them to whole source components, then bind exact UV0/TEXCOORD_0 identity under Materials/Technical-Art authority and re-test the full world."
+  },
+  "reusable_rule": "SPATIAL_MATERIAL_FIELD_REQUIRES_EXACT_SOURCE_SURFACE_SEGMENTATION_BEFORE_UV_BINDING_OR_TEXTURE_ADOPTION",
+  "truth_boundary": "Environment consumes exact source-owned surface identity plus existing Materials/Technical-Art evidence only to diagnose the real Map receiver. It does not author Object source semantics, assign production UVs, change material values, adopt the selected texture, accept Runtime cost, replace Art/QA judgment, establish CANON, or claim production readiness."
+}

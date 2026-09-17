@@ -1,0 +1,227 @@
+name: Environment Nature winding migration current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_nature_winding_migration_current_world.py"
+      - "tools/environment_nature_winding_migration_current_world_v2.py"
+      - "environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd"
+      - "docs/ENVIRONMENT_NATURE_WINDING_MIGRATION_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-nature-winding-migration-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_winding_migration_current_world.py"
+      - "tools/environment_nature_winding_migration_current_world_v2.py"
+      - "environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd"
+      - "docs/ENVIRONMENT_NATURE_WINDING_MIGRATION_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-nature-winding-migration-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-nature-migration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout exact Environment head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Environment predecessor and verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e b9d9ed28e9a826c4698014db5f91c59aba9dddfc^{commit}
+          git merge-base --is-ancestor b9d9ed28e9a826c4698014db5f91c59aba9dddfc HEAD
+          python -m py_compile tools/environment_nature_winding_migration_current_world.py tools/environment_nature_winding_migration_current_world_v2.py
+          grep -F 'NATURE_SOURCE_MIGRATION_HEAD := "4ddbe66e5c02d22407ef773d5346a2fe6f349a2d"' environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          grep -F 'NATURE_VFX_HEAD := "0b9167ac6d7b6d94d9fef92720f8c60e3ef45700"' environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+
+      - name: Checkout exact Nature VFX migration successor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: 0b9167ac6d7b6d94d9fef92720f8c60e3ef45700
+          path: .nature-donor
+          fetch-depth: 0
+
+      - name: Verify exact Nature migration ancestry
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature-donor rev-parse HEAD)" = 0b9167ac6d7b6d94d9fef92720f8c60e3ef45700
+          git -C .nature-donor cat-file -e 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d^{commit}
+          git -C .nature-donor merge-base --is-ancestor 4ddbe66e5c02d22407ef773d5346a2fe6f349a2d HEAD
+          grep -F 'MIGRATED_NEUTRAL_MESH_DIGEST = "47dd4d82651138299d05071df3e8a410f21f673ab8d42b936d7222eb5351b862"' .nature-donor/src/axm_nature_design/wind_response_migrated.py
+          python -m pip install --disable-pip-version-check pytest
+          python -m pytest -q .nature-donor/tests/test_source_topology_migration.py .nature-donor/tests/test_wind_response_migrated.py
+
+      - name: Download exact Object-material current-world payload authority
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_winding_migration_current_world_001
+          mkdir -p "$out/parent"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10466065113/zip" \
+            --output "$out/parent.zip"
+          echo "87dd366302e94b5a6f8241e110e9629c2d81a0d7321197b14a52b860642fd519  $out/parent.zip" | sha256sum --check --strict
+          unzip -q "$out/parent.zip" -d "$out/parent"
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = 6575cc38db9f0f62b14a82b352d8582edf89856d
+          test -f "$out/parent/combined_current_world.json"
+
+      - name: Build exact Nature-migrated current-world payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_winding_migration_current_world_001
+          mkdir -p environment-proof/generated
+          python tools/environment_nature_winding_migration_current_world_v2.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --nature-root .nature-donor \
+            --environment-head "$(cat exact-head.txt)" \
+            --output environment-proof/generated/current_world_nature_winding_migration.json
+          cp environment-proof/generated/current_world_nature_winding_migration.json "$out/combined_current_world.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('environment-proof/generated/current_world_nature_winding_migration.json'))
+          assert p['status']=='PASS_CURRENT_WORLD_NATURE_SOURCE_WINDING_MIGRATION_STRUCTURE',p
+          assert all(p['checks'].values()),p
+          assert p['nature_source_migration_head']=='4ddbe66e5c02d22407ef773d5346a2fe6f349a2d',p
+          assert p['nature_vfx_head']=='0b9167ac6d7b6d94d9fef92720f8c60e3ef45700',p
+          assert p['maximum_translation_residual_m'] <= 1e-12,p
+          assert p['winding_changed_triangles']=={'sapling-neutral-001':260,'compact-east-tree-neutral-001':260,'east-rear-tree-neutral-001':0},p
+          print('PASS_EXACT_NATURE_MIGRATED_CURRENT_WORLD_STRUCTURE')
+          PY
+
+      - name: Download exact indexed-Object visible-footprint Environment reference
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_winding_migration_current_world_001
+          mkdir -p "$out/reference"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10470116628/zip" \
+            --output "$out/reference.zip"
+          echo "89e8accc714c8dc5900eaa835aeb3fd5b3b528dbd3f28e241c9c4b96832d714c  $out/reference.zip" | sha256sum --check --strict
+          unzip -q "$out/reference.zip" -d "$out/reference"
+          test "$(cat "$out/reference/exact-head.txt" | tr -d '\n\r')" = b9d9ed28e9a826c4698014db5f91c59aba9dddfc
+          test -f "$out/reference/candidate/runtime.json"
+          test -d "$out/reference/candidate/rendered"
+          test -f "$out/reference/report.json"
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify inherited current-world observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_material_family_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_material_family_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_footprint_material_review.gd
+          test -f environment-proof/atmosphere_current_world_object_indexed_footprint_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe migrated Nature inside exact current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_winding_migration_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_nature_winding_migration_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact multi-asset receiving result
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_winding_migration_current_world_001
+          python tools/environment_nature_winding_migration_current_world_v2.py verify \
+            --payload "$out/combined_current_world.json" \
+            --reference-root "$out/reference/candidate" \
+            --candidate-root "$out/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_nature_winding_migration_current_world_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_NATURE_SOURCE_WINDING_MIGRATION_TARGET_HOST_REACHED',p
+          assert all(p['checks'].values()),p
+          assert p['matched_frames']==68,p
+          assert p['weather_width_measurements']==1224,p
+          print(json.dumps({
+            'state':p['state'],
+            'composition_digest':p['composition_digest'],
+            'mixed_parent_lineage_discovery':p['mixed_parent_lineage_discovery'],
+            'visual_delta_characterization':p['visual_delta_characterization'],
+            'runtime_deltas':p['runtime_deltas'],
+            'decision':p['decision'],
+          },indent=2))
+          PY
+
+      - name: Remove downloaded evidence duplicates before upload
+        if: always()
+        run: |
+          rm -rf evidence/environment_nature_winding_migration_current_world_001/parent
+          rm -f evidence/environment_nature_winding_migration_current_world_001/parent.zip
+          rm -rf evidence/environment_nature_winding_migration_current_world_001/reference
+          rm -f evidence/environment_nature_winding_migration_current_world_001/reference.zip
+
+      - name: Upload retained Environment Nature-migration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-winding-migration-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_nature_winding_migration_current_world_001
+          if-no-files-found: error
+          retention-days: 30

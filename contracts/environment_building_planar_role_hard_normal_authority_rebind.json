@@ -1,0 +1,49 @@
+{
+  "schema": "axm.environment-building-planar-role-hard-normal-authority-rebind/v0.1",
+  "owner": "Map Environment / World Art",
+  "asset_id": "service-pavilion-001",
+  "consumer_representation_id": "map-consumer:service-pavilion-001:planar-role-post-normal-indexed-001",
+  "prior_environment_head": "9c1fb7b1a53f06a6a8c3c72ce3d1c3e5e1354d3f",
+  "active_segmented_rollback_head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+  "hard_surface_authority": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pr": 14,
+    "head": "7b86b1a9da1ef8dc670ca01cf4918728e68ece92",
+    "policy_path": "assets/service_pavilion_001_planar_role_hard_normal_authority_policy.json",
+    "policy_git_blob_sha": "826cc61a2e9fc172db5025f5b3ace6f566d5125a",
+    "policy_canonical_sha256": "607cd4a26d4a53da41d350bce056b2d6cb57fd5f05b750c200ade45cd4a9a9c9"
+  },
+  "source_authority_boundary": {
+    "source_intent_render_classes": 604,
+    "derived_role_position_groups": 312,
+    "source_render_vertex_identities_removed": 292,
+    "groups_crossing_source_hard_normal_boundaries": 188,
+    "dropped_source_attributes": [
+      "EXACT_CARDINAL_HARD_NORMAL"
+    ],
+    "source_partition_status": "SOURCE_AUTHORIZED_RENDER_EQUIVALENCE",
+    "derived_partition_status": "DERIVED_ATTRIBUTE_DROPPING_PARTITION_NOT_SOURCE_EQUIVALENT"
+  },
+  "consumer_declaration": {
+    "derivation_kind": "GODOT_POST_NORMAL_PER_MATERIAL_SURFACE_INDEX",
+    "stored_vertices": 312,
+    "indices": 1008,
+    "triangles": 336,
+    "material_surfaces": 5,
+    "consumer_generated_normal_index_domain": true,
+    "source_hard_normal_identity_preserved": false,
+    "consumer_generated_normals_are_source_normals": false,
+    "source_owner_equivalence_identity_claimed": false,
+    "source_collapse_authorized": false,
+    "environment_adoption": false,
+    "review_target_only": true
+  },
+  "required_independent_gates": {
+    "technical_art_transport": true,
+    "runtime_target_device": true,
+    "art_direction": true,
+    "visual_qa": true
+  },
+  "reusable_receiving_rule": "SOURCE_ATTRIBUTE_QUOTIENT_REQUIRES_EXPLICIT_DROPPED_ATTRIBUTE_DECLARATION_AND_CONSUMER_OWNED_REPLACEMENT_IDENTITY",
+  "truth_boundary": "This Environment contract consumes the Building Hard-Surface source-owner authority boundary without changing source or receiver geometry. The 312 current-world consumer is declared as an attribute-dropping consumer representation: it drops exact source cardinal-hard-normal identity, owns a separate Godot-generated normal/index domain, and remains non-default. Exact role+position equality and equal counts do not transfer source-normal equivalence, source-collapse permission, transport acceptance, target-device acceptance, visual acceptance, CANON or production readiness."
+}

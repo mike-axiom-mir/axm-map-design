@@ -1,0 +1,187 @@
+name: Environment indexed Object with footprint current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_object_indexed_footprint_observe.gd"
+      - "tools/environment_object_indexed_footprint_current_world.py"
+      - "docs/ENVIRONMENT_OBJECT_INDEXED_FOOTPRINT_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-object-indexed-footprint-current-world.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_object_indexed_footprint_observe.gd"
+      - "tools/environment_object_indexed_footprint_current_world.py"
+      - "docs/ENVIRONMENT_OBJECT_INDEXED_FOOTPRINT_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-object-indexed-footprint-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-indexed-object:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact predecessors and verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 2755dd3b275de9e62c933bd5d0653ddf9aa6fbcd^{commit}
+          git merge-base --is-ancestor 2755dd3b275de9e62c933bd5d0653ddf9aa6fbcd HEAD
+          python -m py_compile tools/environment_object_indexed_footprint_current_world.py
+          grep -F 'runtime_donor_head":"ddd9e8b783b213c6e44bf5eea482de1d41918766"' environment-proof/atmosphere_current_world_object_indexed_footprint_observe.gd
+
+      - name: Download exact visible-cue Environment review evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_indexed_footprint_current_world_001
+          mkdir -p "$out/reference"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10467822460/zip" \
+            --output "$out/reference.zip"
+          echo "6e8ea42e2095beac7fad3770192502bf5114ef87206ec57542b3ccddfe055040  $out/reference.zip" | sha256sum --check --strict
+          unzip -q "$out/reference.zip" -d "$out/reference"
+          test "$(cat "$out/reference/review-head.txt" | tr -d '\n\r')" = 2755dd3b275de9e62c933bd5d0653ddf9aa6fbcd
+          test -f "$out/reference/candidate/runtime.json"
+          test -d "$out/reference/candidate/rendered"
+          test -f "$out/reference/review.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_indexed_footprint_current_world_001/reference/review.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_OBJECT_FOOTPRINT_ON_PREFERRED_MATERIAL_REVIEW_READY',p
+          assert p['review_head']=='2755dd3b275de9e62c933bd5d0653ddf9aa6fbcd',p
+          assert all(p['checks'].values()),p
+          print('PASS_EXACT_VISIBLE_CUE_REFERENCE_BOUNDARY')
+          PY
+
+      - name: Download exact Object-material payload authority
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_indexed_footprint_current_world_001
+          mkdir -p "$out/material-world"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/artifacts/10466065113/zip" \
+            --output "$out/material-world.zip"
+          echo "87dd366302e94b5a6f8241e110e9629c2d81a0d7321197b14a52b860642fd519  $out/material-world.zip" | sha256sum --check --strict
+          unzip -q "$out/material-world.zip" -d "$out/material-world"
+          test "$(cat "$out/material-world/exact-head.txt" | tr -d '\n\r')" = 6575cc38db9f0f62b14a82b352d8582edf89856d
+          test -f "$out/material-world/combined_current_world.json"
+          cp "$out/material-world/combined_current_world.json" environment-proof/generated/current_world_object_material_family.json
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify inherited world chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_material_family_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_material_family_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_footprint_material_review.gd
+          test -f environment-proof/atmosphere_current_world_object_indexed_footprint_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe indexed Object inside exact visible-cue current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_indexed_footprint_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_object_indexed_footprint_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact producer-adoption composition
+        run: |
+          set -euo pipefail
+          out=evidence/environment_object_indexed_footprint_current_world_001
+          python tools/environment_object_indexed_footprint_current_world.py \
+            --reference-root "$out/reference/candidate" \
+            --candidate-root "$out/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_indexed_footprint_current_world_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_INDEXED_OBJECT_WITH_FOOTPRINT_COMPOSITION',p
+          assert all(p['checks'].values()),p
+          assert p['byte_identical_frames']==68,p
+          print(json.dumps({
+              'state':p['state'],
+              'before_vertices':p['before_object_mesh']['total_vertices'],
+              'after_vertices':p['after_object_mesh']['total_vertices'],
+              'after_indices':p['after_object_mesh']['total_indices'],
+              'runtime_deltas':p['runtime_deltas'],
+              'visual_tradeoff':p['visual_tradeoff'],
+          },indent=2))
+          PY
+
+      - name: Remove downloaded evidence duplicates before upload
+        if: always()
+        run: |
+          rm -rf evidence/environment_object_indexed_footprint_current_world_001/reference
+          rm -f evidence/environment_object_indexed_footprint_current_world_001/reference.zip
+          rm -rf evidence/environment_object_indexed_footprint_current_world_001/material-world
+          rm -f evidence/environment_object_indexed_footprint_current_world_001/material-world.zip
+
+      - name: Upload retained Environment indexed-Object evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-indexed-footprint-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_object_indexed_footprint_current_world_001
+          if-no-files-found: error
+          retention-days: 30
