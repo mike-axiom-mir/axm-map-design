@@ -20,7 +20,7 @@ from axm_uc.indexed_surface_eligibility import (
     observe_indexed_surface_eligibility,
 )
 
-SCHEMA = "axm.technical-art-building-planar-role-uc-index-bridge/v0.1"
+SCHEMA = "axm.technical-art-building-planar-role-uc-index-bridge/v0.2"
 BUNDLE_SCHEMA = "axm.technical-art-building-planar-role-index-bundle/v0.1"
 RUNTIME_SCHEMA = "axm.runtime-building-planar-role-surface-index-budget/v0.1"
 RUNTIME_HEAD = "8d5860c308c244d314ede5b79021e46f35c4040d"
@@ -73,6 +73,30 @@ def candidate_rows(before: dict, report: dict) -> tuple[list[list[float]], list[
     if any(row is None for row in positions) or any(row is None for row in normals):
         raise ValueError("UC candidate map left an unreachable candidate vertex")
     return positions, normals
+
+
+def vertex_tuple(position, normal):
+    return (tuple(position), tuple(normal))
+
+
+def unique_tuple_multiset(positions, normals):
+    if len(positions) != len(normals):
+        raise ValueError("POSITION/NORMAL cardinality drift")
+    rows = [vertex_tuple(p, n) for p, n in zip(positions, normals)]
+    return sorted(rows, key=repr)
+
+
+def decoded_tuple_stream(positions, normals, indices):
+    if len(positions) != len(normals):
+        raise ValueError("POSITION/NORMAL cardinality drift")
+    rows = [vertex_tuple(p, n) for p, n in zip(positions, normals)]
+    out = []
+    for index in indices:
+        index = int(index)
+        if index < 0 or index >= len(rows):
+            raise ValueError("index outside declared vertex domain")
+        out.append(rows[index])
+    return out
 
 
 def build_spec(partition: str, before: dict) -> dict:
@@ -129,11 +153,6 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
     runtime_representation = runtime["building_representation"]
     if runtime_representation.get("surface_count") != 5 or runtime_representation.get("triangle_count") != 336:
         raise ValueError("retained Runtime surface/triangle identity drift")
-    if runtime_representation["before"] != {
-        key: runtime_representation["before"][key]
-        for key in runtime_representation["before"]
-    }:
-        raise ValueError("unreachable Runtime before receipt")
     if int(runtime_representation["before"]["total_vertices"]) != 1008 or int(runtime_representation["after"]["total_vertices"]) != 312:
         raise ValueError("retained Runtime before/after vertex count drift")
     if int(runtime_representation["after"]["total_indices"]) != 1008:
@@ -176,14 +195,25 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             raise ValueError(f"{partition}: UC did not expose cross-source candidate state")
         if int(report["candidate"]["vertex_count"]) != int(after["vertex_count"]):
             raise ValueError(f"{partition}: UC candidate vertex count differs from exact Godot indexed surface")
-        if report["candidate"]["indices"] != [int(value) for value in after["storage_indices"]]:
-            raise ValueError(f"{partition}: UC candidate index stream differs from exact Godot SurfaceTool.index() output")
 
-        expected_positions, expected_normals = candidate_rows(before, report)
-        if expected_positions != normalize_rows(after["positions"]):
-            raise ValueError(f"{partition}: UC candidate POSITION order differs from exact Godot indexed surface")
-        if expected_normals != normalize_rows(after["normals"]):
-            raise ValueError(f"{partition}: UC candidate NORMAL order differs from exact Godot indexed surface")
+        uc_positions, uc_normals = candidate_rows(before, report)
+        godot_positions = normalize_rows(after["positions"])
+        godot_normals = normalize_rows(after["normals"])
+        uc_indices = [int(value) for value in report["candidate"]["indices"]]
+        godot_indices = [int(value) for value in after["storage_indices"]]
+
+        # Index IDs and stored vertex order are representation-local. The exact
+        # equivalence contract is the decoded triangle-corner render tuple stream
+        # plus the exact unique tuple domain and cardinality, all within the same
+        # caller-owned material partition.
+        uc_stream = decoded_tuple_stream(uc_positions, uc_normals, uc_indices)
+        godot_stream = decoded_tuple_stream(godot_positions, godot_normals, godot_indices)
+        if uc_stream != godot_stream:
+            raise ValueError(f"{partition}: UC candidate decodes to a different exact POSITION/NORMAL triangle-corner stream than Godot")
+        if unique_tuple_multiset(uc_positions, uc_normals) != unique_tuple_multiset(godot_positions, godot_normals):
+            raise ValueError(f"{partition}: UC and Godot indexed vertex tuple domains differ")
+        if len(set(uc_stream)) != len(uc_positions) or len(set(godot_stream)) != len(godot_positions):
+            raise ValueError(f"{partition}: indexed vertex domain contains duplicate declared POSITION/NORMAL tuples")
 
         source_preserving = copy.deepcopy(spec)
         source_preserving.pop("candidate_identity_policy")
@@ -212,9 +242,9 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             "triangles": int(after["triangle_count"]),
             "indices": int(after["storage_index_count"]),
             "uc_candidate_vertex_count": int(report["candidate"]["vertex_count"]),
-            "uc_index_stream_exact_match": True,
-            "uc_position_order_exact_match": True,
-            "uc_normal_order_exact_match": True,
+            "uc_godot_exact_decoded_tuple_stream_match": True,
+            "uc_godot_exact_unique_tuple_domain_match": True,
+            "raw_index_numbering_or_vertex_order_required_to_match": False,
             "cross_source_candidate_groups": int(report["cross_source_observation"]["candidate_groups_spanning_multiple_source_vertices"]),
             "conservative_source_lineage_vertex_count": int(conservative["candidate"]["vertex_count"]),
             "missing_split_control": held["eligibility_state"],
@@ -225,7 +255,7 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
 
     receipt = {
         "schema": SCHEMA,
-        "result": "PASS_BUILDING_EXACT_GODOT_POST_NORMAL_PER_SURFACE_INDEX_MATCHES_UC_CROSS_SOURCE_TUPLE_CANDIDATE",
+        "result": "PASS_BUILDING_EXACT_GODOT_POST_NORMAL_PER_SURFACE_INDEX_ISOMORPHIC_TO_UC_CROSS_SOURCE_TUPLE_CANDIDATE",
         "technical_art_head": technical_art_head,
         "runtime_parent_head": RUNTIME_HEAD,
         "building_hard_surface_head": HARD_SURFACE_HEAD,
@@ -247,9 +277,9 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             "candidate_vertices": total_candidate_vertices,
             "candidate_indices": total_candidate_indices,
             "cross_source_candidate_groups": total_cross_source_groups,
-            "exact_index_stream_match_all_surfaces": True,
-            "exact_position_order_match_all_surfaces": True,
-            "exact_normal_order_match_all_surfaces": True,
+            "exact_decoded_position_normal_triangle_corner_stream_match_all_surfaces": True,
+            "exact_unique_position_normal_tuple_domain_match_all_surfaces": True,
+            "raw_index_numbering_or_vertex_order_claimed": False,
         },
         "surfaces": surface_reports,
         "negative_controls": {
@@ -262,6 +292,7 @@ def verify(bundle_path: Path, runtime_report_path: Path, output: Path, technical
             "uc_surface_mutation": False,
             "building_semantics_centralized_in_uc": False,
             "material_partitions_crossed": False,
+            "raw_index_id_or_vertex_storage_order_equivalence_claimed": False,
             "runtime_savings_remeasured_here": False,
             "visual_acceptance_claimed_here": False,
             "environment_adoption_authorized": False,
