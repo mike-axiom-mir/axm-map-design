@@ -195,7 +195,8 @@ func _initialize()->void:
                     if first_frame.is_empty():
                         _wallclock_fail("wall-clock sequence could not read first rendered frame")
                         return
-                    frame_images.append(first_frame.pop("image"))
+                    frame_images.append(first_frame["image"])
+                    first_frame.erase("image")
                     frame_records.append(first_frame)
             previous_phase = active_phase
             continue
@@ -222,7 +223,8 @@ func _initialize()->void:
         if frame_record.is_empty():
             _wallclock_fail("wall-clock sequence could not read rendered frame %s" % frame_records.size())
             return
-        frame_images.append(frame_record.pop("image"))
+        frame_images.append(frame_record["image"])
+        frame_record.erase("image")
         frame_records.append(frame_record)
         previous_phase = active_phase
 
