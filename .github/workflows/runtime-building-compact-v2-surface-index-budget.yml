@@ -1,0 +1,218 @@
+name: Runtime Building compact-v2 surface-index budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-building-compact-v2-surface-index-budget-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_building_compact_v2_surface_index_observe.gd"
+      - "tools/runtime_building_compact_v2_surface_index_budget.py"
+      - "docs/RUNTIME_BUILDING_COMPACT_V2_SURFACE_INDEX_BUDGET_001.md"
+      - ".github/workflows/runtime-building-compact-v2-surface-index-budget.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_building_compact_v2_surface_index_observe.gd"
+      - "tools/runtime_building_compact_v2_surface_index_budget.py"
+      - "docs/RUNTIME_BUILDING_COMPACT_V2_SURFACE_INDEX_BUDGET_001.md"
+      - ".github/workflows/runtime-building-compact-v2-surface-index-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compact-v2-post-normal-surface-index:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      ENVIRONMENT_HEAD: ef2cb9cc84edc10ab66c2230daca625623e0b00d
+      WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+      ACTIVE_RUN: "35179857526"
+      ACTIVE_ARTIFACT_NAME: environment-nature-leaf-flutter-current-world-001-ef2cb9cc84edc10ab66c2230daca625623e0b00d
+      UNINDEXED_RUN: "35179857530"
+      UNINDEXED_ARTIFACT_NAME: environment-building-compact-v2-current-world-001-ef2cb9cc84edc10ab66c2230daca625623e0b00d
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact ancestry and proof files
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$ENVIRONMENT_HEAD^{commit}"
+          git merge-base --is-ancestor "$ENVIRONMENT_HEAD" HEAD
+          python -m py_compile tools/runtime_building_compact_v2_surface_index_budget.py
+          grep -F 'RUNTIME_BUILDING_INDEX_SCHEMA := "axm.runtime-building-compact-v2-surface-indexing-observation/v0.1"' environment-proof/atmosphere_current_world_building_compact_v2_surface_index_observe.gd
+          grep -F 'st.index()' environment-proof/atmosphere_current_world_building_compact_v2_surface_index_observe.gd
+
+      - name: Download exact active current-world receiver evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ACTIVE_ARTIFACT_NAME }}
+          path: evidence/runtime_building_compact_v2_surface_index_001/active
+          github-token: ${{ github.token }}
+          run-id: ${{ env.ACTIVE_RUN }}
+
+      - name: Download exact unindexed compact-v2 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.UNINDEXED_ARTIFACT_NAME }}
+          path: evidence/runtime_building_compact_v2_surface_index_001/unindexed
+          github-token: ${{ github.token }}
+          run-id: ${{ env.UNINDEXED_RUN }}
+
+      - name: Verify retained comparison identities and install exact payload
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_compact_v2_surface_index_001
+          test -f "$out/active/candidate/runtime.json"
+          test -f "$out/unindexed/candidate/runtime.json"
+          test -f "$out/unindexed/combined_current_world.json"
+          test "$(find "$out/active/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$out/unindexed/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/runtime_building_compact_v2_surface_index_001')
+          active=json.loads((root/'active/candidate/runtime.json').read_text())
+          unindexed=json.loads((root/'unindexed/candidate/runtime.json').read_text())
+          assert len(active['samples'])==17, len(active['samples'])
+          assert len(unindexed['samples'])==17, len(unindexed['samples'])
+          assert unindexed['environment_building_compact_v2_representation_id']=='boundary-only-union-shell-conforming-compact-v2-001', unindexed
+          assert unindexed['environment_building_compact_v2_geometry_head']=='16253e7dd2f8cd590667f9631e4b50fdfcc7280d', unindexed
+          assert unindexed['environment_building_compact_v2_hard_surface_head']=='35d0ba62d7e534b3cd00ac69e99386843ffa3f2e', unindexed
+          assert unindexed['environment_building_compact_v2_materials_head']=='4179aa1401f5a9114399e2f998c96809d4b8ed2e', unindexed
+          print('PASS_EXACT_ACTIVE_AND_UNINDEXED_COMPACT_V2_COMPARISON_INPUTS')
+          PY
+          mkdir -p environment-proof/generated "$out/indexed/rendered"
+          cp "$out/unindexed/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+
+      - name: Checkout exact inherited Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.WEATHER_WIDTH_OBSERVER_HEAD }}
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Restore exact retained observer-chain setup
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = "$WEATHER_WIDTH_OBSERVER_HEAD"
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_compact_v2_observe.gd
+          grep -F 'extends "res://atmosphere_current_world_nature_leaf_flutter_observe.gd"' environment-proof/atmosphere_current_world_building_compact_v2_observe.gd
+          grep -F 'extends "res://atmosphere_current_world_nature_split_surface_culling_observe.gd"' environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          grep -F 'extends "res://atmosphere_current_world_building_current_policy_observe.gd"' environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          grep -F 'extends "res://atmosphere_current_world_nature_winding_migration_observe.gd"' environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact compact-v2 current world with post-normal per-surface indexing
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_compact_v2_surface_index_001/indexed
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_compact_v2_surface_index_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify before/after runtime evidence and visual tradeoff
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_compact_v2_surface_index_001
+          test -f "$out/indexed/runtime.json"
+          test "$(find "$out/indexed/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python tools/runtime_building_compact_v2_surface_index_budget.py \
+            --active-root "$out/active" \
+            --unindexed-root "$out/unindexed" \
+            --indexed-root "$out/indexed" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/runtime_building_compact_v2_surface_index_001/report.json'))
+          assert p['state'].startswith('PASS_BUILDING_COMPACT_V2_POST_NORMAL_INDEX_REDUCES_'),p
+          assert p['building_representation']['modeled_bytes_saved']>0,p
+          assert p['proof_host']['indexed_vs_unindexed_stable_buffer_delta_bytes']<0,p
+          assert p['proof_host']['observation_count']==68,p
+          print(json.dumps(p,indent=2,sort_keys=True))
+          PY
+
+      - name: Deliberate fail-closed buffer-reduction mutation
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_compact_v2_surface_index_001
+          rm -rf "$out/mutated"
+          mkdir -p "$out/mutated"
+          cp "$out/indexed/runtime.json" "$out/mutated/runtime.json"
+          ln -s "$(realpath "$out/indexed/rendered")" "$out/mutated/rendered"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/runtime_building_compact_v2_surface_index_001')
+          p=root/'mutated/runtime.json'
+          cand=json.loads(p.read_text())
+          control=json.loads((root/'unindexed/candidate/runtime.json').read_text())
+          cand['samples'][0]['contexts']['path_eye']['candidate']['runtime']['buffer_mem_bytes']=control['samples'][0]['contexts']['path_eye']['candidate']['runtime']['buffer_mem_bytes']
+          p.write_text(json.dumps(cand,indent=2,sort_keys=True)+'\n')
+          PY
+          if python tools/runtime_building_compact_v2_surface_index_budget.py \
+            --active-root "$out/active" \
+            --unindexed-root "$out/unindexed" \
+            --indexed-root "$out/mutated" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/mutated-report.json"; then
+            echo "ERROR: verifier accepted removed buffer reduction" >&2
+            exit 1
+          fi
+          echo PASS_FAIL_CLOSED_REMOVED_BUFFER_REDUCTION
+
+      - name: Upload exact Runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-building-compact-v2-surface-index-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/runtime_building_compact_v2_surface_index_001/exact-head.txt
+            evidence/runtime_building_compact_v2_surface_index_001/report.json
+            evidence/runtime_building_compact_v2_surface_index_001/indexed/runtime.json
+            evidence/runtime_building_compact_v2_surface_index_001/indexed/godot.log
+            evidence/runtime_building_compact_v2_surface_index_001/indexed/rendered/*.png
+          if-no-files-found: error
+          retention-days: 30
