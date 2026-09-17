@@ -24,22 +24,25 @@ func _segment_surface(
     material_id:String,
     selected_surface_id:String
 )->Dictionary:
-    if source_arrays.size()<=Mesh.ARRAY_NORMAL:
+    if source_arrays.size()<=Mesh.ARRAY_INDEX:
         fail("selected surface segmentation source array layout drift")
         return {}
     var vertices=source_arrays[Mesh.ARRAY_VERTEX]
     var normals=source_arrays[Mesh.ARRAY_NORMAL]
+    var parent_indices=source_arrays[Mesh.ARRAY_INDEX]
     if typeof(vertices)!=TYPE_PACKED_VECTOR3_ARRAY or typeof(normals)!=TYPE_PACKED_VECTOR3_ARRAY:
         fail("selected surface segmentation expected exact parent vertex/normal arrays")
         return {}
-    if vertices.size()!=source_triangle_indices.size()*3 or normals.size()!=vertices.size():
-        fail("selected surface segmentation parent surface is no longer exact non-indexed triangle soup")
+    if typeof(parent_indices)!=TYPE_PACKED_INT32_ARRAY:
+        fail("selected surface segmentation requires exact indexed parent triangle stream")
+        return {}
+    if normals.size()!=vertices.size() or parent_indices.size()!=source_triangle_indices.size()*3:
+        fail("selected surface segmentation indexed parent cardinality drift")
         return {}
     var local_slot:Dictionary={}
     for slot in range(source_triangle_indices.size()):
         local_slot[int(source_triangle_indices[slot])]=slot
-    var st:=SurfaceTool.new()
-    st.begin(Mesh.PRIMITIVE_TRIANGLES)
+    var chosen_indices:=PackedInt32Array()
     for raw_tri in chosen_triangle_indices:
         var tri_index:=int(raw_tri)
         if not local_slot.has(tri_index):
@@ -47,10 +50,15 @@ func _segment_surface(
             return {}
         var slot:=int(local_slot[tri_index])
         for corner in range(3):
-            var source_vertex:=slot*3+corner
-            st.set_normal(normals[source_vertex])
-            st.add_vertex(vertices[source_vertex])
-    st.commit(destination)
+            var parent_index_offset:=slot*3+corner
+            var parent_vertex_index:=int(parent_indices[parent_index_offset])
+            if parent_vertex_index<0 or parent_vertex_index>=vertices.size():
+                fail("selected surface segmentation parent index references invalid vertex")
+                return {}
+            chosen_indices.append(parent_vertex_index)
+    var segmented_arrays:=source_arrays.duplicate(true)
+    segmented_arrays[Mesh.ARRAY_INDEX]=chosen_indices
+    destination.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,segmented_arrays)
     destination.surface_set_material(destination.get_surface_count()-1,material)
     return {
         "segment_id":segment_id,
@@ -58,7 +66,8 @@ func _segment_surface(
         "selected_surface_id":selected_surface_id,
         "triangle_count":chosen_triangle_indices.size(),
         "source_triangle_indices":chosen_triangle_indices.duplicate(),
-        "parent_vertex_and_normal_fields_reused":true
+        "parent_vertex_and_normal_fields_reused":true,
+        "parent_index_stream_subset_reused":true
     }
 
 func _uv0_count(mesh:ArrayMesh)->int:
@@ -180,7 +189,8 @@ func _build_segmented_receiver(source:Dictionary,parent_mesh:ArrayMesh)->Diction
             "environment_adoption":false,
             "parent_material_objects_reused":true,
             "parent_vertex_and_normal_fields_reused":true,
-            "truth_boundary":"The Map receiver only splits the exact two source-owned faces into independently addressable draw surfaces while reusing parent vertex positions, parent generated normals and the exact parent material objects. No UV0 or selected roughness is added."
+            "parent_index_stream_subsets_reused":true,
+            "truth_boundary":"The Map receiver only splits the exact two source-owned faces into independently addressable draw surfaces while reusing parent vertex positions, parent generated normals, parent index references and the exact parent material objects. No UV0 or selected roughness is added."
         }
     }
 
