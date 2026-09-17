@@ -5,8 +5,8 @@ const CONTRACT_SCHEMA := "axm.animation-object-current-world-wallclock/v0.1"
 const RECEIPT_SCHEMA := "axm.animation-object-current-world-wallclock-observation/v0.1"
 const PASS_STATE := "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_AND_SHADED_REVIEW_SEQUENCE"
 const EXACT_TA_PARENT_HEAD := "d2974dec5043ed9afad346574b23ef8bd4438a76"
-const EXACT_ANIMATION_HEAD := "c688936a84f80f292e43587c9d3386bd717f8178"
-const EXACT_SEQUENCE_DIGEST := "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
+const OWNER_ANIMATION_HEAD := "c688936a84f80f292e43587c9d3386bd717f8178"
+const OWNER_SEQUENCE_DIGEST := "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
 const OWNER_DURATION_S := 2.5
 const OWNER_RATE_HZ := 40.0
 const OWNER_SAMPLE_COUNT := 101
@@ -161,7 +161,7 @@ func _build_current_world()->Dictionary:
     if plan.is_empty():
         _animation_fail("Animation current-world exact motion plan missing")
         return {}
-    if String(plan.get("animation_head", "")) != EXACT_ANIMATION_HEAD or String(plan.get("sequence_digest", "")) != EXACT_SEQUENCE_DIGEST:
+    if String(plan.get("animation_head", "")) != OWNER_ANIMATION_HEAD or String(plan.get("sequence_digest", "")) != OWNER_SEQUENCE_DIGEST:
         _animation_fail("Animation current-world owner identity drift")
         return {}
     if int(plan.get("sample_count", -1)) != OWNER_SAMPLE_COUNT or absf(float(plan.get("duration_s", -1.0)) - OWNER_DURATION_S) > 0.000001:
@@ -258,7 +258,7 @@ func _timed_playback(world:Dictionary)->Dictionary:
             min_latch_angle_deg = minf(min_latch_angle_deg, float(raw_angle))
             if absf(lid_angle) > ANGLE_EPS_DEG and absf(float(raw_angle) + 50.0) > ANGLE_EPS_DEG:
                 phase_order_violations += 1
-        if observations.is_empty() or int((observations[-1] as Dictionary)["matched_owner_sample_index"]) != matched_index:
+        if observations.is_empty() or int((observations[observations.size()-1] as Dictionary)["matched_owner_sample_index"]) != matched_index:
             observations.append({
                 "frame":frame_count,
                 "elapsed_s":float(now_usec - start_usec) / 1000000.0,
@@ -286,7 +286,8 @@ func _timed_playback(world:Dictionary)->Dictionary:
     var endpoint_keeper_drift := maxf(start_keeper0.distance_to(_mesh_center(container, "latch_0_keeper")), start_keeper1.distance_to(_mesh_center(container, "latch_1_keeper")))
     var endpoint_lever_drift := 0.0
     for lever_name in start_levers.keys():
-        endpoint_lever_drift = maxf(endpoint_lever_drift, (start_levers[lever_name] as Vector3).distance_to(_mesh_center(container, String(lever_name))))
+        var start_center:Vector3 = start_levers[lever_name]
+        endpoint_lever_drift = maxf(endpoint_lever_drift, start_center.distance_to(_mesh_center(container, String(lever_name))))
     if endpoint_keeper_drift > POSITION_EPS_M or endpoint_lever_drift > POSITION_EPS_M:
         _animation_fail("Animation current-world wall-clock endpoint closure drift")
         return {}
@@ -408,8 +409,8 @@ func _initialize()->void:
         "state":"STARTED",
         "contract_schema":CONTRACT_SCHEMA,
         "technical_art_parent_head":EXACT_TA_PARENT_HEAD,
-        "animation_head":EXACT_ANIMATION_HEAD,
-        "sequence_digest":EXACT_SEQUENCE_DIGEST,
+        "animation_head":OWNER_ANIMATION_HEAD,
+        "sequence_digest":OWNER_SEQUENCE_DIGEST,
         "duration_s":OWNER_DURATION_S,
         "sample_rate_hz":OWNER_RATE_HZ,
         "sample_count":OWNER_SAMPLE_COUNT,
