@@ -6,20 +6,36 @@ It does not change Building semantic source authority, the five material roles/s
 
 ## Question
 
-The current accepted review path first builds 1,008 unindexed triangle-corner vertices, generates normals, then creates a second SurfaceTool and indexes that mesh down to 312 final stored vertices / 1,008 indices. The renderer-side memory win is already proven.
+The current review receiver already proves the renderer-memory benefit of post-normal per-surface indexing: it builds 1,008 unindexed triangle-corner vertices, generates normals, then `create_from + SurfaceTool.index()` compacts the exact five surfaces to 312 stored vertices / 1,008 indices.
 
-This pass asks a narrower import/preparation question: can the receiver construct the already-proven final material/seam domain directly as indexed position+cardinal-normal arrays, skipping the temporary unindexed mesh and the second create-from/index rewrite?
+This pass asks a different import/preparation question: is it cheaper to deduplicate the exact per-material position domain to 312 vertices first, attach the same 1,008 triangle indices, and then run the same pinned Godot `generate_normals()` step?
 
-## Evidence boundary
+## Truth-boundary repairs
 
-The workflow runs both paths on pinned Godot 4.7.2 GL Compatibility over the same 17-state current-world payload and records:
+The first v0.1 experiment attempted to emit direct position + hand-derived cardinal-normal + index arrays. It correctly failed the exact final-storage identity gate: that normal domain was not equivalent to the current Godot-generated domain. The failed run is preserved.
 
-- per-state Building receiver construction microseconds;
-- the same 68 renderer counter observations;
-- direct 68-frame pixel comparison;
-- exact 5-surface / 312-stored-vertex / 1,008-index / 336-triangle identity;
-- a fail-closed storage mutation.
+The repaired v0.2 candidate performs only the already-proven position-domain deduplication before the same Godot normal-generation step. It finishes at the exact same 5 surfaces / 312 stored vertices / 1,008 indices / 336 triangles.
 
-The direct path is intentionally limited to this exact cardinal-normal position+normal domain. It proves no UV, tangent, color, skin, morph, custom-channel, arbitrary-mesh, target-device FPS/GPU, transport, collision, CANON or production-readiness claim.
+A second measurement repair was also necessary: the current-world scene constructs the Building once and copies the static-source receipt into all 17 state rows. Those repeated receipt values are one construction observation, not 17 timing samples. Final preparation evidence therefore comes from a separate benchmark with 5 warmup pairs and 41 independently timed, alternating control/candidate pairs.
 
-Art Direction / Visual QA own any nonzero retained raster tradeoff. Environment owns receiver adoption. Technical Art owns transport/import equivalence outside this procedural receiver path. The four AXM roots remain the merge gate.
+## Measured result
+
+On the pinned Godot 4.7.2 proof host, the repeated benchmark holds the candidate rather than adopting it:
+
+- post-normal-index control median: 619 us; p90: 628 us;
+- index-before-normal candidate median: 728 us; p90: 737 us;
+- median difference: +109 us / +17.609047% for the candidate;
+- paired-delta median: +108 us;
+- candidate faster pairs: 0 / 41.
+
+The separate current-world A/B still ends in the same final renderer representation. Across 68 observations the candidate-minus-control deltas are exactly 0 for draw calls, objects, primitives, observed buffer memory and observed texture memory. All 68 retained frame pairs have a measurable but bounded raster delta: at most 55 changed pixels per frame, maximum 1 LSB per channel, and zero pixels above 1 LSB. Art Direction / Visual QA retain that visual decision.
+
+Scoped result: `HOLD_BUILDING_INDEX_BEFORE_NORMAL_RECEIVER_PREPARATION_WIN_NOT_REPRODUCED`.
+
+Decision: keep the existing post-normal indexed receiver as the control. Do not move the deduplication earlier merely because it sounds cheaper; in this exact GDScript receiver the repeated proof-host measurement is slower.
+
+## Boundaries
+
+This is proof-host CPU-side geometry-construction evidence only. It is not target-device CPU/GPU frame time, FPS, VRAM/heap, import/export transport equivalence, arbitrary UV/tangent/color/skin/morph/custom-channel safety, Art/QA acceptance, Environment adoption, CANON, or production readiness.
+
+Environment owns receiver adoption. Art Direction / Visual QA own the nonzero raster tradeoff. Technical Art owns transport/import equivalence outside this procedural receiver path. The four AXM roots remain the merge gate.
