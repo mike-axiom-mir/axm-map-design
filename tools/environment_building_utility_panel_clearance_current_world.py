@@ -19,6 +19,10 @@ ROUGHNESS_STATE = "PASS_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_APPEARANCE_CANDI
 SOURCE_HEAD = "fbfa3b47048755b45dac91451171d5511c8d4f47"
 SOURCE_CONTENT_HEAD = "32bbdd54f00aaac87ba8139bf932d8aff6109a66"
 PROCEDURAL_HEAD = "0c458e19cda73e26e90531d24fe7697b5a8d14fc"
+CURRENT_POLICY_HEAD = "a976af429b0ea90e0f0cc72d4a8bd4eb8fef22d3"
+CURRENT_VARIANT = "header-segmented-23"
+SEGMENTATION_SOURCE_HEAD = "34124101e616c423c5a3ed5e122ddf09b98a1650"
+SEGMENTATION_REVISION = "service-pavilion-001/interpenetration-free-header-segmentation-003"
 PARENT_HEAD = "4bd7eaf6970716dde4159448c92556785f47e954"
 PARENT_ARTIFACT_SHA256 = "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97"
 CONTEXTS = ("path_eye", "elevated_oblique")
@@ -32,7 +36,9 @@ def load(path: str | Path) -> dict[str, Any]:
 
 
 def approx_vec(actual: Any, expected: list[float], eps: float = EPS) -> bool:
-    return isinstance(actual, list) and len(actual) == 3 and all(abs(float(a) - float(b)) <= eps for a, b in zip(actual, expected, strict=True))
+    return isinstance(actual, list) and len(actual) == 3 and all(
+        abs(float(a) - float(b)) <= eps for a, b in zip(actual, expected, strict=True)
+    )
 
 
 def find(rows: Any, asset_id: str) -> dict[str, Any]:
@@ -56,6 +62,24 @@ def verify_contract(contract: dict[str, Any]) -> None:
     procedural = contract.get("procedural_rebind_authority", {})
     if procedural.get("head") != PROCEDURAL_HEAD or procedural.get("automatic_receiver_adoption") is not False:
         raise ValueError("Building Procedural authority/adoption boundary drift")
+    current = contract.get("current_receiver_authority", {})
+    if current.get("source_policy_head") != CURRENT_POLICY_HEAD:
+        raise ValueError("current Building receiver policy head drift")
+    if current.get("current_source_variant_id") != CURRENT_VARIANT:
+        raise ValueError("current Building receiver variant drift")
+    if current.get("segmentation_source_head") != SEGMENTATION_SOURCE_HEAD:
+        raise ValueError("current Building segmentation source head drift")
+    if current.get("segmentation_revision") != SEGMENTATION_REVISION:
+        raise ValueError("current Building segmentation revision drift")
+    if current.get("placement_translation_source_xyz_m") != [0.0, 7.2, 0.0]:
+        raise ValueError("current Building placement translation drift")
+    receiver = contract.get("receiver_rebind", {})
+    if receiver.get("expected_vertex_count") != 184 or receiver.get("expected_triangle_count") != 276 or receiver.get("expected_surface_count") != 5:
+        raise ValueError("current Building receiver structural identity drift")
+    if receiver.get("current_receiver_vertex_groups", {}).get("front-utility-bay") != list(range(168, 176)):
+        raise ValueError("front current receiver vertex group drift")
+    if receiver.get("current_receiver_vertex_groups", {}).get("east-utility-bay") != list(range(176, 184)):
+        raise ValueError("east current receiver vertex group drift")
     decision = contract.get("decision", {})
     for key in (
         "environment_building_clearance_adoption",
@@ -66,7 +90,9 @@ def verify_contract(contract: dict[str, Any]) -> None:
             raise ValueError(f"automatic Environment adoption forbidden: {key}")
 
 
-def verify_source(contract: dict[str, Any], pavilion: dict[str, Any], panel: dict[str, Any], procedural: dict[str, Any]) -> dict[str, Any]:
+def verify_source(
+    contract: dict[str, Any], pavilion: dict[str, Any], panel: dict[str, Any], procedural: dict[str, Any]
+) -> dict[str, Any]:
     source = contract["building_source_authority"]
     if pavilion.get("asset_id") != "service-pavilion-001" or panel.get("asset_id") != "utility-access-panel-001":
         raise ValueError("Building source asset identity drift")
@@ -78,18 +104,8 @@ def verify_source(contract: dict[str, Any], pavilion: dict[str, Any], panel: dic
         raise ValueError("panel required body clearance drift")
     interfaces = {row.get("id"): row for row in pavilion.get("interfaces", []) if isinstance(row, dict)}
     expected = {
-        "front-utility-bay": {
-            "origin": [-2.45, -1.00, 1.65],
-            "normal": [0.0, -1.0, 0.0],
-            "old": [-2.45, -1.08, 1.65],
-            "new": [-2.45, -1.10, 1.65],
-        },
-        "east-utility-bay": {
-            "origin": [3.80, 0.10, 1.65],
-            "normal": [1.0, 0.0, 0.0],
-            "old": [3.88, 0.10, 1.65],
-            "new": [3.90, 0.10, 1.65],
-        },
+        "front-utility-bay": {"origin": [-2.45, -1.00, 1.65], "normal": [0.0, -1.0, 0.0]},
+        "east-utility-bay": {"origin": [3.80, 0.10, 1.65], "normal": [1.0, 0.0, 0.0]},
     }
     for receiver_id, truth in expected.items():
         row = interfaces.get(receiver_id)
@@ -112,6 +128,27 @@ def verify_source(contract: dict[str, Any], pavilion: dict[str, Any], panel: dic
     return {"physical_body_gap_m": physical_gap, "receiver_count": 2}
 
 
+def _assert_building_structural_identity(before: dict[str, Any], after: dict[str, Any], index: int) -> None:
+    expected = {"vertices": 184, "triangles": 276, "surface_count": 5}
+    for key, value in expected.items():
+        if int(before.get(key, -1)) != value or int(after.get(key, -1)) != value:
+            raise ValueError(f"current Building {key} identity drift at state {index}")
+    stable_keys = (
+        "material_ids",
+        "material_profile_sha256",
+        "proof_culling",
+        "receiving_policy",
+        "header_segmentation_revision",
+        "source_positive_volume_intersection_count",
+        "successor_positive_volume_intersection_count",
+    )
+    for key in stable_keys:
+        if before.get(key) != after.get(key):
+            raise ValueError(f"current Building structural/material metadata changed during clearance rebind: {key} state {index}")
+    if after.get("header_segmentation_revision") != SEGMENTATION_REVISION:
+        raise ValueError(f"current Building segmentation revision drift at state {index}")
+
+
 def verify_runtime(parent: dict[str, Any], candidate: dict[str, Any], contract: dict[str, Any]) -> dict[str, Any]:
     samples_parent = parent.get("samples", [])
     samples_candidate = candidate.get("samples", [])
@@ -126,10 +163,13 @@ def verify_runtime(parent: dict[str, Any], candidate: dict[str, Any], contract: 
     runtime_delta: dict[str, set[int]] = {k: set() for k in ("draw_calls_in_frame", "objects_in_frame", "primitives_in_frame")}
 
     receiver = contract["receiver_rebind"]
+    current = contract["current_receiver_authority"]
     for index, (before, after) in enumerate(zip(samples_parent, samples_candidate, strict=True)):
         if int(before.get("index", -1)) != index or int(after.get("index", -1)) != index:
             raise ValueError(f"runtime state index drift at {index}")
+        before_building = find(before.get("static_source_meshes"), BUILDING_ASSET)
         building = find(after.get("static_source_meshes"), BUILDING_ASSET)
+        _assert_building_structural_identity(before_building, building, index)
         obs = building.get("environment_building_utility_panel_clearance_current_world")
         if not isinstance(obs, dict) or obs.get("state") != RESULT:
             raise ValueError(f"Building clearance observation missing at state {index}")
@@ -137,16 +177,27 @@ def verify_runtime(parent: dict[str, Any], candidate: dict[str, Any], contract: 
             raise ValueError(f"Building source provenance drift at state {index}")
         if obs.get("building_procedural_head") != PROCEDURAL_HEAD:
             raise ValueError(f"Building Procedural provenance drift at state {index}")
-        if not approx_vec(obs.get("front_predecessor_center_source_xyz_m"), receiver["predecessor_centers_source_xyz_m"]["front-utility-bay"]):
-            raise ValueError(f"front predecessor center drift at state {index}")
-        if not approx_vec(obs.get("front_successor_center_source_xyz_m"), receiver["successor_centers_source_xyz_m"]["front-utility-bay"]):
-            raise ValueError(f"front successor center drift at state {index}")
-        if not approx_vec(obs.get("east_predecessor_center_source_xyz_m"), receiver["predecessor_centers_source_xyz_m"]["east-utility-bay"]):
-            raise ValueError(f"east predecessor center drift at state {index}")
-        if not approx_vec(obs.get("east_successor_center_source_xyz_m"), receiver["successor_centers_source_xyz_m"]["east-utility-bay"]):
-            raise ValueError(f"east successor center drift at state {index}")
-        if obs.get("translated_source_vertex_count") != 16 or obs.get("topology_changed") is not False or obs.get("surface_partition_changed") is not False or obs.get("material_values_changed") is not False:
-            raise ValueError(f"Building bounded-rebind boundary drift at state {index}")
+        if obs.get("current_receiver_source_policy_head") != CURRENT_POLICY_HEAD or obs.get("current_receiver_source_variant_id") != CURRENT_VARIANT:
+            raise ValueError(f"Building current receiver policy identity drift at state {index}")
+        if obs.get("current_receiver_segmentation_source_head") != SEGMENTATION_SOURCE_HEAD or obs.get("current_receiver_segmentation_revision") != SEGMENTATION_REVISION:
+            raise ValueError(f"Building current receiver segmentation identity drift at state {index}")
+        if not approx_vec(obs.get("placement_translation_source_xyz_m"), current["placement_translation_source_xyz_m"]):
+            raise ValueError(f"Building current receiver placement translation drift at state {index}")
+        for prefix, receiver_id in (("front", "front-utility-bay"), ("east", "east-utility-bay")):
+            checks = (
+                (f"{prefix}_predecessor_center_source_xyz_m", receiver["predecessor_centers_source_xyz_m"][receiver_id]),
+                (f"{prefix}_successor_center_source_xyz_m", receiver["successor_centers_source_xyz_m"][receiver_id]),
+                (f"{prefix}_predecessor_center_receiver_xyz_m", receiver["predecessor_centers_current_receiver_xyz_m"][receiver_id]),
+                (f"{prefix}_successor_center_receiver_xyz_m", receiver["successor_centers_current_receiver_xyz_m"][receiver_id]),
+            )
+            for key, expected in checks:
+                if not approx_vec(obs.get(key), expected):
+                    raise ValueError(f"{key} drift at state {index}")
+        if obs.get("translated_source_vertex_count") != 16:
+            raise ValueError(f"Building translated vertex count drift at state {index}")
+        for key in ("topology_changed", "surface_partition_changed", "material_values_changed"):
+            if obs.get(key) is not False:
+                raise ValueError(f"Building bounded-rebind boundary drift: {key} state {index}")
         if obs.get("environment_adoption") is not False:
             raise ValueError(f"Building Environment adoption must remain held at state {index}")
         rebound += 1
@@ -163,12 +214,12 @@ def verify_runtime(parent: dict[str, Any], candidate: dict[str, Any], contract: 
 
         before_compact = find(before.get("static_source_meshes"), COMPACT_ASSET)
         after_compact = find(after.get("static_source_meshes"), COMPACT_ASSET)
-        keys = (
+        compact_keys = (
             "compact_east_visual_response_phase_index",
             "compact_east_visual_response_vfx_head",
             "compact_east_visual_response_weather_semantics",
         )
-        if any(before_compact.get(k) != after_compact.get(k) for k in keys):
+        if any(before_compact.get(k) != after_compact.get(k) for k in compact_keys):
             raise ValueError(f"compact-east receiving identity drift at state {index}")
         phase = int(after_compact.get("compact_east_visual_response_phase_index", -1))
         if phase != index:
@@ -179,7 +230,9 @@ def verify_runtime(parent: dict[str, Any], candidate: dict[str, Any], contract: 
         for context in CONTEXTS:
             weather = after["contexts"][context]["candidate"]["weather_update"]
             weather_measurements += int(weather.get("measured_width_count", 0))
-            weather_max_residual = max(weather_max_residual, float(weather.get("maximum_projected_width_residual_px", 999.0)))
+            weather_max_residual = max(
+                weather_max_residual, float(weather.get("maximum_projected_width_residual_px", 999.0))
+            )
             for mode in MODES:
                 a = before["contexts"][context][mode]["runtime"]
                 b = after["contexts"][context][mode]["runtime"]
@@ -192,11 +245,30 @@ def verify_runtime(parent: dict[str, Any], candidate: dict[str, Any], contract: 
         raise ValueError(f"Weather width continuity failed: {weather_measurements=} {weather_max_residual=}")
     if any(values != {0} for values in runtime_delta.values()):
         raise ValueError(f"Building placement rebind changed structural submission counts: {runtime_delta}")
+    top_level_exact = {
+        "environment_building_utility_panel_clearance_current_receiver_source_policy_head": CURRENT_POLICY_HEAD,
+        "environment_building_utility_panel_clearance_current_receiver_variant_id": CURRENT_VARIANT,
+        "environment_building_utility_panel_clearance_current_receiver_segmentation_source_head": SEGMENTATION_SOURCE_HEAD,
+        "environment_building_utility_panel_clearance_current_receiver_segmentation_revision": SEGMENTATION_REVISION,
+    }
+    for key, expected in top_level_exact.items():
+        if candidate.get(key) != expected:
+            raise ValueError(f"top-level current Building receiver identity drift: {key}")
     if candidate.get("environment_building_utility_panel_clearance_adoption") is not False:
         raise ValueError("top-level Building Environment adoption boundary drift")
 
     return {
         "building_rebound_states": rebound,
+        "building_current_receiver_rebound_states": rebound,
+        "building_current_receiver_identity": {
+            "source_policy_head": CURRENT_POLICY_HEAD,
+            "source_variant_id": CURRENT_VARIANT,
+            "segmentation_source_head": SEGMENTATION_SOURCE_HEAD,
+            "segmentation_revision": SEGMENTATION_REVISION,
+            "vertices": 184,
+            "triangles": 276,
+            "surfaces": 5,
+        },
         "object_roughness_exact_states": roughness_exact,
         "compact_east_exact_states": compact_exact,
         "compact_east_phase_indices": compact_phases,
@@ -220,7 +292,7 @@ def image_delta(parent_root: str | Path, candidate_root: str | Path) -> dict[str
     for parent_path in parent_files:
         match = FRAME_RE.match(parent_path.name)
         assert match is not None
-        mode, context, index = match.groups()
+        mode, context, _index = match.groups()
         candidate_path = candidate_dir / parent_path.name
         if not candidate_path.exists():
             raise ValueError(f"candidate frame missing: {candidate_path.name}")
@@ -236,7 +308,12 @@ def image_delta(parent_root: str | Path, candidate_root: str | Path) -> dict[str
                 if global_bbox is None:
                     global_bbox = bb
                 else:
-                    global_bbox = [min(global_bbox[0], bb[0]), min(global_bbox[1], bb[1]), max(global_bbox[2], bb[2]), max(global_bbox[3], bb[3])]
+                    global_bbox = [
+                        min(global_bbox[0], bb[0]),
+                        min(global_bbox[1], bb[1]),
+                        max(global_bbox[2], bb[2]),
+                        max(global_bbox[3], bb[3]),
+                    ]
             total_changed += changed
             changed_frames += int(changed > 0)
             max_changed = max(max_changed, changed)
@@ -270,6 +347,14 @@ def verify(args: argparse.Namespace) -> dict[str, Any]:
         "environment_head": args.environment_head,
         "parent_environment_head": PARENT_HEAD,
         "reusable_rule": RULE,
+        "failed_predecessor": {
+            "workflow_run": 35260357907,
+            "head": "ce40c64bbfa07cd944bae6fac322986aea5307c5",
+            "artifact_id": 10514557596,
+            "artifact_sha256": "756719002b6658690b7e68713921a92687a3fd902e640455194e179d440352ce",
+            "diagnosis": "FIRST_ATTEMPT_TARGETED_LEGACY_152_VERTEX_COMPATIBILITY_RECEIVER_WHILE_ACTIVE_WORLD_RENDERED_184_VERTEX_HEADER_SEGMENTED_RECEIVER",
+            "failed_attempt_changed_pixels": 0
+        },
         "source_authority": {
             "building_current_head": SOURCE_HEAD,
             "building_source_content_head": SOURCE_CONTENT_HEAD,
@@ -279,7 +364,14 @@ def verify(args: argparse.Namespace) -> dict[str, Any]:
         "real_world_scope": {
             "states": 17,
             "matched_frames": 68,
-            "assets_present": ["Building", "Nature west-sapling", "Nature compact-east", "Object selected roughness", "Map footprint cue", "Weather source-width presentation"],
+            "assets_present": [
+                "Building current header-segmented receiver",
+                "Nature west-sapling",
+                "Nature compact-east",
+                "Object selected roughness",
+                "Map footprint cue",
+                "Weather source-width presentation",
+            ],
         },
         "runtime_continuity": runtime,
         "visual_observability": visual,
@@ -288,7 +380,7 @@ def verify(args: argparse.Namespace) -> dict[str, Any]:
         "environment_compact_east_adoption": False,
         "art_qa_acceptance_required": True,
         "runtime_acceptance_required": True,
-        "truth_boundary": "PASS proves only that the exact source/procedural two-panel +0.02 m clearance successor can be received in the exact retained selected-roughness + compact-east + Weather current world without changing Object roughness identity, compact-east phase identity, Weather width behavior or structural submission counts. Pixel delta is characterized, not required or aesthetically accepted. Environment adoption, Art/QA acceptance, Runtime/device acceptance, gameplay, CANON and production readiness remain separate.",
+        "truth_boundary": "PASS proves only that the exact source/procedural two-panel +0.02 m clearance successor is received by the active 184-vertex header-segmented-23 Building representation in the exact retained selected-roughness + compact-east + Weather current world without changing Object roughness identity, compact-east phase identity, Weather width behavior or structural submission counts. The failed predecessor remains evidence that a legacy compatibility-path mutation is insufficient. Pixel delta is characterized, not aesthetically accepted. Environment adoption, Art/QA acceptance, Runtime/device acceptance, gameplay, CANON and production readiness remain separate.",
     }
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -303,11 +395,11 @@ def negative_control(args: argparse.Namespace) -> None:
     mutated = copy.deepcopy(candidate)
     building = find(mutated["samples"][0].get("static_source_meshes"), BUILDING_ASSET)
     obs = building["environment_building_utility_panel_clearance_current_world"]
-    obs["front_successor_center_source_xyz_m"] = [-2.45, -1.09, 1.65]
+    obs["front_successor_center_receiver_xyz_m"] = [-2.45, 6.11, 1.65]
     try:
         verify_runtime(parent, mutated, contract)
     except ValueError as exc:
-        print("PASS_REJECTED_MUTATED_BUILDING_CLEARANCE_RECEIVER:", exc)
+        print("PASS_REJECTED_MUTATED_BUILDING_CLEARANCE_CURRENT_RECEIVER:", exc)
         return
     raise SystemExit("negative control unexpectedly passed")
 
@@ -329,7 +421,7 @@ def main() -> None:
     p.add_argument("--environment-head", required=True)
     p.add_argument("--output", required=True)
 
-    n = sub.add_parser("negative-control", parents=[common])
+    sub.add_parser("negative-control", parents=[common])
     args = parser.parse_args()
     if args.command == "verify":
         verify(args)
