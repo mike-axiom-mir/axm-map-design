@@ -10,7 +10,7 @@ TA_PARENT = "e085437f6cc958bbf7c5c6464578923d542962b0"
 PREDECESSOR_EVIDENCE_HEAD = "c2695f654f9dd44312ca5d205eceb27f7c2680ee"
 ANIMATION_HEAD = "c688936a84f80f292e43587c9d3386bd717f8178"
 SEQUENCE_DIGEST = "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
-FRAME_RULE = "MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_TECHNICAL_ART_HOST_AXIS_THEN_MAP_HOST_ANGLE_BACK_TO_OWNER_CONVENTION__DO_NOT_ASSUME_SOURCE_EULER_X_EQUALS_HOST_EULER_X"
+FRAME_RULE = "MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_TECHNICAL_ART_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN__DO_NOT_ASSUME_SOURCE_EULER_X_EQUALS_HOST_EULER_X"
 
 
 def verify(data: dict) -> None:
@@ -22,7 +22,8 @@ def verify(data: dict) -> None:
     assert data["sequence_digest"] == SEQUENCE_DIGEST
     assert data["receiver_frame_matching_rule"] == FRAME_RULE
     assert data["acceptance_pose_match_uses_host_quaternion_projected_to_exact_receiver_axis"] is True
-    assert data["legacy_lid_rotation_deg_x_fields_are_host_euler_diagnostics_only"] is True
+    assert data["receiver_plan_already_encodes_owner_to_host_angle_adaptation"] is True
+    assert data["source_euler_x_not_used_for_acceptance"] is True
     assert float(data["duration_s"]) == 2.5
     assert float(data["sample_rate_hz"]) == 40.0
     assert int(data["sample_count"]) == 101
@@ -36,8 +37,6 @@ def verify(data: dict) -> None:
     assert timed["natural_stop"] is True
     assert int(timed["phase_order_violations"]) == 0
     assert float(timed["max_owner_sample_error_deg"]) <= 0.0002
-    # These two values are host diagnostic Euler/owner-angle summaries only;
-    # exact membership above is quaternion/receiver-axis based on v0.2.
     assert float(timed["max_abs_lid_angle_deg"]) >= 99.0
     assert float(timed["min_latch_angle_deg"]) <= -49.9
     assert float(timed["endpoint_keeper_drift_m"]) <= 1e-6
