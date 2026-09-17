@@ -6,6 +6,7 @@ on:
     paths:
       - "environment-proof/atmosphere_current_world_building_planar_role_index_control_timed_observe.gd"
       - "environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd"
+      - "environment-proof/runtime_building_planar_role_prepare_benchmark.gd"
       - "tools/runtime_building_planar_role_direct_indexed_import_budget.py"
       - "docs/RUNTIME_BUILDING_PLANAR_ROLE_DIRECT_INDEXED_IMPORT_BUDGET_001.md"
       - ".github/workflows/runtime-building-planar-role-direct-indexed-import-budget.yml"
@@ -13,6 +14,7 @@ on:
     paths:
       - "environment-proof/atmosphere_current_world_building_planar_role_index_control_timed_observe.gd"
       - "environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd"
+      - "environment-proof/runtime_building_planar_role_prepare_benchmark.gd"
       - "tools/runtime_building_planar_role_direct_indexed_import_budget.py"
       - "docs/RUNTIME_BUILDING_PLANAR_ROLE_DIRECT_INDEXED_IMPORT_BUDGET_001.md"
       - ".github/workflows/runtime-building-planar-role-direct-indexed-import-budget.yml"
@@ -49,8 +51,9 @@ jobs:
           git merge-base --is-ancestor "$ENVIRONMENT_HEAD" HEAD
           git merge-base --is-ancestor "$UNINDEXED_ENVIRONMENT_HEAD" HEAD
           python -m py_compile tools/runtime_building_planar_role_direct_indexed_import_budget.py
-          grep -F 'DIRECT_FINAL_POSITION_NORMAL_INDEX_ARRAYS' environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd
+          grep -F 'DIRECT_INDEXED_POSITION_DOMAIN_THEN_GENERATE_NORMALS' environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd
           grep -F 'POST_NORMAL_SURFACETOOL_INDEX_CONTROL' environment-proof/atmosphere_current_world_building_planar_role_index_control_timed_observe.gd
+          grep -F 'const TRIALS := 41' environment-proof/runtime_building_planar_role_prepare_benchmark.gd
 
       - name: Download exact canonical unindexed Environment payload donor
         uses: actions/download-artifact@v4
@@ -113,6 +116,26 @@ jobs:
           python -m pip install --disable-pip-version-check pillow
           if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
 
+      - name: Benchmark independent receiver geometry construction
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_direct_indexed_001
+          rm -f environment-proof/runtime-building-planar-role-prepare-benchmark.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script runtime_building_planar_role_prepare_benchmark.gd \
+            2>&1 | tee "$out/prepare-benchmark.log"
+          cp environment-proof/runtime-building-planar-role-prepare-benchmark.json "$out/prepare-benchmark.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/runtime_building_direct_indexed_001/prepare-benchmark.json'))
+          assert p['trials']==41,p
+          assert p['warmups']==5,p
+          assert p['final_identity']=={'surface_count':5,'stored_vertices':312,'indices':1008,'primitives':336},p
+          print(json.dumps(p,indent=2,sort_keys=True))
+          PY
+
       - name: Observe timed post-normal indexing control
         env:
           AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
@@ -132,7 +155,7 @@ jobs:
           cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
           exit "$status"
 
-      - name: Observe direct final-array indexed candidate
+      - name: Observe index-before-normal candidate
         env:
           AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
         run: |
@@ -151,17 +174,19 @@ jobs:
           cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
           exit "$status"
 
-      - name: Verify preparation cost renderer identity and visual tradeoff
+      - name: Verify repeated preparation cost renderer identity and visual tradeoff
         run: |
           set -euo pipefail
           out=evidence/runtime_building_direct_indexed_001
           test -f "$out/control/runtime.json"
           test -f "$out/candidate/runtime.json"
+          test -f "$out/prepare-benchmark.json"
           test "$(find "$out/control/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
           test "$(find "$out/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
           python tools/runtime_building_planar_role_direct_indexed_import_budget.py \
             --control-root "$out/control" \
             --candidate-root "$out/candidate" \
+            --benchmark "$out/prepare-benchmark.json" \
             --exact-head "$(cat exact-head.txt)" \
             --output "$out/report.json"
           cp exact-head.txt "$out/exact-head.txt"
@@ -170,6 +195,7 @@ jobs:
           p=json.load(open('evidence/runtime_building_direct_indexed_001/report.json'))
           assert p['representation']['stored_vertices']==312,p
           assert p['representation']['indices']==1008,p
+          assert p['preparation_benchmark']['paired_trials']==41,p
           assert p['proof_host_renderer_delta_sets_candidate_minus_control']['draw_calls_in_frame']==[0],p
           print(json.dumps(p,indent=2,sort_keys=True))
           PY
@@ -192,6 +218,7 @@ jobs:
           if python tools/runtime_building_planar_role_direct_indexed_import_budget.py \
             --control-root "$out/control" \
             --candidate-root "$out/mutated" \
+            --benchmark "$out/prepare-benchmark.json" \
             --exact-head "$(cat exact-head.txt)" \
             --output "$out/mutated-report.json"; then
             echo "ERROR: verifier accepted mutated final storage identity" >&2
@@ -206,6 +233,8 @@ jobs:
           path: |
             evidence/runtime_building_direct_indexed_001/exact-head.txt
             evidence/runtime_building_direct_indexed_001/report.json
+            evidence/runtime_building_direct_indexed_001/prepare-benchmark.json
+            evidence/runtime_building_direct_indexed_001/prepare-benchmark.log
             evidence/runtime_building_direct_indexed_001/control/runtime.json
             evidence/runtime_building_direct_indexed_001/control/godot.log
             evidence/runtime_building_direct_indexed_001/control/rendered/*.png
