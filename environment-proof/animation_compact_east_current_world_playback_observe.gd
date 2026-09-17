@@ -207,6 +207,7 @@ func _initialize()->void:
     root3d.add_child(camera)
     camera.make_current()
     configure_camera(camera,data,CONTEXT)
+    await settle()
     var weather_update:=fill_weather_width_ribbons(data.get("weather_lines",[]) as Array,camera)
     if weather_update.get("state")!="PASS_SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBONS":
         fail("compact-east Animation could not freeze exact Weather source-width state 00")
