@@ -6,6 +6,9 @@ const SOURCE_INTENT_RECEIVING_SCHEMA := "axm.environment-building-source-intent-
 const SOURCE_INTENT_GEOMETRY_HEAD := "b9b4ab63e23b9756ab79597e86ecc41ea75ea8b7"
 const SOURCE_INTENT_CANDIDATE_ID := "boundary-only-planar-role-source-intent-indexed-001"
 const SOURCE_INTENT_CANDIDATE_SHA256 := "f6a831058de66901fd42704b1d8c1cf187b13a0919ae3719c03c4369f107e6c0"
+const EXPECTED_MAP_PLACEMENT_TRANSLATION := Vector3(0.0, 7.2, 0.0)
+const EXPECTED_MAP_MIN_BOUNDS := Vector3(-3.8, 6.08, 0.0)
+const EXPECTED_MAP_MAX_BOUNDS := Vector3(3.92, 8.2, 3.4)
 
 func _load_source_intent_candidate()->Dictionary:
     if not FileAccess.file_exists(SOURCE_INTENT_INDEXED_PATH):
@@ -61,6 +64,28 @@ func _mesh_diag(mesh:ArrayMesh)->Dictionary:
         "surfaces":surfaces,
     }
 
+func _vec_close(a:Vector3,b:Vector3,eps:float=0.000001)->bool:
+    return a.distance_to(b)<=eps
+
+func _candidate_translated_bounds(vertices:Array,translation:Vector3)->Dictionary:
+    var minimum:=Vector3(INF,INF,INF)
+    var maximum:=Vector3(-INF,-INF,-INF)
+    for vertex_value in vertices:
+        var vertex:=vertex_value as Dictionary
+        var p:=gvec(vertex.get("position",[]) as Array)+translation
+        minimum=Vector3(min(minimum.x,p.x),min(minimum.y,p.y),min(minimum.z,p.z))
+        maximum=Vector3(max(maximum.x,p.x),max(maximum.y,p.y),max(maximum.z,p.z))
+    return {"min":minimum,"max":maximum}
+
+func _parent_bounds(vertices:Array)->Dictionary:
+    var minimum:=Vector3(INF,INF,INF)
+    var maximum:=Vector3(-INF,-INF,-INF)
+    for vertex_value in vertices:
+        var p:=gvec(vertex_value as Array)
+        minimum=Vector3(min(minimum.x,p.x),min(minimum.y,p.y),min(minimum.z,p.z))
+        maximum=Vector3(max(maximum.x,p.x),max(maximum.y,p.y),max(maximum.z,p.z))
+    return {"min":minimum,"max":maximum}
+
 func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
     var proof:=data.get("environment_building_material_receiving",{}) as Dictionary
     if String(proof.get("asset_id",""))!="source:building:service-pavilion-001":
@@ -83,15 +108,34 @@ func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
         fail("planar-role review payload incorrectly claims Environment adoption")
         return {}
 
+    var placement_raw:=receiving.get("placement_translation_source_xyz_m",[]) as Array
+    if placement_raw.size()!=3:
+        fail("planar-role current-world placement translation missing")
+        return {}
+    var placement:=gvec(placement_raw)
+    if not _vec_close(placement,EXPECTED_MAP_PLACEMENT_TRANSLATION):
+        fail("planar-role current-world placement translation drift: %s" % placement)
+        return {}
+
     var candidate:=_load_source_intent_candidate()
     if candidate.is_empty():
         return {}
     var vertices:=candidate.get("vertices",[]) as Array
     var triangles:=candidate.get("triangles",[]) as Array
     var triangle_roles:=candidate.get("triangle_roles",[]) as Array
+    var parent_vertices:=proof.get("vertices_source_xyz_m",[]) as Array
     var parent_surfaces:=proof.get("surfaces",[]) as Array
-    if parent_surfaces.size()!=BUILDING_PLANAR_ROLES.size():
-        fail("expected exact five parent Building material surfaces")
+    if parent_vertices.size()!=672 or parent_surfaces.size()!=BUILDING_PLANAR_ROLES.size():
+        fail("expected exact parent planar-role Building geometry/material payload")
+        return {}
+
+    var translated_bounds:=_candidate_translated_bounds(vertices,placement)
+    var parent_bounds:=_parent_bounds(parent_vertices)
+    if not _vec_close(translated_bounds["min"] as Vector3,parent_bounds["min"] as Vector3) or not _vec_close(translated_bounds["max"] as Vector3,parent_bounds["max"] as Vector3):
+        fail("source-intent candidate translated bounds do not match retained Map receiver bounds")
+        return {}
+    if not _vec_close(translated_bounds["min"] as Vector3,EXPECTED_MAP_MIN_BOUNDS) or not _vec_close(translated_bounds["max"] as Vector3,EXPECTED_MAP_MAX_BOUNDS):
+        fail("source-intent candidate translated bounds drift from exact current-world Building envelope")
         return {}
 
     var surface_by_role:Dictionary={}
@@ -145,7 +189,7 @@ func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
                 fail("source-intent indexed vertex crosses material-role boundary")
                 return {}
             local_index[global_index]=local_index.size()
-            positions.append(gvec(vertex.get("position",[]) as Array))
+            positions.append(gvec(vertex.get("position",[]) as Array)+placement)
             normals.append(gvec(vertex.get("normal",[]) as Array))
         var local_indices:=PackedInt32Array()
         for triangle_index_value in role_triangle_indices:
@@ -185,8 +229,13 @@ func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
             "parent_representation_id":BUILDING_PLANAR_REPRESENTATION_ID,
             "source_owner_equivalence_identity_claimed":true,
             "environment_adoption":false,
+            "placement_translation_source_xyz_m":[placement.x,placement.y,placement.z],
+            "translated_bounds_source_xyz_m":{
+                "min":[(translated_bounds["min"] as Vector3).x,(translated_bounds["min"] as Vector3).y,(translated_bounds["min"] as Vector3).z],
+                "max":[(translated_bounds["max"] as Vector3).x,(translated_bounds["max"] as Vector3).y,(translated_bounds["max"] as Vector3).z],
+            },
             "storage":storage,
-            "truth_boundary":"Exact 604-vertex Geometry source-intent indexed candidate rendered as a current-world Environment review target only. Hard-Surface source semantics, five material roles/scalars, Nature, Object, footprint, Weather, route, cameras and lighting remain outside this receiver construction. Art/QA, Technical-Art transport and Runtime/device acceptance remain separate gates."
+            "truth_boundary":"Exact 604-vertex Geometry source-intent indexed candidate rendered at the exact retained Map placement as a current-world Environment review target only. Hard-Surface source semantics, five material roles/scalars, Nature, Object, footprint, Weather, route, cameras and lighting remain outside this receiver construction. Art/QA, Technical-Art transport and Runtime/device acceptance remain separate gates."
         }
     }
 
@@ -195,5 +244,5 @@ func write_receipt()->void:
     receipt["environment_building_source_intent_indexed_geometry_head"]=SOURCE_INTENT_GEOMETRY_HEAD
     receipt["environment_building_source_intent_indexed_candidate_id"]=SOURCE_INTENT_CANDIDATE_ID
     receipt["environment_building_source_intent_indexed_candidate_sha256"]=SOURCE_INTENT_CANDIDATE_SHA256
-    receipt["environment_building_source_intent_indexed_truth_boundary"]="Exact source-intent indexed Building receiver current-world observation only; no default Environment adoption, visual preference, transport acceptance, target-device performance, CANON or production-readiness implication."
+    receipt["environment_building_source_intent_indexed_truth_boundary"]="Exact source-intent indexed Building receiver at the retained Map placement; current-world observation only. No default Environment adoption, visual preference, transport acceptance, target-device performance, CANON or production-readiness implication."
     super.write_receipt()
