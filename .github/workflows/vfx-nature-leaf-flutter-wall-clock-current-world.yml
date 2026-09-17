@@ -1,0 +1,219 @@
+name: VFX Nature leaf flutter wall-clock current-world evidence
+
+on:
+  push:
+    branches: [studio/vfx-nature-leaf-flutter-wall-clock-current-world-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_WALL_CLOCK_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-wall-clock-current-world.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_WALL_CLOCK_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-wall-clock-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  current-world-wall-clock-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact VFX head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind accepted flutter receiver ancestry
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          printf '%s\n' "$EXPECTED" > exact-head.txt
+          git cat-file -e 7713cbe5863c3bc38dabb6236eb4b393401224b6^{commit}
+          git merge-base --is-ancestor 7713cbe5863c3bc38dabb6236eb4b393401224b6 HEAD
+          grep -F 'EXACT_ENVIRONMENT_PARENT_HEAD := "7713cbe5863c3bc38dabb6236eb4b393401224b6"' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+          grep -F 'EXACT_VFX_EFFECT_HEAD := "ecade64227ba1d3d1faf029ca7188ea63c2560ec"' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+
+      - name: Download exact accepted current-world leaf-flutter receiver evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001/environment-parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Verify and install exact current-world payload
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001
+          parent="$root/environment-parent"
+          test "$(tr -d '\n\r' < "$parent/exact-head.txt")" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test -f "$parent/combined_current_world.json"
+          test -f "$parent/report.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          parent=Path('evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001/environment-parent')
+          report=json.loads((parent/'report.json').read_text())
+          payload=json.loads((parent/'combined_current_world.json').read_text())
+          assert report['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',report
+          assert payload['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',payload
+          assert payload['nature_leaf_flutter_vfx_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',payload
+          assert payload['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',payload
+          assert len(payload['states'])==17,payload
+          assert abs(payload['states'][1]['time_s']-0.03125)<=1e-12,payload
+          assert abs(payload['states'][16]['time_s']-0.5)<=1e-12,payload
+          assert payload['states'][0]['sapling_mesh_digest']==payload['states'][16]['sapling_mesh_digest'],payload
+          print('PASS_EXACT_ACCEPTED_CURRENT_WORLD_FLUTTER_PARENT')
+          PY
+          mkdir -p environment-proof/generated "$root/result"
+          cp "$parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$parent/report.json" "$root/environment-parent-report.json"
+          cp exact-head.txt "$root/exact-head.txt"
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify current-world observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_weather_variant_observe.gd
+          test -f environment-proof/atmosphere_current_world_rebind_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run real current-world wall-clock reference
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001
+          rm -f environment-proof/vfx-nature-leaf-flutter-wall-clock-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd \
+            2>&1 | tee "$root/result/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/vfx-nature-leaf-flutter-wall-clock-runtime.json "$root/result/runtime.json" 2>/dev/null || true
+          exit "$status"
+
+      - name: Validate bounded wall-clock characterization
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001')
+          payload=json.loads((root/'environment-parent'/'combined_current_world.json').read_text())
+          r=json.loads((root/'result'/'runtime.json').read_text())
+          allowed={
+              'PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_WALL_CLOCK_REFERENCE_FULL_SOURCE_COVERAGE',
+              'PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_WALL_CLOCK_REFERENCE_SOURCE_DROPS_OBSERVED',
+          }
+          assert r['state'] in allowed,r
+          assert r['schema']=='axm.vfx-current-world-nature-leaf-flutter-wall-clock-observation/v0.1',r
+          assert r['environment_parent_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',r
+          assert r['vfx_effect_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',r
+          assert r['presentation_mode']=='PHASE_LOCKED_LATEST_DUE_DIRECT_SOURCE_STATE_NO_RETIME',r
+          assert r['weather_policy']=='FIXED_AT_SOURCE_PHASE_00_SOURCE_WIDTH_PRESENTATION',r
+          assert r['source_phase_step_s']==0.03125 and r['source_unique_phase_count']==16,r
+          assert r['source_endpoint_witness_phase']==16 and r['source_cycle_duration_s']==0.5,r
+          assert r['test_cycles_per_context']==3,r
+          assert set(r['contexts'])=={'path_eye','elevated_oblique'},r
+          total_skipped=0
+          for name,c in r['contexts'].items():
+              assert c['scheduled_slot_count']==48,c
+              assert c['presented_slot_count']+c['skipped_slot_count']==48,c
+              assert c['endpoint_witness_phase']==16,c
+              assert c['endpoint_sapling_mesh_digest']==payload['states'][16]['sapling_mesh_digest'],c
+              assert c['fixed_weather_update']['state']=='PASS_SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBONS',c
+              assert c['fixed_weather_update']['maximum_projected_width_residual_px']<=0.05,c
+              assert all(0 <= int(row['source_phase_index']) < 16 for row in c['records']),c
+              assert all(int(row['absolute_slot']) < 48 for row in c['records']),c
+              total_skipped += int(c['skipped_slot_count'])
+          if total_skipped==0:
+              assert r['state'].endswith('FULL_SOURCE_COVERAGE'),r
+          else:
+              assert r['state'].endswith('SOURCE_DROPS_OBSERVED'),r
+          truth=r['truth_flags']
+          assert truth['exact_art_preferred_spatial_response_preserved'] is True,truth
+          assert truth['geometry_materials_environment_and_cameras_reauthored'] is False,truth
+          assert truth['weather_semantics_reauthored'] is False,truth
+          assert truth['weather_held_fixed_during_timing_run'] is True,truth
+          assert truth['direct_source_states_only'] is True,truth
+          assert truth['interpolation_added'] is False and truth['retiming_added'] is False,truth
+          assert truth['monotonic_wall_clock_scheduler_tested'] is True,truth
+          assert truth['render_frame_post_draw_observed'] is True,truth
+          assert truth['display_scanout_timing_proven'] is False,truth
+          assert truth['perceptual_naturalness_or_final_art_acceptance'] is False,truth
+          assert truth['physical_wind_or_biomechanics'] is False,truth
+          assert truth['gameplay_or_collision'] is False,truth
+          assert truth['target_device_performance'] is False,truth
+          summary={
+              'state':r['state'],
+              'contexts':{
+                  name:{
+                      'presented':c['presented_slot_count'],
+                      'skipped':c['skipped_slot_count'],
+                      'selection_lateness_ms':c['selection_lateness_ms'],
+                      'submit_lateness_ms':c['submit_lateness_ms'],
+                      'post_draw_lateness_ms':c['post_draw_lateness_ms'],
+                      'post_draw_interval_ms':c['post_draw_interval_ms'],
+                      'apply_duration_ms':c['apply_duration_ms'],
+                  }
+                  for name,c in r['contexts'].items()
+              }
+          }
+          (root/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Remove downloaded parent payload bulk before upload
+        if: always()
+        run: |
+          rm -rf evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001/environment-parent
+          rm -rf .vfx-width-donor
+
+      - name: Retain exact wall-clock VFX evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-wall-clock-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/vfx_nature_leaf_flutter_wall_clock_current_world_001
+          if-no-files-found: error
+          retention-days: 30
