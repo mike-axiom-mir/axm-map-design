@@ -1,0 +1,182 @@
+name: Animation compact-east current-world low-intrusion presentation evidence
+
+on:
+  push:
+    branches: [studio/animation-compact-east-current-world-playback-001]
+    paths:
+      - "environment-proof/animation_compact_east_current_world_presentation_observe.gd"
+      - "tools/verify_animation_compact_east_current_world_presentation.py"
+      - "docs/ANIMATION_COMPACT_EAST_CURRENT_WORLD_PRESENTATION_001.md"
+      - ".github/workflows/animation-compact-east-current-world-presentation.yml"
+  pull_request:
+    paths:
+      - "environment-proof/animation_compact_east_current_world_presentation_observe.gd"
+      - "tools/verify_animation_compact_east_current_world_presentation.py"
+      - "docs/ANIMATION_COMPACT_EAST_CURRENT_WORLD_PRESENTATION_001.md"
+      - ".github/workflows/animation-compact-east-current-world-presentation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  low-intrusion-presentation-observation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact Animation head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact predecessor and frozen source lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 84a186f087d8d7353cbfb98750f765d21bcc52be^{commit}
+          git merge-base --is-ancestor 84a186f087d8d7353cbfb98750f765d21bcc52be HEAD
+          git cat-file -e 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c^{commit}
+          git merge-base --is-ancestor 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c HEAD
+          python -m py_compile tools/verify_animation_compact_east_current_world_presentation.py
+          grep -F 'EXACT_WALLCLOCK_PREDECESSOR_HEAD := "84a186f087d8d7353cbfb98750f765d21bcc52be"' environment-proof/animation_compact_east_current_world_presentation_observe.gd
+          grep -F 'PRESENTATION_OBSERVATION_SEMANTICS := "FRAME_POST_DRAW_METADATA_ONLY_DURING_TIMED_PLAYBACK__NO_IMAGE_READBACK_OR_DISK_IO_IN_TIMED_LOOP"' environment-proof/animation_compact_east_current_world_presentation_observe.gd
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download exact wall-clock predecessor evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: animation-compact-east-current-world-wallclock-sequence-001-84a186f087d8d7353cbfb98750f765d21bcc52be
+          path: evidence/animation_compact_east_current_world_presentation_001/wallclock-predecessor
+          github-token: ${{ github.token }}
+          run-id: 35259707312
+
+      - name: Verify exact wall-clock predecessor
+        run: |
+          set -euo pipefail
+          predecessor=evidence/animation_compact_east_current_world_presentation_001/wallclock-predecessor
+          test "$(cat "$predecessor/exact-head.txt" | tr -d '\n\r')" = 84a186f087d8d7353cbfb98750f765d21bcc52be
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/animation_compact_east_current_world_presentation_001/wallclock-predecessor/report.json'))
+          assert p['state']=='PASS_COMPACT_EAST_CURRENT_WORLD_REVIEWABLE_WALL_CLOCK_FRAME_SEQUENCE_RETAINED',p.get('state')
+          assert p['visual_motion_naturalness_accepted'] is False,p
+          assert p['display_scanout_accepted'] is False,p
+          print('PASS_EXACT_WALLCLOCK_PREDECESSOR')
+          PY
+
+      - name: Download exact green VFX current-world receiving evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: vfx-compact-east-responsive-current-world-001-29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: evidence/animation_compact_east_current_world_presentation_001/vfx-parent
+          github-token: ${{ github.token }}
+          run-id: 35243081614
+
+      - name: Verify exact VFX receiving prerequisite
+        run: |
+          set -euo pipefail
+          parent=evidence/animation_compact_east_current_world_presentation_001/vfx-parent
+          test "$(cat "$parent/exact-head.txt" | tr -d '\n\r')" = 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/animation_compact_east_current_world_presentation_001/vfx-parent/combined_current_world.json'))
+          r=json.load(open('evidence/animation_compact_east_current_world_presentation_001/vfx-parent/report.json'))
+          assert p['environment_head']=='29ef2d4cc4398b3f26290e4e1f1f10398ca9898c',p.get('environment_head')
+          assert p['compact_east_visual_response_vfx_head']=='cef2ad78d8e36a55ada5dad07329f1a7125d48de',p.get('compact_east_visual_response_vfx_head')
+          assert len(p['states'])==17
+          assert r['state']=='PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_TARGET_HOST',r.get('state')
+          print('PASS_EXACT_VFX_CURRENT_WORLD_PREREQUISITE')
+          PY
+          mkdir -p environment-proof/generated
+          cp "$parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe real playback without image readback in timed loop
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/animation_compact_east_current_world_presentation_001
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/animation-compact-east-current-world-presentation-runtime.json environment-proof/animation-presentation-phase-*.png
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script animation_compact_east_current_world_presentation_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/animation-compact-east-current-world-presentation-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/animation-presentation-phase-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify low-intrusion presentation evidence
+        run: |
+          set -euo pipefail
+          out=evidence/animation_compact_east_current_world_presentation_001
+          python tools/verify_animation_compact_east_current_world_presentation.py \
+            --wallclock-report "$out/wallclock-predecessor/report.json" \
+            --runtime "$out/runtime.json" \
+            --raster-dir "$out/rendered" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/animation_compact_east_current_world_presentation_001/report.json'))
+          allowed={
+            'PASS_COMPACT_EAST_CURRENT_WORLD_LOW_INTRUSION_PRESENTATION_CREST_RETAINED',
+            'HOLD_COMPACT_EAST_CURRENT_WORLD_LOW_INTRUSION_PRESENTATION_CREST_NOT_RETAINED_EVERY_LOOP',
+          }
+          assert p['state'] in allowed,p
+          assert p['observed_complete_loops']==3,p
+          assert p['timed_loop_viewport_image_readbacks']==0,p
+          assert p['timed_loop_disk_writes']==0,p
+          assert p['reconstructed_phase_raster_count']==16,p
+          assert p['negative_control_crest_omission_rejected'] is True,p
+          assert p['visual_motion_naturalness_accepted'] is False,p
+          assert p['display_scanout_accepted'] is False,p
+          assert p['target_device_delivery_accepted'] is False,p
+          assert all(p['checks'].values()),p
+          print(p['state'])
+          print('crest_observed_by_cycle=',p['crest_observed_by_cycle'])
+          print('cycle_durations_s=',p['cycle_durations_s'])
+          print('frame_post_draw_interval_ms=',p['frame_post_draw_interval_min_ms'],p['frame_post_draw_interval_mean_ms'],p['frame_post_draw_interval_max_ms'])
+          PY
+
+      - name: Remove downloaded prerequisites before upload
+        if: always()
+        run: |
+          rm -rf evidence/animation_compact_east_current_world_presentation_001/wallclock-predecessor
+          rm -rf evidence/animation_compact_east_current_world_presentation_001/vfx-parent
+
+      - name: Upload retained low-intrusion presentation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: animation-compact-east-current-world-presentation-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/animation_compact_east_current_world_presentation_001
+          if-no-files-found: error
+          retention-days: 30
