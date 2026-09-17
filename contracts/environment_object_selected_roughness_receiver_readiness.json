@@ -1,0 +1,86 @@
+{
+  "schema": "axm.environment-object-selected-roughness-receiver-readiness/v0.1",
+  "study_id": "environment-object-selected-roughness-receiver-readiness-001",
+  "intent": "Bind the exact Art-preferred Object service_dark roughness field and exact Technical Art transport result to the real current-world Map receiver, then fail closed on adoption because the existing five-surface Environment receiver carries no TEXCOORD_0 identity.",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pr": 24,
+    "branch": "studio/environment-weather-variant-object-convergence-001",
+    "accepted_real_scene_evidence_head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+    "accepted_real_scene_workflow_run": 35174899697,
+    "accepted_real_scene_artifact": "environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6",
+    "current_object_receiver": {
+      "asset_id": "source:object:modular-equipment-case-001",
+      "source_head": "d3fa10a270faae7925811f44f03381fe5c5d0215",
+      "source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a",
+      "materials_head": "c85517446a769e0d5f880fc0e9e32f47124f7b5e",
+      "material_profile_sha256": "dc200229d6c25fa84063aa51f66103abc022efa54b2167e4432a5b47fc40360c",
+      "material_surface_count": 5,
+      "surface_material_ids": [
+        "shell_coating",
+        "service_dark",
+        "hardware_steel",
+        "rubber_guard",
+        "interface_orange"
+      ],
+      "expected_uv0_count_per_surface": [0, 0, 0, 0, 0],
+      "spatial_roughness_field_adopted": false
+    }
+  },
+  "selected_materials_authority": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 6,
+    "head": "0515a2d5ad2c7a1eb545f2b7b327b7367530dfca",
+    "contract_path": "lookdev/service_dark_roughness_selected_field_001.json",
+    "contract_git_blob": "16ab4ea07c41273e58b72f970d6bed383bbbfe33",
+    "material_id": "service_dark",
+    "semantic_encoding": "BASE_LEVEL_R8_SCALAR_VALUES_ROW_MAJOR",
+    "width_px": 512,
+    "height_px": 512,
+    "scalar_r8_sha256": "b8d13c07f9b71278042b0d42d44b84579a3f327c6adf6723cae4c8c8f06dd38e",
+    "r8_min": 153,
+    "r8_max": 183,
+    "unique_r8_values": 31,
+    "art_direction_decision": "PASS_ART_DIRECTION_OBJECT_SERVICE_DARK_BOUNDED_ROUGHNESS_MICROVARIATION_PREFERENCE_024"
+  },
+  "technical_art_transport": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 28,
+    "head": "1bcdbae786e02f3ca46a89e4e0ff608d74f364b4",
+    "accepted_workflow": "Object Technical Art selected roughness semantic UC transport",
+    "accepted_workflow_run": 35207912100,
+    "accepted_artifact": "object-service-dark-selected-roughness-semantic-uc-transport-1bcdbae786e02f3ca46a89e4e0ff608d74f364b4",
+    "accepted_result": "PASS_OBJECT_SERVICE_DARK_SELECTED_ROUGHNESS_SCALAR_TO_CURRENT_UC_TEXTURED_GLB_TO_GODOT_FRONT_VIEWS",
+    "glb_sha256": "9327291569a04bcb22016dc2ac4292499531b141a19e4bfceb291122e20ac3f4",
+    "glb_mesh_count": 2,
+    "glb_primitive_count": 2,
+    "uv_status": "MEASURED",
+    "note": "The separate legacy selected-roughness workflow on the same head is not the accepted authority path; the semantic transport workflow is the repaired exact evidence path."
+  },
+  "decision": {
+    "state": "HOLD_CURRENT_WORLD_OBJECT_SELECTED_ROUGHNESS_RECEIVER__EXACT_UV0_BINDING_NOT_PRESENT",
+    "environment_adoption": false,
+    "why": "The exact selected scalar field and its Technical Art transport are real upstream evidence, but the current Environment five-surface Object receiver emits no TEXCOORD_0 values. A spatial roughness field cannot be truthfully placed on that receiver by scalar identity alone.",
+    "next_receiving_requirement": "Technical Art and Environment must bind an exact UV/triangle correspondence to the current five-surface Map receiver, or prove transform/geometry equivalence for consuming the validated Technical Art transport representation, before any current-world roughness-field render/adoption claim."
+  },
+  "reusable_rule": "SPATIAL_MATERIAL_FIELD_REQUIRES_EXACT_RECEIVER_UV_IDENTITY_BEFORE_CURRENT_WORLD_ADOPTION",
+  "truth_boundary": {
+    "source_geometry_changed": false,
+    "map_object_material_scalars_changed": false,
+    "selected_roughness_field_changed": false,
+    "uvs_authored_by_environment": false,
+    "technical_art_transport_rewritten": false,
+    "runtime_storage_adopted": false,
+    "environment_adoption": false,
+    "art_or_qa_acceptance_inferred": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "ownership": {
+    "object_materials": "selected roughness meaning and scalar identity",
+    "technical_art": "UV/material-channel/GLB transport identity",
+    "environment": "current-world receiving composition, exact receiver binding, rollback and scene evidence",
+    "runtime": "storage representation and target-device performance/adoption",
+    "art_and_visual_qa": "visual preference and independent acceptance"
+  }
+}
