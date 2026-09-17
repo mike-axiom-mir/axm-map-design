@@ -1,0 +1,17 @@
+{
+  "schema": "axm.animation-object-current-world-wallclock/v0.1",
+  "technical_art_parent_head": "d2974dec5043ed9afad346574b23ef8bd4438a76",
+  "technical_art_parent_artifact_id": 10520039600,
+  "technical_art_parent_artifact_sha256": "ed7acb94e1b10d7b8abe50a7b5ee0c79393cfa1e91e33b18dddd91c96eb3cc0b",
+  "animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "sequence_id": "lid-latch-open-hold-close-001",
+  "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
+  "duration_s": 2.5,
+  "sample_rate_hz": 40,
+  "sample_count": 101,
+  "playback_engine": "Godot 4.7.2 AnimationPlayer",
+  "timed_pass": "frame_post_draw metadata only; no viewport readback or disk writes while timing is observed",
+  "review_pass": "second real AnimationPlayer.play() with shaded frame capture; capture timing is instrumentation and is not performance evidence",
+  "reusable_rule": "PROVE_CURRENT_WORLD_OWNER_MOTION_WITH_A_LOW_INTRUSION_WALLCLOCK_PASS_FIRST_THEN_CAPTURE_A_SEPARATE_REAL_PLAYBACK_REVIEW_SEQUENCE_WITHOUT_RETIMING_SOURCE_MOTION",
+  "truth_boundary": "Animation may prove the exact owner clip on the Technical-Art current-world rigid receiver. It does not own receiver construction, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness."
+}
