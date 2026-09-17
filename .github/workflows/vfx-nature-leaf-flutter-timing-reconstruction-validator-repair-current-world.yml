@@ -1,0 +1,146 @@
+name: VFX Nature leaf flutter reconstruction validator repair
+
+on:
+  push:
+    branches: [studio/vfx-nature-leaf-flutter-wall-clock-current-world-001]
+    paths:
+      - ".github/workflows/vfx-nature-leaf-flutter-timing-reconstruction-validator-repair-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate-retained-reconstruction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact VFX head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Bind retained failed-run lineage
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.sha }}"
+          git cat-file -e 05ca6fbc93e9aa8f130d3d7066975bcdf6940f86^{commit}
+          git merge-base --is-ancestor 05ca6fbc93e9aa8f130d3d7066975bcdf6940f86 HEAD
+          printf '%s\n' "${{ github.sha }}" > exact-head.txt
+
+      - name: Download exact retained real-Godot reconstruction artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-timing-reconstruction-001-05ca6fbc93e9aa8f130d3d7066975bcdf6940f86
+          path: retained
+          github-token: ${{ github.token }}
+          run-id: 35195889303
+
+      - name: Validate retained telemetry-bound reconstruction fail-closed
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path('retained')
+          manifest = json.loads((root / 'reconstruction-manifest.json').read_text())
+          summary = json.loads((root / 'summary.json').read_text())
+
+          assert manifest['schema'] == 'axm.vfx-current-world-nature-leaf-flutter-telemetry-bound-reconstruction/v0.1', manifest
+          assert manifest['state'] == 'PASS_TELEMETRY_BOUND_CLEAN_PRESENTATION_STATE_RECONSTRUCTION', manifest
+          assert manifest['exact_vfx_head'] == '05ca6fbc93e9aa8f130d3d7066975bcdf6940f86', manifest
+          assert manifest['accepted_receiver_head'] == '7713cbe5863c3bc38dabb6236eb4b393401224b6', manifest
+          assert manifest['nature_vfx_effect_head'] == 'ecade64227ba1d3d1faf029ca7188ea63c2560ec', manifest
+          assert manifest['clean_timing_head'] == '795d9e8862e895e506c756b9ea01cd6228fa7ab7', manifest
+          assert manifest['clean_timing_workflow'] == 35179504496, manifest
+          assert manifest['clean_presentation_mode'] == 'PHASE_LOCKED_LATEST_DUE_DIRECT_SOURCE_STATE_NO_RETIME', manifest
+          assert manifest['scheduled_slots'] == 96 and manifest['presented_slots'] == 92, manifest
+          assert manifest['direct_live_capture_of_clean_stream'] is False, manifest
+          assert manifest['static_images_real_godot'] is True, manifest
+          assert manifest['interpolation_added'] is False, manifest
+          assert manifest['source_retimed'] is False, manifest
+          assert manifest['video_encoder_is_timing_authority'] is False, manifest
+          assert manifest['wrong_phase_identity_negative_control'] == 'PASS_REJECTED_WRONG_PHASE_DIGEST_BINDING', manifest
+
+          expected = {
+              'path_eye': {'presented': 47, 'skipped': [19]},
+              'elevated_oblique': {'presented': 45, 'skipped': [11, 23, 38]},
+          }
+          png_paths = set()
+          for context, exp in expected.items():
+              ctx = manifest['contexts'][context]
+              assert ctx['presented_slots'] == exp['presented'], (context, ctx)
+              assert ctx['skipped_slots'] == exp['skipped'], (context, ctx)
+              events = ctx['events']
+              assert events[0]['event'] == 'pre_timer_neutral_already_established', events[0]
+              assert events[-1]['event'] == 'post_window_endpoint_witness', events[-1]
+              assert events[0]['source_phase_index'] == 0, events[0]
+              assert events[-1]['source_phase_index'] == 16, events[-1]
+              assert all(events[i + 1]['time_ms'] > events[i]['time_ms'] for i in range(len(events) - 1)), context
+              assert events[0]['png_sha256'] == events[-1]['png_sha256'], context
+
+              for event in events:
+                  path = root / event['png']
+                  assert path.is_file(), path
+                  digest = hashlib.sha256(path.read_bytes()).hexdigest()
+                  assert digest == event['png_sha256'], (context, event['source_phase_index'], digest, event['png_sha256'])
+                  png_paths.add(path)
+
+              duration_text = (root / f'review-{context}-duration.txt').read_text().strip()
+              # ffprobe default=noprint_wrappers=1 emits `duration=<seconds>`.
+              # The original exact-head validator incorrectly passed that whole string to float().
+              if '=' in duration_text:
+                  key, duration_text = duration_text.split('=', 1)
+                  assert key == 'duration', key
+              duration = float(duration_text)
+              endpoint = ctx['clean_endpoint_post_draw_offset_ms'] / 1000.0
+              assert duration >= endpoint, (context, duration, endpoint)
+              review = root / f'review-{context}.mkv'
+              assert review.is_file() and review.stat().st_size > 0, review
+
+          assert len(png_paths) == 34, len(png_paths)
+          assert summary['state'] == manifest['state'], summary
+          assert summary['clean_presented'] == '92/96', summary
+          assert summary['path_eye_presented'] == '47/48', summary
+          assert summary['elevated_oblique_presented'] == '45/48', summary
+          assert summary['fixed_weather_static_pngs'] == 34, summary
+          assert summary['neutral_endpoint_png_identity'] is True, summary
+          assert summary['wrong_phase_negative_control'] == 'PASS_REJECTED_WRONG_PHASE_DIGEST_BINDING', summary
+
+          receipt = {
+              'schema': 'axm.vfx-reconstruction-validator-repair-receipt/v0.1',
+              'state': 'PASS_RETAINED_REAL_GODOT_TELEMETRY_BOUND_RECONSTRUCTION_AFTER_VALIDATOR_PARSER_REPAIR',
+              'retained_run': 35195889303,
+              'retained_exact_vfx_head': '05ca6fbc93e9aa8f130d3d7066975bcdf6940f86',
+              'validator_repair_head': Path('exact-head.txt').read_text().strip(),
+              'failure_class_repaired': 'FFPROBE_DURATION_KEY_VALUE_PARSE_ONLY',
+              'effect_or_timing_semantics_changed': False,
+              'real_godot_static_pngs_verified': 34,
+              'clean_timing_events_rebound': 92,
+              'clean_scheduled_slots': 96,
+              'direct_live_capture_of_clean_stream': False,
+              'interpolation_added': False,
+              'source_retimed': False,
+              'wrong_phase_negative_control': manifest['wrong_phase_identity_negative_control'],
+              'review_duration_seconds': {
+                  c: float((root / f'review-{c}-duration.txt').read_text().strip().split('=', 1)[-1])
+                  for c in expected
+              },
+          }
+          Path('validator-repair-receipt.json').write_text(json.dumps(receipt, indent=2, sort_keys=True) + '\n')
+          print(json.dumps(receipt, indent=2, sort_keys=True))
+          PY
+
+      - name: Retain validator repair receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-reconstruction-validator-repair-${{ github.sha }}
+          path: |
+            exact-head.txt
+            validator-repair-receipt.json
+          if-no-files-found: error
+          retention-days: 30
