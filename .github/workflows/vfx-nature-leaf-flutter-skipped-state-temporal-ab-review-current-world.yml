@@ -112,7 +112,7 @@ jobs:
               'parent_clean_presented_total':92,
               'parent_clean_scheduled_total':96,
               'timing_authority':'RETAINED_CLEAN_FRAME_POST_DRAW_TELEMETRY_ONLY',
-              'comparison_raster_hz':240,
+              'comparison_raster_hz':64,
               'comparison_raster_semantics':'REVIEW_ONLY_FRAME_DUPLICATION_OR_DROP_NO_MOTION_INTERPOLATION',
               'native_media_is_timing_authority':False,
               'slow_media_is_timing_authority':False,
@@ -152,11 +152,11 @@ jobs:
             native="$out/media/$stem-native.mkv"
             slow="$out/media/$stem-slow4x.mkv"
             test -s "$clean" && test -s "$ideal"
-            ffmpeg -hide_banner -loglevel error -y -i "$clean" -i "$ideal" \
-              -filter_complex "[0:v]trim=start=$start:duration=$dur,setpts=PTS-STARTPTS,fps=240,tpad=stop_mode=clone:stop_duration=0.05,trim=duration=$dur[left];[1:v]trim=start=$start:duration=$dur,setpts=PTS-STARTPTS,fps=240,tpad=stop_mode=clone:stop_duration=0.05,trim=duration=$dur[right];[left][right]hstack=inputs=2[v]" \
-              -map '[v]' -an -c:v ffv1 -level 3 -pix_fmt bgr0 "$native"
+            ffmpeg -hide_banner -loglevel error -y -filter_complex_threads 1 -i "$clean" -i "$ideal" \
+              -filter_complex "[0:v]trim=start=$start:duration=$dur,setpts=PTS-STARTPTS,fps=64,tpad=stop_mode=clone:stop_duration=0.05,trim=duration=$dur[left];[1:v]trim=start=$start:duration=$dur,setpts=PTS-STARTPTS,fps=64,tpad=stop_mode=clone:stop_duration=0.05,trim=duration=$dur[right];[left][right]hstack=inputs=2[v]" \
+              -map '[v]' -an -c:v ffv1 -level 3 -pix_fmt bgr0 -threads 1 "$native"
             ffmpeg -hide_banner -loglevel error -y -i "$native" \
-              -vf 'setpts=4*PTS' -an -c:v ffv1 -level 3 -pix_fmt bgr0 "$slow"
+              -vf 'settb=AVTB,setpts=4*PTS' -fps_mode vfr -an -c:v ffv1 -level 3 -pix_fmt bgr0 -threads 1 "$slow"
             ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$native" > "$native.duration.txt"
             ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$slow" > "$slow.duration.txt"
             ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$native" > "$native.size.txt"
@@ -174,6 +174,15 @@ jobs:
           out=Path('evidence/vfx_nature_leaf_flutter_skip_temporal_ab_review_001/review')
           report=json.loads((out/'temporal-ab-manifest.json').read_text())
           expected={('path_eye',19):3,('elevated_oblique',11):11,('elevated_oblique',23):7,('elevated_oblique',38):6}
+          assert report['comparison_raster_hz']==64,report
+          assert report['source_interpolation_added'] is False,report
+          assert report['source_retimed'] is False,report
+          assert report['source_amplitude_modified'] is False,report
+          assert report['clean_stream_direct_live_capture'] is False,report
+          assert report['ideal_schedule_observed_runtime'] is False,report
+          assert report['final_perceptual_acceptance_claimed'] is False,report
+          assert report['gameplay_or_physics_claimed'] is False,report
+          assert report['target_device_performance_claimed'] is False,report
           assert len(report['windows'])==4
           for w in report['windows']:
               key=(w['context'],w['skipped_slot'])
@@ -199,12 +208,13 @@ jobs:
           (out/'temporal-ab-manifest.json').write_text(json.dumps(report,indent=2)+'\n')
           options=''.join(f'<option value="{i}">{w["context"]} slot {w["skipped_slot"]} / phase {w["skipped_phase"]}</option>' for i,w in enumerate(report['windows']))
           payload=json.dumps(report,separators=(',',':')).replace('</','<\\/')
-          html=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXM Nature skipped-state temporal A/B</title><style>body{{font-family:system-ui;background:#111;color:#eee;margin:18px}}video{{width:100%;max-width:1100px;background:#000}}.truth{{border:1px solid #666;padding:10px;border-radius:8px;margin:10px 0}}select{{font:inherit;margin-right:8px}}</style></head><body><h1>Nature leaf flutter — skipped-state temporal A/B</h1><div class="truth">Review media only. Left = clean cadence-aligned reconstruction from retained measured telemetry. Right = unobserved ideal 31.25 ms source schedule. 4× slow multiplies review time only. The 240 Hz comparison raster duplicates/holds frames; it is not timing authority and adds no motion interpolation.</div><select id="w">{options}</select><select id="s"><option value="native">native</option><option value="slow4x">4× slow diagnostic</option></select><br><video id="v" controls loop muted autoplay></video><pre id="m"></pre><script>const D={payload},W=document.getElementById('w'),S=document.getElementById('s'),V=document.getElementById('v'),M=document.getElementById('m');function r(){{const x=D.windows[+W.value],k=S.value;V.src=k==='native'?x.native_media:x.slow4x_media;M.textContent=JSON.stringify(x,null,2);V.play().catch(()=>{{}})}}W.onchange=r;S.onchange=r;r();</script></body></html>'''
+          html=f'''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AXM Nature skipped-state temporal A/B</title><style>body{{font-family:system-ui;background:#111;color:#eee;margin:18px}}video{{width:100%;max-width:1100px;background:#000}}.truth{{border:1px solid #666;padding:10px;border-radius:8px;margin:10px 0}}select{{font:inherit;margin-right:8px}}</style></head><body><h1>Nature leaf flutter — skipped-state temporal A/B</h1><div class="truth">Review media only. Left = clean cadence-aligned reconstruction from retained measured telemetry. Right = unobserved ideal 31.25 ms source schedule. 4× slow multiplies review time only. The 64 Hz comparison raster duplicates/holds frames; it is not timing authority and adds no motion interpolation.</div><select id="w">{options}</select><select id="s"><option value="native">native</option><option value="slow4x">4× slow diagnostic</option></select><br><video id="v" controls loop muted autoplay></video><pre id="m"></pre><script>const D={payload},W=document.getElementById('w'),S=document.getElementById('s'),V=document.getElementById('v'),M=document.getElementById('m');function r(){{const x=D.windows[+W.value],k=S.value;V.src=k==='native'?x.native_media:x.slow4x_media;M.textContent=JSON.stringify(x,null,2);V.play().catch(()=>{{}})}}W.onchange=r;S.onchange=r;r();</script></body></html>'''
           (out/'review.html').write_text(html)
           summary={
               'state':report['state'],
               'window_count':len(report['windows']),
               'media_files':8,
+              'comparison_raster_hz':report['comparison_raster_hz'],
               'windows':[{k:w[k] for k in ('context','skipped_slot','skipped_phase','review_start_s','review_duration_s','native_duration_s','slow4x_duration_s')} for w in report['windows']],
           }
           (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')

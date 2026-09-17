@@ -19,7 +19,7 @@ For each exact clean skip, this review:
 - takes the comparison side from the same exact real-Godot source-state images on the authored `31.25 ms` ideal schedule;
 - creates a native-speed side-by-side lossless FFV1 clip with **clean on the left / ideal on the right**;
 - creates a clearly labeled `4x` slow diagnostic copy by multiplying review playback time only;
-- uses a 240 Hz review raster clock only to place the two VFR review streams on one comparison surface; this convenience raster clock is not timing authority and performs no motion interpolation;
+- uses a 64 Hz review raster clock only to place the two VFR review streams on one comparison surface. `64 Hz` was chosen because the authored `31.25 ms` step is exactly two review frames; this convenience raster clock is not timing authority and performs no motion interpolation;
 - retains the exact skip identity and source lineage in a machine-readable manifest.
 
 The four windows remain:
@@ -33,7 +33,7 @@ Each window begins three authored slots before the skip and spans seven source-s
 
 ## Truth boundary
 
-The retained clean JSON telemetry remains timing authority. The new side-by-side clips are **review media only**. The ideal side is an unobserved authored schedule reference, not runtime evidence. The `4x` slow media retimes review playback only and must not be described as source timing. The 240 Hz comparison raster duplicates/holds exact input frames to share a review clock; it does not create synthetic in-between states.
+The retained clean JSON telemetry remains timing authority. The new side-by-side clips are **review media only**. The ideal side is an unobserved authored schedule reference, not runtime evidence. The `4x` slow media retimes review playback only and must not be described as source timing. The 64 Hz comparison raster duplicates/holds exact input frames to share a review clock; it does not create synthetic in-between states.
 
 No interpolation, source amplitude change, source retiming, Weather change, camera change, material change, geometry change, gameplay behavior or physics behavior is introduced.
 
