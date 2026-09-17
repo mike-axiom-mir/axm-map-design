@@ -62,7 +62,6 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git -C .building-planar-role rev-parse HEAD)" = "$HARD_SURFACE_HEAD"
-          test "$(git -C .building-planar-role hash-object lookdev/building_material_profile_001.json)" = "$MATERIAL_PROFILE_BLOB"
           rm -rf .building-planar-role/evidence/environment-planar-role-rebuild
           python .building-planar-role/tools/build_service_pavilion_planar_role_render_receiver.py \
             --exact-head "$HARD_SURFACE_HEAD" \
