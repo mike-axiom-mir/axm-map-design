@@ -1,0 +1,19 @@
+{
+  "schema": "axm.animation-object-current-world-wallclock/v0.2",
+  "technical_art_parent_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
+  "technical_art_parent_artifact_id": 10521663924,
+  "technical_art_parent_artifact_sha256": "2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24",
+  "predecessor_animation_evidence_head": "c2695f654f9dd44312ca5d205eceb27f7c2680ee",
+  "animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "sequence_id": "lid-latch-open-hold-close-001",
+  "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
+  "duration_s": 2.5,
+  "sample_rate_hz": 40,
+  "sample_count": 101,
+  "playback_engine": "Godot 4.7.2 AnimationPlayer",
+  "timed_pass": "frame_post_draw metadata only; no viewport readback or disk writes while timing is observed",
+  "review_pass": "second real AnimationPlayer.play() with shaded frame capture; capture timing is instrumentation and is not performance evidence",
+  "reusable_rule": "REPLAY_FROZEN_OWNER_MOTION_ON_EACH_VERIFIED_TECHNICAL_ART_RECEIVER_SUCCESSOR__DO_NOT_TRANSFER_WALLCLOCK_ACCEPTANCE_BY_ANCESTRY__MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN",
+  "frame_boundary": "Technical Art already owns and verifies source-to-host coordinate/angle adaptation in the receiver plan. Animation observes the actual host pivot quaternion around that exact host axis and compares it to the adapted receiver target; it does not apply a second source-to-host sign conversion or assume source Euler X equals host Euler X.",
+  "truth_boundary": "Animation may replay and characterize the exact owner clip on the exact Technical-Art current-world receiver successor. It does not own receiver construction or frame conversion, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness."
+}
