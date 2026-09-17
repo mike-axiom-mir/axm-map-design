@@ -1,0 +1,90 @@
+name: VFX compact-east current-world effect readability review
+
+on:
+  push:
+    branches: [studio/vfx-compact-east-responsive-current-world-001]
+    paths:
+      - "tools/environment_compact_east_effect_readability_review.py"
+      - "docs/VFX_COMPACT_EAST_EFFECT_READABILITY_REVIEW_001.md"
+      - ".github/workflows/vfx-compact-east-effect-readability-review.yml"
+  pull_request:
+    paths:
+      - "tools/environment_compact_east_effect_readability_review.py"
+      - "docs/VFX_COMPACT_EAST_EFFECT_READABILITY_REVIEW_001.md"
+      - ".github/workflows/vfx-compact-east-effect-readability-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-retained-effect-readability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact review head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Bind review source
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > review-head.txt
+          python -m py_compile tools/environment_compact_east_effect_readability_review.py
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install review dependency
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Download exact accepted parent Godot evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: .review-parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Download exact green compact-east Godot evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: vfx-compact-east-responsive-current-world-001-29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .review-candidate
+          github-token: ${{ github.token }}
+          run-id: 35243081614
+
+      - name: Build fail-closed effect readability review
+        run: |
+          set -euo pipefail
+          out=evidence/vfx_compact_east_effect_readability_review_001
+          rm -rf "$out"
+          python tools/environment_compact_east_effect_readability_review.py \
+            --parent-root .review-parent \
+            --candidate-root .review-candidate \
+            --output "$out"
+          cp review-head.txt "$out/review-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/vfx_compact_east_effect_readability_review_001/report.json'))
+          assert p['state']=='PASS_COMPACT_EAST_CURRENT_WORLD_PARENT_ISOLATED_EFFECT_READABILITY_REVIEW',p
+          assert p['parent_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',p
+          assert p['candidate_head']=='29ef2d4cc4398b3f26290e4e1f1f10398ca9898c',p
+          assert p['observing_context']=='elevated_oblique',p
+          assert p['non_observing_context']=='path_eye',p
+          assert p['observed_receiver_union_bbox_xyxy']==[594,287,940,672],p
+          assert all(p['checks'].values()),p
+          print(json.dumps(p,indent=2))
+          PY
+
+      - name: Upload retained review surface
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-compact-east-effect-readability-review-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/vfx_compact_east_effect_readability_review_001
+          if-no-files-found: error
+          retention-days: 30
