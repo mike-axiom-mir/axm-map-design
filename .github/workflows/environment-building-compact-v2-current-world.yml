@@ -1,0 +1,275 @@
+name: Environment Building compact-v2 current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_building_compact_v2_current_world.py"
+      - "environment-proof/atmosphere_current_world_building_compact_v2_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_COMPACT_V2_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-compact-v2-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_building_compact_v2_current_world.py"
+      - "environment-proof/atmosphere_current_world_building_compact_v2_observe.gd"
+      - "docs/ENVIRONMENT_BUILDING_COMPACT_V2_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-building-compact-v2-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-building-compact-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      PARENT_HEAD: 7713cbe5863c3bc38dabb6236eb4b393401224b6
+      GEOMETRY_HEAD: 16253e7dd2f8cd590667f9631e4b50fdfcc7280d
+      HARD_SURFACE_HEAD: 35d0ba62d7e534b3cd00ac69e99386843ffa3f2e
+      MATERIALS_HEAD: 4179aa1401f5a9114399e2f998c96809d4b8ed2e
+    steps:
+      - name: Checkout exact Environment head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact current-world parent and verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$PARENT_HEAD^{commit}"
+          git merge-base --is-ancestor "$PARENT_HEAD" HEAD
+          python -m py_compile tools/environment_building_compact_v2_current_world.py
+          grep -F 'BUILDING_COMPACT_REPRESENTATION_ID := "boundary-only-union-shell-conforming-compact-v2-001"' environment-proof/atmosphere_current_world_building_compact_v2_observe.gd
+
+      - name: Checkout exact Building Geometry compact-v2 donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.GEOMETRY_HEAD }}
+          path: .building-geometry
+          fetch-depth: 1
+
+      - name: Checkout exact Building Hard-Surface owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.HARD_SURFACE_HEAD }}
+          path: .building-owner
+          fetch-depth: 1
+
+      - name: Checkout exact Building Materials donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.MATERIALS_HEAD }}
+          path: .building-materials
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify exact Building donor heads
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-geometry rev-parse HEAD)" = "$GEOMETRY_HEAD"
+          test "$(git -C .building-owner rev-parse HEAD)" = "$HARD_SURFACE_HEAD"
+          test "$(git -C .building-materials rev-parse HEAD)" = "$MATERIALS_HEAD"
+
+      - name: Rebuild exact Building reference and compact-v2 Geometry evidence
+        run: |
+          set -euo pipefail
+          rm -rf \
+            .building-geometry/evidence/service-pavilion-boundary-shell-001 \
+            .building-geometry/evidence/service-pavilion-boundary-shell-compaction-v2-001
+          python .building-geometry/tools/build_service_pavilion_union_shell_candidate.py \
+            --exact-head "$GEOMETRY_HEAD" \
+            --output-dir .building-geometry/evidence/service-pavilion-boundary-shell-001
+          python .building-geometry/tools/build_service_pavilion_boundary_shell_compaction_v2.py \
+            --exact-head "$GEOMETRY_HEAD" \
+            --output-dir .building-geometry/evidence/service-pavilion-boundary-shell-compaction-v2-001
+
+      - name: Rebuild exact Building Materials compact-v2 packet
+        run: |
+          set -euo pipefail
+          rm -rf .building-material-packet
+          python .building-materials/tools/build_building_material_boundary_shell_compact_v2_evidence.py \
+            --geometry-root .building-geometry \
+            --owner-root .building-owner \
+            --exact-head "$MATERIALS_HEAD" \
+            --out .building-material-packet
+          python - <<'PY'
+          import json
+          p=json.load(open('.building-material-packet/payload.json'))
+          r=json.load(open('.building-material-packet/build_receipt.json'))
+          assert r['result']=='PASS_BUILDING_COMPACT_V2_SOURCE_OWNER_MATERIAL_REBIND_PACKET',r
+          assert p['exact_materials_head']=='4179aa1401f5a9114399e2f998c96809d4b8ed2e',p
+          assert p['geometry_donor_head']=='16253e7dd2f8cd590667f9631e4b50fdfcc7280d',p
+          assert p['hard_surface_owner_head']=='35d0ba62d7e534b3cd00ac69e99386843ffa3f2e',p
+          assert p['semantic_source_variant_id']=='header-segmented-23',p
+          assert p['selected_representation_id']=='boundary-only-union-shell-conforming-compact-v2-001',p
+          assert p['compact_stats']['vertex_count']==1004 and p['compact_stats']['triangle_count']==2052,p
+          assert p['compact_stats']['source_component_owner_count']==19,p
+          assert p['normal_policy']=='EXPLICIT_PER_TRIANGLE_PLANE_NORMAL__NO_VERTEX_SMOOTHING__HARD_SURFACE_REVIEW',p
+          assert p['truth_boundary']['environment_adoption'] is False,p
+          print('PASS_EXACT_BUILDING_COMPACT_V2_MATERIAL_PACKET_REBUILD')
+          PY
+
+      - name: Download exact Nature-flutter current-world parent evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/environment_building_compact_v2_current_world_001/parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Verify exact current-world parent identity
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_compact_v2_current_world_001
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = "$PARENT_HEAD"
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/parent/report.json"
+          test -f "$out/parent/candidate/runtime.json"
+          test -d "$out/parent/candidate/rendered"
+          test "$(find "$out/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_compact_v2_current_world_001/parent/combined_current_world.json'))
+          r=json.load(open('evidence/environment_building_compact_v2_current_world_001/parent/report.json'))
+          assert p['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',p
+          assert p['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',p
+          assert r['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',r
+          assert r['matched_frames']==68 and r['weather_width_measurements']==1224,r
+          assert all(r['checks'].values()),r
+          print('PASS_EXACT_NATURE_FLUTTER_CURRENT_WORLD_PARENT')
+          PY
+
+      - name: Build exact current-world Building compact-v2 receiving payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_compact_v2_current_world_001
+          mkdir -p environment-proof/generated "$out"
+          python tools/environment_building_compact_v2_current_world.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --material-payload .building-material-packet/payload.json \
+            --material-receipt .building-material-packet/build_receipt.json \
+            --environment-head "$(cat exact-head.txt)" \
+            --output environment-proof/generated/current_world_nature_winding_migration.json
+          cp environment-proof/generated/current_world_nature_winding_migration.json "$out/combined_current_world.json"
+          cp .building-material-packet/payload.json "$out/building-compact-v2-material-payload.json"
+          cp .building-material-packet/build_receipt.json "$out/building-compact-v2-material-receipt.json"
+          cp .building-owner/assets/service_pavilion_001_compact_boundary_shell_policy.json "$out/building-compact-v2-owner-policy.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('environment-proof/generated/current_world_nature_winding_migration.json'))
+          assert p['building_compact_v2_structure_result']=='PASS_CURRENT_WORLD_BUILDING_COMPACT_V2_STRUCTURE',p
+          assert p['building_compact_v2_selected_representation_id']=='boundary-only-union-shell-conforming-compact-v2-001',p
+          assert p['building_compact_v2_semantic_source_variant_id']=='header-segmented-23',p
+          assert p['building_compact_v2_material_triangle_counts']=={
+              'frame_galvanized':1164,'infill_coating':88,'roof_membrane':388,'slab_mineral':388,'utility_panel_ochre':24
+          },p
+          assert len(p['states'])==17 and all(p['checks'].values()),p
+          print('PASS_CURRENT_WORLD_BUILDING_COMPACT_V2_STRUCTURE')
+          PY
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify inherited observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_compact_v2_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow numpy
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact current world with Building compact-v2 receiver
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_compact_v2_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_compact_v2_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact multi-asset Building compact-v2 receiving result
+        run: |
+          set -euo pipefail
+          out=evidence/environment_building_compact_v2_current_world_001
+          python tools/environment_building_compact_v2_current_world.py verify \
+            --payload "$out/combined_current_world.json" \
+            --parent-root "$out/parent/candidate" \
+            --candidate-root "$out/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_compact_v2_current_world_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_BUILDING_COMPACT_V2_BOUNDED_CONTINUITY_REVIEW_READY',p
+          assert p['matched_frames']==68,p
+          assert p['weather_width_measurements']==1224,p
+          assert p['maximum_weather_width_residual_px'] <= 0.05,p
+          assert p['maximum_significant_changed_fraction_gt_1_lsb'] <= 0.001,p
+          assert all(p['checks'].values()),p
+          print(json.dumps(p,indent=2))
+          PY
+
+      - name: Remove downloaded parent and bulky donors before upload
+        if: always()
+        run: |
+          rm -rf evidence/environment_building_compact_v2_current_world_001/parent
+          rm -rf .building-geometry .building-owner .building-materials .building-material-packet .vfx-width-donor
+
+      - name: Upload retained Environment Building compact-v2 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-compact-v2-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_building_compact_v2_current_world_001
+          if-no-files-found: error
+          retention-days: 30
