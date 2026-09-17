@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import environment_nature_leaf_flutter_current_world as parent_tool
+import environment_nature_split_surface_culling_current_world as surface_tool
 
 PARENT_HEAD = "7713cbe5863c3bc38dabb6236eb4b393401224b6"
 PARENT_STRUCTURE_RESULT = "PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE"
@@ -135,7 +136,7 @@ def build(parent: dict[str, Any], source_root: Path, environment_head: str) -> d
     neutral = load_json(source_root / "phase_00_mesh.json")
     if len(neutral.get("vertices", [])) != VERTICES or len(neutral.get("triangles", [])) != TRIANGLES:
         raise ValueError("compact-east neutral topology count drift")
-    if parent_tool.digest(neutral) != EXPECTED_NEUTRAL_DIGEST:
+    if surface_tool.digest(neutral) != EXPECTED_NEUTRAL_DIGEST:
         raise ValueError("compact-east neutral mesh digest drift")
 
     out_states: list[dict[str, Any]] = []
@@ -159,7 +160,7 @@ def build(parent: dict[str, Any], source_root: Path, environment_head: str) -> d
             raise ValueError(f"compact-east phase topology count drift at {index}")
         if phase.get("triangles") != neutral.get("triangles") or phase.get("regions") != neutral.get("regions"):
             raise ValueError(f"compact-east phase topology/region identity drift at {index}")
-        phase_digest = parent_tool.digest(phase)
+        phase_digest = surface_tool.digest(phase)
         phase_mesh_digests.append(phase_digest)
 
         row = copy.deepcopy(parent_row)
@@ -212,7 +213,7 @@ def build(parent: dict[str, Any], source_root: Path, environment_head: str) -> d
             "weather_semantics": EXPECTED_WEATHER_SEMANTICS,
             "authority": "MAP_RECEIVING_COMPOSITION_ONLY",
         }
-        scene["scene_digest"] = parent_tool.scene_digest(scene)
+        scene["scene_digest"] = surface_tool.scene_digest(scene)
 
         restored = copy.deepcopy(scene)
         restored_source = _compact(restored)
@@ -279,7 +280,7 @@ def build(parent: dict[str, Any], source_root: Path, environment_head: str) -> d
             "CANON_OR_PRODUCTION_READINESS",
         ],
     })
-    result["composition_digest"] = parent_tool.digest({
+    result["composition_digest"] = surface_tool.digest({
         "parent": parent.get("composition_digest"),
         "compact_east_vfx_head": NATURE_VFX_HEAD,
         "phase_mesh_digests": phase_mesh_digests,
