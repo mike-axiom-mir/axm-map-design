@@ -1,0 +1,238 @@
+name: Environment Nature leaf flutter current-world evidence
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "tools/environment_nature_leaf_flutter_current_world.py"
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd"
+      - "docs/ENVIRONMENT_NATURE_LEAF_FLUTTER_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-nature-leaf-flutter-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_leaf_flutter_current_world.py"
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd"
+      - "docs/ENVIRONMENT_NATURE_LEAF_FLUTTER_CURRENT_WORLD_001.md"
+      - ".github/workflows/environment-nature-leaf-flutter-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-nature-leaf-flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout exact Environment head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact current-world parent and verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 10c6e29790b0b53b20abd603738cb54671af013c^{commit}
+          git merge-base --is-ancestor 10c6e29790b0b53b20abd603738cb54671af013c HEAD
+          python -m py_compile tools/environment_nature_leaf_flutter_current_world.py
+          grep -F 'NATURE_LEAF_FLUTTER_VFX_HEAD := "ecade64227ba1d3d1faf029ca7188ea63c2560ec"' environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+
+      - name: Checkout exact Nature VFX owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: ecade64227ba1d3d1faf029ca7188ea63c2560ec
+          path: .nature-vfx
+          fetch-depth: 1
+
+      - name: Checkout exact Geometry leaf context donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-nature-design
+          ref: da3adbef4de8cddb8f3ebe841d39bb31a8936f5f
+          path: .geometry-leaf
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Rebuild exact bounded Nature VFX flutter source
+        run: |
+          set -euo pipefail
+          test "$(git -C .nature-vfx rev-parse HEAD)" = ecade64227ba1d3d1faf029ca7188ea63c2560ec
+          test "$(git -C .geometry-leaf rev-parse HEAD)" = da3adbef4de8cddb8f3ebe841d39bb31a8936f5f
+          rm -rf evidence/environment_nature_leaf_flutter_current_world_001 .leaf-geometry-evidence .leaf-flutter-evidence
+          mkdir -p evidence/environment_nature_leaf_flutter_current_world_001
+          python .geometry-leaf/tools/build_leaf_backface_candidate_evidence.py .leaf-geometry-evidence
+          git -C .geometry-leaf rev-parse HEAD > .leaf-geometry-evidence/exact-head.txt
+          python .nature-vfx/tools/build_sapling_leaf_flutter_candidate.py .leaf-geometry-evidence .leaf-flutter-evidence
+          git -C .nature-vfx rev-parse HEAD > .leaf-flutter-evidence/exact-head.txt
+          python - <<'PY'
+          import json
+          s=json.load(open('.leaf-flutter-evidence/leaf-flutter-summary.json'))
+          assert s['state']=='PASS_BOUNDED_DETERMINISTIC_LEAF_FLUTTER_SOURCE_CANDIDATE',s
+          assert s['geometry_leaf_head']=='da3adbef4de8cddb8f3ebe841d39bb31a8936f5f',s
+          assert s['front_vertices']==390 and s['front_triangles']==570,s
+          assert len(s['samples'])==17,s
+          assert s['max_observed_flutter_vertex_delta_m'] <= 0.0085 + 1e-12,s
+          assert s['max_observed_non_leaf_vertex_delta_m'] <= 1e-12,s
+          assert s['samples'][0]['baseline_candidate_digest']==s['samples'][0]['flutter_candidate_digest'],s
+          assert s['samples'][16]['baseline_candidate_digest']==s['samples'][16]['flutter_candidate_digest'],s
+          print('PASS_EXACT_NATURE_VFX_FLUTTER_SOURCE_REBUILD')
+          PY
+
+      - name: Download exact Art-preferred split-culling current-world parent evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-split-surface-culling-001-10c6e29790b0b53b20abd603738cb54671af013c
+          path: evidence/environment_nature_leaf_flutter_current_world_001/parent
+          github-token: ${{ github.token }}
+          run-id: 35172522809
+
+      - name: Verify exact current-world parent identity
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_leaf_flutter_current_world_001
+          test "$(cat "$out/parent/exact-head.txt" | tr -d '\n\r')" = 10c6e29790b0b53b20abd603738cb54671af013c
+          test -f "$out/parent/combined_current_world.json"
+          test -f "$out/parent/candidate/runtime.json"
+          test -d "$out/parent/candidate/rendered"
+          test "$(find "$out/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_nature_leaf_flutter_current_world_001/parent/combined_current_world.json'))
+          assert p['environment_head']=='10c6e29790b0b53b20abd603738cb54671af013c',p
+          assert p['nature_surface_culling_structure_result']=='PASS_CURRENT_WORLD_NATURE_SPLIT_SURFACE_CULLING_STRUCTURE',p
+          q=p['nature_surface_culling_policy']
+          assert q['policy_id']=='source-woody-back__source-foliage-two-sided-001',q
+          assert q['woody_surface_cull']=='CULL_BACK' and q['foliage_surface_cull']=='CULL_DISABLED',q
+          assert q['explicit_leaf_backface_geometry_adopted'] is False,q
+          assert len(p['states'])==17,p
+          print('PASS_EXACT_SPLIT_CULLING_CURRENT_WORLD_PARENT')
+          PY
+
+      - name: Build exact current-world leaf-flutter receiving payload
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_leaf_flutter_current_world_001
+          mkdir -p environment-proof/generated
+          python tools/environment_nature_leaf_flutter_current_world.py build \
+            --parent "$out/parent/combined_current_world.json" \
+            --flutter-root .leaf-flutter-evidence \
+            --environment-head "$(cat exact-head.txt)" \
+            --output environment-proof/generated/current_world_nature_winding_migration.json
+          cp environment-proof/generated/current_world_nature_winding_migration.json "$out/combined_current_world.json"
+          cp .leaf-flutter-evidence/leaf-flutter-summary.json "$out/nature-vfx-leaf-flutter-summary.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('environment-proof/generated/current_world_nature_winding_migration.json'))
+          assert p['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',p
+          assert p['nature_leaf_flutter_vfx_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',p
+          assert p['nature_leaf_flutter_changed_vertex_counts'][0]==0,p
+          assert p['nature_leaf_flutter_changed_vertex_counts'][16]==0,p
+          assert all(v>0 for v in p['nature_leaf_flutter_changed_vertex_counts'][1:16]),p
+          assert p['nature_leaf_flutter_maximum_current_world_vertex_delta_m'] <= 0.0085 + 1e-12,p
+          assert all(p['checks'].values()),p
+          print('PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE')
+          PY
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify inherited current-world observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_winding_migration_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_current_policy_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_split_surface_culling_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Observe exact current world with bounded Nature leaf flutter
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_leaf_flutter_current_world_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_nature_leaf_flutter_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact multi-asset Nature leaf-flutter receiving result
+        run: |
+          set -euo pipefail
+          out=evidence/environment_nature_leaf_flutter_current_world_001
+          python tools/environment_nature_leaf_flutter_current_world.py verify \
+            --payload "$out/combined_current_world.json" \
+            --parent-root "$out/parent/candidate" \
+            --candidate-root "$out/candidate" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_nature_leaf_flutter_current_world_001/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',p
+          assert p['matched_frames']==68 and p['neutral_endpoint_frames']==8,p
+          assert p['neutral_endpoint_changed_pixels']==0,p
+          assert p['changed_frames']>0,p
+          assert p['weather_width_measurements']==1224,p
+          assert p['maximum_weather_width_residual_px'] <= 0.05,p
+          assert all(v==0 for v in p['runtime_counter_deltas'].values()),p
+          assert all(p['checks'].values()),p
+          print(json.dumps(p,indent=2))
+          PY
+
+      - name: Remove downloaded parent and bulky donor payloads before upload
+        if: always()
+        run: |
+          rm -rf evidence/environment_nature_leaf_flutter_current_world_001/parent
+          rm -rf .leaf-geometry-evidence .leaf-flutter-evidence
+
+      - name: Upload retained Environment Nature leaf-flutter evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_nature_leaf_flutter_current_world_001
+          if-no-files-found: error
+          retention-days: 30
