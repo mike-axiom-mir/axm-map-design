@@ -28,7 +28,7 @@ PARENT_ARTIFACT_SHA256 = "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1d
 CONTEXTS = ("path_eye", "elevated_oblique")
 MODES = ("control", "candidate")
 FRAME_RE = re.compile(r"^atmosphere-width-(control|candidate)-(path_eye|elevated_oblique)-(\d\d)\.png$")
-EPS = 1e-7
+EPS = 1e-6
 
 
 def load(path: str | Path) -> dict[str, Any]:
