@@ -6,12 +6,14 @@ on:
     paths:
       - 'environment-proof/atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd'
       - 'tools/technical_art_building_planar_role_uc_index_bridge.py'
+      - 'tools/technical_art_building_planar_role_source_consumer_normal_boundary.py'
       - 'docs/TECHNICAL_ART_BUILDING_PLANAR_ROLE_UC_INDEX_BRIDGE_001.md'
       - '.github/workflows/technical-art-building-planar-role-uc-index-bridge.yml'
   pull_request:
     paths:
       - 'environment-proof/atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd'
       - 'tools/technical_art_building_planar_role_uc_index_bridge.py'
+      - 'tools/technical_art_building_planar_role_source_consumer_normal_boundary.py'
       - 'docs/TECHNICAL_ART_BUILDING_PLANAR_ROLE_UC_INDEX_BRIDGE_001.md'
       - '.github/workflows/technical-art-building-planar-role-uc-index-bridge.yml'
   workflow_dispatch:
@@ -35,6 +37,9 @@ jobs:
       UC_PROVEN_DRAFT_HEAD: 237ea786a56a0b5c6fa3647ed302c3a8f04fcbed
       UC_HEAD: 2295495cccf60c1fbd541b20215d17ac18e32821
       UC_OBSERVER_PATH: src/axm_uc/indexed_surface_eligibility.py
+      UC_OBSERVER_BLOB: cea48b2326813de6bd09430beafdac5315638657
+      CURRENT_UC_HEAD: 68100dbd20b0b4cf792d070a4341696085f3e6bc
+      HARD_SURFACE_AUTHORITY_HEAD: 7b86b1a9da1ef8dc670ca01cf4918728e68ece92
     steps:
       - name: Checkout exact Technical Art head
         uses: actions/checkout@v4
@@ -50,6 +55,7 @@ jobs:
           git cat-file -e "$RUNTIME_HEAD^{commit}"
           git merge-base --is-ancestor "$RUNTIME_HEAD" HEAD
           python -m py_compile tools/technical_art_building_planar_role_uc_index_bridge.py
+          python -m py_compile tools/technical_art_building_planar_role_source_consumer_normal_boundary.py
           grep -F 'TECHNICAL_ART_INDEX_BUNDLE_SCHEMA := "axm.technical-art-building-planar-role-index-bundle/v0.1"' environment-proof/atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd
 
       - name: Download exact retained Runtime indexing evidence
@@ -126,6 +132,7 @@ jobs:
           expected="$(printf '%s\n' '.github/workflows/indexed-surface-eligibility.yml' 'src/axm_uc/indexed_surface_eligibility.py' 'tests/test_indexed_surface_cross_source_metrics.py' | sort)"
           test "$actual" = "$expected"
           grep -F 'CROSS_SOURCE_TUPLE_POLICY = "ATTRIBUTES_AND_PROTECTED_SPLITS"' ".uc/$UC_OBSERVER_PATH"
+          test "$(git -C .uc rev-parse "HEAD:$UC_OBSERVER_PATH")" = "$UC_OBSERVER_BLOB"
           python -m pip install --disable-pip-version-check -e .uc
           sha256sum ".uc/$UC_OBSERVER_PATH" > "$root/uc-observer.sha256"
           git -C .uc rev-parse HEAD > "$root/uc-head.txt"
@@ -249,6 +256,79 @@ jobs:
           fi
           echo PASS_FAIL_CLOSED_CORNER_GROUP_MUTATION
 
+      - name: Checkout exact Building hard-normal source authority
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.HARD_SURFACE_AUTHORITY_HEAD }}
+          path: .building-hard-normal-authority
+          fetch-depth: 1
+
+      - name: Rebuild exact Building hard-normal authority evidence
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-hard-normal-authority rev-parse HEAD)" = "$HARD_SURFACE_AUTHORITY_HEAD"
+          authority=evidence/technical_art_building_uc_index_bridge/hard-normal-authority
+          rm -rf "$authority" && mkdir -p "$authority"
+          python .building-hard-normal-authority/tools/verify_service_pavilion_planar_role_hard_normal_authority.py \
+            --exact-head "$HARD_SURFACE_AUTHORITY_HEAD" \
+            --output-dir "$authority"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_building_uc_index_bridge/hard-normal-authority/hard-normal-authority-evidence.json'))
+          assert p['result']=='PASS_SOURCE_OWNED_PLANAR_ROLE_HARD_NORMAL_AUTHORITY_BOUNDARY',p
+          assert p['exact_head']=='7b86b1a9da1ef8dc670ca01cf4918728e68ece92',p
+          assert p['metrics']['source_intent_render_vertices']==604,p
+          assert p['metrics']['role_position_quotient_groups']==312,p
+          assert p['metrics']['source_render_vertex_identities_removed']==292,p
+          assert p['metrics']['hard_normal_crossing_groups']==188,p
+          print('PASS_EXACT_BUILDING_HARD_NORMAL_SOURCE_AUTHORITY_REBUILT')
+          PY
+
+      - name: Checkout current UC for observer continuity only
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: ${{ env.CURRENT_UC_HEAD }}
+          path: .uc-current
+          fetch-depth: 1
+
+      - name: Bind 312 Godot consumer normal identity to source authority
+        run: |
+          set -euo pipefail
+          test "$(git -C .uc-current rev-parse HEAD)" = "$CURRENT_UC_HEAD"
+          test "$(git -C .uc-current rev-parse "HEAD:$UC_OBSERVER_PATH")" = "$UC_OBSERVER_BLOB"
+          test "$(git -C .uc rev-parse "HEAD:$UC_OBSERVER_PATH")" = "$UC_OBSERVER_BLOB"
+          out=evidence/technical_art_building_uc_index_bridge/source-consumer-normal-boundary
+          rm -rf "$out" && mkdir -p "$out"
+          python tools/technical_art_building_planar_role_source_consumer_normal_boundary.py \
+            --technical-art-receipt evidence/technical_art_building_uc_index_bridge/final/receipt.json \
+            --hard-surface-policy evidence/technical_art_building_uc_index_bridge/hard-normal-authority/service_pavilion_001_planar_role_hard_normal_authority_policy.json \
+            --hard-surface-evidence evidence/technical_art_building_uc_index_bridge/hard-normal-authority/hard-normal-authority-evidence.json \
+            --normal-generator-source environment-proof/atmosphere_current_world_building_planar_role_observe.gd \
+            --post-normal-indexer-source environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd \
+            --proven-uc-observer ".uc/$UC_OBSERVER_PATH" \
+            --current-uc-observer ".uc-current/$UC_OBSERVER_PATH" \
+            --technical-art-head "$(cat exact-head.txt)" \
+            --hard-surface-head "$HARD_SURFACE_AUTHORITY_HEAD" \
+            --current-uc-head "$CURRENT_UC_HEAD" \
+            --output "$out"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_building_uc_index_bridge/source-consumer-normal-boundary/source-consumer-normal-boundary-receipt.json'))
+          assert p['result']=='PASS_BUILDING_312_GODOT_CONSUMER_NORMAL_IDENTITY_BOUND_TO_SOURCE_HARD_NORMAL_AUTHORITY__HOLD_NORMAL_NUMERIC_EXACTNESS_RUNTIME_VISUAL',p
+          assert p['source_authority']['source_render_equivalence_classes']==604,p
+          assert p['source_authority']['role_position_quotient_groups']==312,p
+          assert p['source_authority']['dropped_source_attribute']=='EXACT_CARDINAL_HARD_NORMAL',p
+          assert p['consumer_representation']['stored_vertices']==312,p
+          assert p['consumer_representation']['source_equivalence_claimed'] is False,p
+          assert p['consumer_representation']['source_hard_normal_preservation_claimed'] is False,p
+          assert p['universal_creation']['current_head']=='68100dbd20b0b4cf792d070a4341696085f3e6bc',p
+          assert p['universal_creation']['current_observer_byte_identical_to_proven_observer'] is True,p
+          assert all(v['status']=='PASS_REJECTED' for v in p['negative_controls'].values()),p
+          print('PASS_BUILDING_SOURCE_CONSUMER_NORMAL_AUTHORITY_BOUNDARY_RETAINED')
+          PY
+
       - name: Upload retained Technical Art bridge evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -256,6 +336,8 @@ jobs:
           name: technical-art-building-planar-role-uc-index-bridge-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             evidence/technical_art_building_uc_index_bridge/final/
+            evidence/technical_art_building_uc_index_bridge/source-consumer-normal-boundary/
+            evidence/technical_art_building_uc_index_bridge/hard-normal-authority/
             evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
             evidence/technical_art_building_uc_index_bridge/runtime-report.json
             evidence/technical_art_building_uc_index_bridge/uc-head.txt
