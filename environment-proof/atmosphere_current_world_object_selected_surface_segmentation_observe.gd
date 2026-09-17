@@ -73,7 +73,7 @@ func _uv0_count(mesh:ArrayMesh)->int:
             if typeof(uv_value)!=TYPE_PACKED_VECTOR2_ARRAY:
                 fail("selected surface segmentation UV0 type drift")
                 return -1
-            total+=(uv_value as PackedVector2Array).size()
+            total+=uv_value.size()
     return total
 
 func _build_segmented_receiver(source:Dictionary,parent_mesh:ArrayMesh)->Dictionary:
@@ -125,16 +125,19 @@ func _build_segmented_receiver(source:Dictionary,parent_mesh:ArrayMesh)->Diction
             fail("selected surface segmentation parent material missing")
             return {}
         var source_indices=partition.get(material_id,[]) as Array
+        var appended:Array=[]
         if material_id=="shell_coating":
-            segments.append(_segment_surface(segmented,source_arrays,source_indices,shell_remainder,parent_material,"shell_coating_remainder",material_id,""))
-            segments.append(_segment_surface(segmented,source_arrays,source_indices,LID_SOURCE_TRIANGLES,parent_material,LID_SURFACE_ID,material_id,LID_SURFACE_ID))
+            appended.append(_segment_surface(segmented,source_arrays,source_indices,shell_remainder,parent_material,"shell_coating_remainder",material_id,""))
+            appended.append(_segment_surface(segmented,source_arrays,source_indices,LID_SOURCE_TRIANGLES,parent_material,LID_SURFACE_ID,material_id,LID_SURFACE_ID))
         elif material_id=="service_dark":
-            segments.append(_segment_surface(segmented,source_arrays,source_indices,service_remainder,parent_material,"service_dark_remainder",material_id,""))
-            segments.append(_segment_surface(segmented,source_arrays,source_indices,FRONT_SOURCE_TRIANGLES,parent_material,FRONT_SURFACE_ID,material_id,FRONT_SURFACE_ID))
+            appended.append(_segment_surface(segmented,source_arrays,source_indices,service_remainder,parent_material,"service_dark_remainder",material_id,""))
+            appended.append(_segment_surface(segmented,source_arrays,source_indices,FRONT_SOURCE_TRIANGLES,parent_material,FRONT_SURFACE_ID,material_id,FRONT_SURFACE_ID))
         else:
-            segments.append(_segment_surface(segmented,source_arrays,source_indices,source_indices,parent_material,material_id,material_id,""))
-        if not errors.is_empty():
-            return {}
+            appended.append(_segment_surface(segmented,source_arrays,source_indices,source_indices,parent_material,material_id,material_id,""))
+        for row in appended:
+            if (row as Dictionary).is_empty():
+                return {}
+            segments.append(row)
 
     if segmented.get_surface_count()!=7 or segments.size()!=7:
         fail("selected surface segmentation did not produce exact seven-surface receiver")
