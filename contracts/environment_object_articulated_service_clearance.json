@@ -1,0 +1,60 @@
+{
+  "animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "candidate": {
+    "animation_changed": false,
+    "building_changed": false,
+    "camera_or_light_changed": false,
+    "environment_adoption": false,
+    "nature_changed": false,
+    "object_source_changed": false,
+    "object_world_placement_changed": false,
+    "other_outer_edges_changed": false,
+    "rear_outer_edge_expansion_m": 0.02,
+    "scope": "MAP_ENVIRONMENT_DRESSING_ONLY",
+    "technical_art_receiver_changed": false,
+    "weather_changed": false
+  },
+  "combined_world_artifact": {
+    "id": 10509037278,
+    "sha256": "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97"
+  },
+  "evidence_contract": {
+    "building_overlap_forbidden": true,
+    "minimum_readable_path_separation_m": 1.0,
+    "owner_samples_evaluated": 101,
+    "real_scene_frames_per_sample": 68,
+    "real_scene_owner_samples_required": [0, 10, 50, 100],
+    "real_scene_states_per_sample": 17,
+    "required_current_assets": [
+      "Building current 184v/276t/5-surface receiver",
+      "Nature compact-east 390v/570t",
+      "Nature east-rear 390v/570t",
+      "Object articulated 468v/812t/7-surface receiver",
+      "Environment service-footprint frame",
+      "Weather source-width current-world presentation"
+    ],
+    "successor_rendered_visual_acceptance_required": true
+  },
+  "object_source_head": "d3fa10a270faae7925811f44f03381fe5c5d0215",
+  "object_source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a",
+  "object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+  "repository": "mike-axiom-mir/axm-map-design",
+  "reusable_rule": "DYNAMIC_WORLD_PROPS_REQUIRE_THEIR_FULL_OWNER_MOTION_SWEEP_TO_FIT_THE_ENVIRONMENT_SERVICE_ZONE__DRESSING_MAY_EXPAND_ONLY_WITH_EXPLICIT_PATH_BUILDING_AND_SOURCE_CONTINUITY_EVIDENCE",
+  "schema": "axm.environment-object-articulated-service-clearance/v0.1",
+  "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
+  "service_frame": {
+    "asset_id": "environment:dressing:west-object-service-footprint-frame-001",
+    "existing_minimum_inner_clearance_contract_m": 0.06,
+    "frame_height_m": 0.02,
+    "predecessor_outer_footprint_world_xy_m": [-4.025387, -2.890757, 3.736077, 4.8707069999999995],
+    "strip_width_m": 0.045
+  },
+  "study_id": "environment-object-articulated-service-clearance-001",
+  "technical_art_parent_artifact": {
+    "id": 10521663924,
+    "sha256": "2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24"
+  },
+  "technical_art_parent_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
+  "technical_art_parent_pr": 45,
+  "truth_boundary": "Environment may alter only its own world-dressing service envelope after proving the complete exact owner motion sweep against the exact current-world placement. Source geometry, Animation, Technical Art transport, Building, Nature, Weather, cameras and lights remain owned by their existing lanes. A spatial PASS does not aesthetically adopt the successor dressing; Art/QA and Runtime remain separate gates."
+}
