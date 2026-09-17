@@ -1,0 +1,370 @@
+name: VFX Nature leaf flutter external capture current-world evidence
+
+on:
+  push:
+    branches: [studio/vfx-nature-leaf-flutter-wall-clock-current-world-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_EXTERNAL_CAPTURE_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-external-capture-current-world.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_EXTERNAL_CAPTURE_CURRENT_WORLD_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-external-capture-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  external-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact VFX head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact source receiver and low-intrusion contract
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          printf '%s\n' "$EXPECTED" > exact-head.txt
+          git cat-file -e 7713cbe5863c3bc38dabb6236eb4b393401224b6^{commit}
+          git cat-file -e 795d9e8862e895e506c756b9ea01cd6228fa7ab7^{commit}
+          git merge-base --is-ancestor 7713cbe5863c3bc38dabb6236eb4b393401224b6 HEAD
+          grep -F 'EXACT_VFX_EFFECT_HEAD := "ecade64227ba1d3d1faf029ca7188ea63c2560ec"' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+          grep -F 'EXTERNAL_CAPTURE_MODE := "EXTERNAL_X11GRAB_FFV1_NO_IN_PROCESS_VIEWPORT_READBACK"' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd
+          grep -F 'LOW_INTRUSION_MIN_PRESENTED_TOTAL := 90' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd
+          grep -F 'LOW_INTRUSION_MAX_CADENCE_RATIO := 1.10' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd
+          if grep -F 'get_image(' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd; then
+            echo 'in-process viewport readback forbidden in external observer' >&2
+            exit 1
+          fi
+          if grep -F 'save_png' environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd; then
+            echo 'in-process PNG encoding forbidden in external observer' >&2
+            exit 1
+          fi
+
+      - name: Download exact accepted current-world leaf-flutter receiver evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/vfx_nature_leaf_flutter_external_capture_current_world_001/environment-parent
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Verify and install exact current-world payload
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_external_capture_current_world_001
+          parent="$root/environment-parent"
+          test "$(tr -d '\n\r' < "$parent/exact-head.txt")" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test -f "$parent/combined_current_world.json"
+          test -f "$parent/report.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          parent=Path('evidence/vfx_nature_leaf_flutter_external_capture_current_world_001/environment-parent')
+          report=json.loads((parent/'report.json').read_text())
+          payload=json.loads((parent/'combined_current_world.json').read_text())
+          assert report['state']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_TARGET_HOST',report
+          assert payload['environment_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',payload
+          assert payload['nature_leaf_flutter_vfx_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',payload
+          assert payload['nature_leaf_flutter_structure_result']=='PASS_CURRENT_WORLD_NATURE_LEAF_FLUTTER_STRUCTURE',payload
+          assert len(payload['states'])==17,payload
+          assert abs(payload['states'][1]['time_s']-0.03125)<=1e-12,payload
+          assert abs(payload['states'][16]['time_s']-0.5)<=1e-12,payload
+          assert payload['states'][0]['sapling_mesh_digest']==payload['states'][16]['sapling_mesh_digest'],payload
+          print('PASS_EXACT_ACCEPTED_CURRENT_WORLD_FLUTTER_PARENT')
+          PY
+          mkdir -p environment-proof/generated "$root/result"
+          cp "$parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$parent/report.json" "$root/environment-parent-report.json"
+          cp exact-head.txt "$root/exact-head.txt"
+
+      - name: Install exact inherited Weather-width observer into proof host
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Verify current-world observer chain
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_weather_variant_observe.gd
+          test -f environment-proof/atmosphere_current_world_rebind_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_observe.gd
+          test -f environment-proof/atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install external capture tools
+        run: |
+          set -euo pipefail
+          missing=0
+          command -v Xvfb >/dev/null 2>&1 || missing=1
+          command -v ffmpeg >/dev/null 2>&1 || missing=1
+          if [ "$missing" -ne 0 ]; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb ffmpeg
+          fi
+          Xvfb -help >/dev/null 2>&1 || true
+          ffmpeg -version | head -n 1
+
+      - name: Run real current-world external lossless capture
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_external_capture_current_world_001
+          rm -f environment-proof/vfx-nature-leaf-flutter-wall-clock-external-runtime.json
+          rm -f "$root/result/external-full-with-telemetry.mkv" "$root/result/ffmpeg.log" "$root/result/godot.log"
+          Xvfb :99 -screen 0 1120x720x24 -ac -nolisten tcp >"$root/result/xvfb.log" 2>&1 &
+          xvfb_pid=$!
+          export DISPLAY=:99
+          cleanup() {
+            if [ -n "${ffmpeg_pid:-}" ] && kill -0 "$ffmpeg_pid" 2>/dev/null; then kill -INT "$ffmpeg_pid" 2>/dev/null || true; fi
+            if kill -0 "$xvfb_pid" 2>/dev/null; then kill "$xvfb_pid" 2>/dev/null || true; fi
+          }
+          trap cleanup EXIT
+          sleep 1
+          ffmpeg -nostdin -y -loglevel info \
+            -f x11grab -draw_mouse 0 -framerate 60 -video_size 1120x720 -i :99.0+0,0 \
+            -c:v ffv1 -level 3 -g 1 -pix_fmt bgr0 \
+            "$root/result/external-full-with-telemetry.mkv" >"$root/result/ffmpeg.log" 2>&1 &
+          ffmpeg_pid=$!
+          sleep 0.5
+          set +e
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --resolution 1120x720 --position 0,0 \
+            --path environment-proof --script atmosphere_current_world_nature_leaf_flutter_wall_clock_external_observe.gd \
+            2>&1 | tee "$root/result/godot.log"
+          godot_status=${PIPESTATUS[0]}
+          set -e
+          sleep 0.5
+          kill -INT "$ffmpeg_pid" 2>/dev/null || true
+          wait "$ffmpeg_pid" || true
+          ffmpeg_pid=''
+          kill "$xvfb_pid" 2>/dev/null || true
+          wait "$xvfb_pid" 2>/dev/null || true
+          trap - EXIT
+          cp environment-proof/vfx-nature-leaf-flutter-wall-clock-external-runtime.json "$root/result/runtime.json" 2>/dev/null || true
+          test -s "$root/result/external-full-with-telemetry.mkv"
+          exit "$godot_status"
+
+      - name: Decode telemetry and validate low-intrusion evidence
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_external_capture_current_world_001
+          ffprobe -v error -select_streams v:0 \
+            -show_entries stream=codec_name,width,height,pix_fmt,r_frame_rate \
+            -of json "$root/result/external-full-with-telemetry.mkv" > "$root/result/video-probe.json"
+          ffmpeg -v error -i "$root/result/external-full-with-telemetry.mkv" \
+            -vf 'crop=20:288:1100:0' -f rawvideo -pix_fmt rgb24 "$root/result/telemetry.rgb"
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('evidence/vfx_nature_leaf_flutter_external_capture_current_world_001')
+          result=root/'result'
+          receipt=json.loads((result/'runtime.json').read_text())
+          probe=json.loads((result/'video-probe.json').read_text())
+          streams=probe['streams']
+          assert len(streams)==1,probe
+          stream=streams[0]
+          assert stream['codec_name']=='ffv1',stream
+          assert int(stream['width'])==1120 and int(stream['height'])==720,stream
+          assert stream['r_frame_rate']=='60/1',stream
+          assert receipt['schema']=='axm.vfx-current-world-nature-leaf-flutter-external-capture/v0.1',receipt
+          assert receipt['environment_parent_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',receipt
+          assert receipt['vfx_effect_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',receipt
+          assert receipt['presentation_mode']=='PHASE_LOCKED_LATEST_DUE_DIRECT_SOURCE_STATE_NO_RETIME',receipt
+          assert receipt['weather_policy']=='FIXED_AT_SOURCE_PHASE_00_SOURCE_WIDTH_PRESENTATION',receipt
+          assert receipt['source_phase_step_s']==0.03125 and receipt['source_unique_phase_count']==16,receipt
+          assert receipt['external_capture_mode']=='EXTERNAL_X11GRAB_FFV1_NO_IN_PROCESS_VIEWPORT_READBACK',receipt
+          flags=receipt['truth_flags']
+          assert flags['in_process_viewport_readback_used'] is False,flags
+          assert flags['in_process_png_encoding_used'] is False,flags
+          assert flags['interpolation_used'] is False and flags['retiming_used'] is False,flags
+          assert set(receipt['contexts'])=={'path_eye','elevated_oblique'},receipt
+
+          runtime_pairs=[]
+          total_presented=0
+          total_skipped=0
+          for name,ctx_bit in [('path_eye',0),('elevated_oblique',1)]:
+              c=receipt['contexts'][name]
+              assert c['scheduled_slot_count']==48,c
+              assert c['presented_slot_count']+c['skipped_slot_count']==48,c
+              assert c['fixed_weather_update']['state']=='PASS_SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBONS',c
+              assert c['fixed_weather_update']['maximum_projected_width_residual_px']<=0.05,c
+              for row in c['records']:
+                  slot=int(row['absolute_slot'])
+                  phase=int(row['source_phase_index'])
+                  assert 0<=slot<48 and phase==slot%16,row
+                  assert int(row['sapling_update']['leaf_flutter_phase_index'])==phase,row
+                  assert int(row['external_marker_slot'])==slot,row
+                  assert int(row['external_marker_context_bit'])==ctx_bit,row
+                  runtime_pairs.append((ctx_bit,slot))
+              total_presented += int(c['presented_slot_count'])
+              total_skipped += int(c['skipped_slot_count'])
+          assert total_presented+total_skipped==96,(total_presented,total_skipped)
+          assert len(runtime_pairs)==total_presented,runtime_pairs
+          runtime_set=set(runtime_pairs)
+
+          raw=(result/'telemetry.rgb').read_bytes()
+          width,height=20,288
+          frame_bytes=width*height*3
+          assert len(raw)%frame_bytes==0,(len(raw),frame_bytes)
+          frame_count=len(raw)//frame_bytes
+          sync=[1,0,1,1]
+          valid_frames=[]
+          invalid_sync_frames=0
+          for frame_index in range(frame_count):
+              frame=raw[frame_index*frame_bytes:(frame_index+1)*frame_bytes]
+              bits=[]
+              good=True
+              for cell in range(12):
+                  x=10; y=cell*24+12
+                  off=(y*width+x)*3
+                  rgb=frame[off:off+3]
+                  if len(rgb)!=3:
+                      good=False; break
+                  lo=max(rgb)<55
+                  hi=min(rgb)>200
+                  if not (lo or hi):
+                      good=False; break
+                  bits.append(1 if hi else 0)
+              if not good or bits[:4]!=sync:
+                  invalid_sync_frames+=1
+                  continue
+              if bits[4]!=1:
+                  continue
+              context_bit=bits[5]
+              slot=sum(bits[6+i]<<i for i in range(6))
+              assert 0<=slot<48,(frame_index,bits,slot)
+              pair=(context_bit,slot)
+              assert pair in runtime_set,(frame_index,pair,'marker_not_in_runtime_receipt')
+              valid_frames.append((frame_index,context_bit,slot))
+          assert valid_frames,'no externally phase-bound video frames decoded'
+          video_set={(ctx,slot) for _,ctx,slot in valid_frames}
+          visible_fraction=len(video_set)/len(runtime_set)
+          assert visible_fraction>=0.50,(visible_fraction,len(video_set),len(runtime_set))
+
+          ranges={}
+          for frame_index,ctx,slot in valid_frames:
+              key=f'{ctx}:{slot}'
+              row=ranges.setdefault(key,{'context_bit':ctx,'absolute_slot':slot,'first_frame':frame_index,'last_frame':frame_index,'frame_count':0})
+              row['last_frame']=frame_index
+              row['frame_count']+=1
+          manifest={
+              'schema':'axm.vfx-external-x11-phase-marker-manifest/v0.1',
+              'exact_head':(root/'exact-head.txt').read_text().strip(),
+              'video_file':'result/external-full-with-telemetry.mkv',
+              'video_sha256':hashlib.sha256((result/'external-full-with-telemetry.mkv').read_bytes()).hexdigest(),
+              'video_frame_count':frame_count,
+              'valid_phase_bound_frame_count':len(valid_frames),
+              'runtime_presented_state_count':len(runtime_set),
+              'video_observed_presented_state_count':len(video_set),
+              'video_observed_fraction_of_runtime_presented_states':visible_fraction,
+              'first_valid_frame':valid_frames[0][0],
+              'last_valid_frame':valid_frames[-1][0],
+              'state_ranges':sorted(ranges.values(),key=lambda x:(x['context_bit'],x['absolute_slot'])),
+              'truth_boundary':'The telemetry strip binds externally recorded X11 frames to exact context/absolute source slot values emitted in the same render turn. Missing externally sampled states remain missing; no video frame is reconstructed or relabelled as captured.'
+          }
+          (root/'external-phase-marker-manifest.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
+
+          compare=receipt['comparison_to_clean_reference']
+          runtime_comparable=(
+              receipt['state']=='PASS_EXTERNAL_X11_CAPTURE_LOW_INTRUSION_TIMING_COMPARABLE'
+              and bool(compare['coverage_gate_pass'])
+              and bool(compare['cadence_gate_pass'])
+          )
+          phase_stream_sufficient=visible_fraction>=0.90
+          final_state=('PASS_EXTERNAL_X11_CAPTURE_LOW_INTRUSION_AND_PHASE_BOUND_VISUAL_STREAM'
+                       if runtime_comparable and phase_stream_sufficient
+                       else 'HOLD_EXTERNAL_X11_CAPTURE_NOT_COMPARABLE_OR_VISUALLY_INCOMPLETE')
+          summary={
+              'state':final_state,
+              'runtime_state':receipt['state'],
+              'scheduled_slots':96,
+              'presented_slots':total_presented,
+              'skipped_slots':total_skipped,
+              'clean_reference_presented_slots':92,
+              'presented_delta_vs_clean':total_presented-92,
+              'path_eye_mean_post_draw_ms':receipt['contexts']['path_eye']['post_draw_interval_ms']['mean'],
+              'path_eye_cadence_ratio_vs_clean':compare['path_eye_cadence_ratio_vs_clean'],
+              'elevated_oblique_mean_post_draw_ms':receipt['contexts']['elevated_oblique']['post_draw_interval_ms']['mean'],
+              'elevated_oblique_cadence_ratio_vs_clean':compare['elevated_oblique_cadence_ratio_vs_clean'],
+              'video_observed_presented_states':len(video_set),
+              'runtime_presented_states':len(runtime_set),
+              'video_observed_fraction':visible_fraction,
+              'valid_phase_bound_video_frames':len(valid_frames),
+              'video_sha256':manifest['video_sha256'],
+              'low_intrusion_runtime_gate_pass':runtime_comparable,
+              'phase_bound_visual_stream_gate_pass':phase_stream_sufficient,
+              'truth_boundary':'This is proof-host external-capture measurement fidelity plus direct phase-bound visual-stream evidence. It is not final perceptual naturalness, display scanout, target-device performance, physical wind, gameplay, CANON or production readiness.'
+          }
+          (root/'external-capture-summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(final_state)
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+          ffmpeg -v error -y -i "$root/result/external-full-with-telemetry.mkv" \
+            -vf 'crop=1100:720:0:0' -c:v ffv1 -level 3 -g 1 -pix_fmt bgr0 \
+            "$root/result/external-review-scene.mkv"
+          rm -f "$root/result/telemetry.rgb"
+
+      - name: Hash retained packet
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_external_capture_current_world_001
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('evidence/vfx_nature_leaf_flutter_external_capture_current_world_001')
+          files=[]
+          for p in sorted(root.rglob('*')):
+              if p.is_file():
+                  b=p.read_bytes()
+                  files.append({'path':str(p.relative_to(root)),'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()})
+          (root/'packet-manifest.json').write_text(json.dumps({'schema':'axm.vfx-external-capture-packet/v0.1','files':files},indent=2,sort_keys=True)+'\n')
+          PY
+
+      - name: Upload exact external capture evidence
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-external-capture-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/vfx_nature_leaf_flutter_external_capture_current_world_001
+          if-no-files-found: error
+          compression-level: 6
+          retention-days: 90
+
+      - name: Record artifact identity
+        run: |
+          {
+            echo "artifact-id: ${{ steps.upload.outputs.artifact-id }}"
+            echo "artifact-digest: ${{ steps.upload.outputs.artifact-digest }}"
+            echo "artifact-url: ${{ steps.upload.outputs.artifact-url }}"
+          } | tee -a "$GITHUB_STEP_SUMMARY"

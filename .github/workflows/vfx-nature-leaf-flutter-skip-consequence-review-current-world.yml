@@ -1,0 +1,134 @@
+name: VFX Nature leaf flutter skipped-state consequence review
+
+on:
+  push:
+    branches: [studio/vfx-nature-leaf-flutter-wall-clock-current-world-001]
+    paths:
+      - "tools/vfx_nature_leaf_flutter_skip_consequence_review.py"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_SKIP_CONSEQUENCE_REVIEW_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-skip-consequence-review-current-world.yml"
+  pull_request:
+    paths:
+      - "tools/vfx_nature_leaf_flutter_skip_consequence_review.py"
+      - "docs/VFX_NATURE_LEAF_FLUTTER_SKIP_CONSEQUENCE_REVIEW_001.md"
+      - ".github/workflows/vfx-nature-leaf-flutter-skip-consequence-review-current-world.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  skipped-state-consequence-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact VFX head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact lineage and compile builder
+        run: |
+          set -euo pipefail
+          EXPECTED="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD)" = "$EXPECTED"
+          printf '%s\n' "$EXPECTED" > exact-head.txt
+          git cat-file -e 9e3a7e64ebd50be175ef6866a0fa37960d589adb^{commit}
+          git merge-base --is-ancestor 9e3a7e64ebd50be175ef6866a0fa37960d589adb HEAD
+          python -m py_compile tools/vfx_nature_leaf_flutter_skip_consequence_review.py
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install bounded image observer dependency
+        run: python -m pip install 'Pillow>=10,<13'
+
+      - name: Download exact retained telemetry-bound reconstruction
+        uses: actions/download-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-timing-reconstruction-001-05ca6fbc93e9aa8f130d3d7066975bcdf6940f86
+          path: evidence/vfx_nature_leaf_flutter_skip_consequence_review_001/reconstruction
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35195889303
+
+      - name: Build exact skipped-state consequence review
+        run: |
+          set -euo pipefail
+          root=evidence/vfx_nature_leaf_flutter_skip_consequence_review_001
+          recon="$root/reconstruction"
+          out="$root/review"
+          python tools/vfx_nature_leaf_flutter_skip_consequence_review.py \
+            --artifact-root "$recon" \
+            --output "$out" \
+            | tee "$root/build.log"
+          cp exact-head.txt "$out/exact-head.txt"
+
+      - name: Fail-closed validate review package
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          out=Path('evidence/vfx_nature_leaf_flutter_skip_consequence_review_001/review')
+          report=json.loads((out/'skip-consequence-manifest.json').read_text())
+          assert report['state']=='PASS_TELEMETRY_BOUND_SKIPPED_STATE_VISUAL_CONSEQUENCE_REVIEW_SURFACE',report
+          assert report['accepted_receiver_head']=='7713cbe5863c3bc38dabb6236eb4b393401224b6',report
+          assert report['nature_vfx_effect_head']=='ecade64227ba1d3d1faf029ca7188ea63c2560ec',report
+          assert report['clean_timing_head']=='795d9e8862e895e506c756b9ea01cd6228fa7ab7',report
+          assert report['clean_scheduled_total']==96 and report['clean_presented_total']==92,report
+          assert report['review_window_count']==4 and len(report['windows'])==4,report
+          assert report['static_images_real_godot'] is True,report
+          assert report['interpolation_added'] is False,report
+          assert report['source_retimed'] is False,report
+          assert report['direct_live_capture_of_clean_stream'] is False,report
+          assert report['final_perceptual_acceptance_claimed'] is False,report
+          assert report['gameplay_or_physics_claimed'] is False,report
+          assert report['target_device_performance_claimed'] is False,report
+          expected={('path_eye',19),('elevated_oblique',11),('elevated_oblique',23),('elevated_oblique',38)}
+          assert {(w['context'],w['absolute_slot']) for w in report['windows']}==expected,report['windows']
+          for w in report['windows']:
+              assert w['negative_wrong_phase_binding_rejected'] is True,w
+              assert w['skipped_phase']==w['absolute_slot']%16,w
+              assert w['previous_presented_slot']<w['absolute_slot']<w['next_presented_slot'],w
+              for k in ('previous_to_skipped','skipped_to_next','previous_to_next'):
+                  c=w[k]
+                  assert c['metrics']['changed_pixels']>0,c
+                  assert c['metrics']['max_channel_delta']>0,c
+                  assert (out/c['raw_diff_png']).is_file(),c
+                  assert (out/c['x8_diagnostic_png']).is_file(),c
+          assert (out/'review.html').is_file()
+          assert (out/'summary.json').is_file()
+          assert len(list((out/'images').glob('*-raw-diff.png')))==12
+          assert len(list((out/'images').glob('*-x8-diagnostic.png')))==12
+          print(json.dumps({
+              'state':report['state'],
+              'windows':[
+                  {
+                      'context':w['context'],
+                      'slot':w['absolute_slot'],
+                      'phase':w['skipped_phase'],
+                      'previous_to_skipped_changed_pixels':w['previous_to_skipped']['metrics']['changed_pixels'],
+                      'skipped_to_next_changed_pixels':w['skipped_to_next']['metrics']['changed_pixels'],
+                      'direct_previous_to_next_changed_pixels':w['previous_to_next']['metrics']['changed_pixels'],
+                      'direct_previous_to_next_max_channel_delta':w['previous_to_next']['metrics']['max_channel_delta'],
+                  }
+                  for w in report['windows']
+              ],
+          },indent=2))
+          PY
+
+      - name: Upload exact skipped-state review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vfx-nature-leaf-flutter-skip-consequence-review-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/vfx_nature_leaf_flutter_skip_consequence_review_001/build.log
+            evidence/vfx_nature_leaf_flutter_skip_consequence_review_001/review/
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
