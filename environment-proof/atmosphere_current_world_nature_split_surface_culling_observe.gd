@@ -79,7 +79,7 @@ func _commit_nature_surfaces(mesh:ArrayMesh,vertices:Array,triangles:Array,proof
                 st.add_vertex(gvec(vertices[vertex_index] as Array))
         st.generate_normals()
         st.commit(mesh)
-        var cull_back := role == "woody"
+        var cull_back: bool = (role == "woody")
         mesh.surface_set_material(mesh.get_surface_count()-1,_nature_material(material_payload,cull_back))
         total+=indices.size()
     return total
