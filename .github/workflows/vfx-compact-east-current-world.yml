@@ -187,7 +187,9 @@ jobs:
           assert p['state']=='PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_TARGET_HOST',p
           assert p['matched_frames']==68,p
           assert p['neutral_endpoint_changed_pixels']==0,p
-          assert p['interior_changed_frames']==60,p
+          assert p['interior_changed_frames']==30,p
+          assert p['fully_observing_contexts']==['elevated_oblique'],p
+          assert p['non_observing_contexts']==['path_eye'],p
           assert all(p['checks'].values()),p
           print(json.dumps(p,indent=2))
           PY
