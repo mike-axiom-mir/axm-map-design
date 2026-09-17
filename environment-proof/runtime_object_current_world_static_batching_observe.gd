@@ -63,8 +63,8 @@ func _component_mesh_nodes(container:Node3D, component_map:Dictionary)->Dictiona
 func _mesh_surface_triangle_count(mesh:Mesh)->int:
     var total := 0
     for surface_index in range(mesh.get_surface_count()):
-        var index_count := mesh.surface_get_array_index_len(surface_index)
-        var vertex_count := mesh.surface_get_array_len(surface_index)
+        var index_count:int = mesh.surface_get_array_index_len(surface_index)
+        var vertex_count:int = mesh.surface_get_array_len(surface_index)
         total += int(index_count / 3) if index_count > 0 else int(vertex_count / 3)
     return total
 
