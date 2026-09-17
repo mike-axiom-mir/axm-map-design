@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
-SCHEMA = "axm.environment-object-articulated-service-clearance-render-review/v0.1"
+SCHEMA = "axm.environment-object-articulated-service-clearance-render-review/v0.2"
 VISIBLE_RESULT = "PASS_CURRENT_WORLD_OBJECT_ARTICULATED_SERVICE_CLEARANCE_SUCCESSOR_RENDERED__LOCALIZED_VISUAL_DELTA__ADOPTION_HELD"
 ZERO_RESULT = "PASS_CURRENT_WORLD_OBJECT_ARTICULATED_SERVICE_CLEARANCE_SUCCESSOR_RENDERED__ZERO_RASTER_DELTA_CHARACTERIZED__ADOPTION_HELD"
 RULE = "SPATIALLY_PROVEN_ENVIRONMENT_DRESSING_SUCCESSOR_MUST_BE_RENDERED_AGAINST_THE_EXACT_PREDECESSOR_WORLD_WITH_OWNER_MOTION_CAMERAS_LIGHTS_AND_UNRELATED_ASSETS_HELD"
@@ -27,6 +27,11 @@ EXPECTED_SAMPLES = [0, 40]
 EXPECTED_STATE_COUNT = 17
 EXPECTED_FRAME_COUNT = 68
 PIXEL_LOCALITY_PAD = 2
+
+# Godot instance IDs are process-local handles. Separate predecessor/successor
+# executions must not be treated as content drift merely because these handles
+# differ. No authored/source/runtime scalar is ignored.
+PROCESS_LOCAL_KEYS = {"node_instance_id", "mesh_instance_id", "material_instance_id"}
 
 IDENTITY_KEYS = [
     "godot_version",
@@ -62,6 +67,14 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def same_float_list(a: Any, b: list[float], eps: float = 1e-6) -> bool:
     return isinstance(a, list) and len(a) == len(b) and all(abs(float(x) - float(y)) <= eps for x, y in zip(a, b))
+
+
+def semantic_runtime_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {k: semantic_runtime_value(v) for k, v in value.items() if k not in PROCESS_LOCAL_KEYS}
+    if isinstance(value, list):
+        return [semantic_runtime_value(v) for v in value]
+    return value
 
 
 def frame_row(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -148,8 +161,10 @@ def validate_runtime_pair(sample: int, predecessor: dict[str, Any], successor: d
             raise AssertionError(f"world state identity drift at state {state_idx}")
         if ps.get("weather_field_digest") != ss.get("weather_field_digest") or ps.get("weather_width_profile_digest") != ss.get("weather_width_profile_digest"):
             raise AssertionError(f"Weather state identity drift at state {state_idx}")
-        if ps.get("sapling_mesh_digest") != ss.get("sapling_mesh_digest") or ps.get("sapling_update") != ss.get("sapling_update"):
-            raise AssertionError(f"Nature current-world identity drift at state {state_idx}")
+        if ps.get("sapling_mesh_digest") != ss.get("sapling_mesh_digest"):
+            raise AssertionError(f"Nature mesh digest drift at state {state_idx}")
+        if semantic_runtime_value(ps.get("sapling_update")) != semantic_runtime_value(ss.get("sapling_update")):
+            raise AssertionError(f"Nature authored/runtime state drift at state {state_idx}")
 
         prows = ps.get("static_source_meshes", [])
         srows = ss.get("static_source_meshes", [])
@@ -170,8 +185,8 @@ def validate_runtime_pair(sample: int, predecessor: dict[str, Any], successor: d
                 sa = sctx[context][mode]
                 if pa.get("runtime") != sa.get("runtime"):
                     raise AssertionError(f"runtime counter drift at state {state_idx} {context} {mode}")
-                if pa.get("weather_update") != sa.get("weather_update"):
-                    raise AssertionError(f"Weather observation drift at state {state_idx} {context} {mode}")
+                if semantic_runtime_value(pa.get("weather_update")) != semantic_runtime_value(sa.get("weather_update")):
+                    raise AssertionError(f"Weather authored/runtime observation drift at state {state_idx} {context} {mode}")
                 pc = pa.get("capture", {})
                 sc = sa.get("capture", {})
                 for key in ("state", "width", "height", "dressing_asset_id", "path"):
@@ -352,6 +367,7 @@ def main() -> None:
             "changed_frames": changed_frames,
         },
         "samples": samples_report,
+        "semantic_identity_note": "Only process-local Godot node/mesh/material instance handles are excluded from cross-process equality. All authored/source/runtime content remains strict.",
         "authority": {
             "environment_adoption": False,
             "art_qa_acceptance": False,
@@ -361,7 +377,7 @@ def main() -> None:
         },
         "truth_boundary": (
             "This review renders the exact spatially proven +20 mm rear-only Environment service-frame successor against the exact historical predecessor at neutral owner sample 0 and the exact worst-case opened-lid plateau sample 40. "
-            "Building, Nature, Object source/material/roughness/motion, Weather, cameras, lighting and proof-host runtime counters must remain identical; only the Environment-owned dressing footprint may differ. Pixel deltas are characterized and must remain inside the projected dressing envelope, but no minimum aesthetic delta is invented. "
+            "Building, Nature, Object source/material/roughness/motion, Weather, cameras, lighting and proof-host runtime counters must remain identical; only process-local Godot instance handles may differ between separate processes and only the Environment-owned dressing footprint may differ semantically. Pixel deltas are characterized and must remain inside the projected dressing envelope, but no minimum aesthetic delta is invented. "
             "The result is review-ready evidence only and does not grant Environment adoption, Art/QA acceptance, Runtime/device acceptance, gameplay/collision/navigation authority, CANON or production readiness."
         ),
     }
