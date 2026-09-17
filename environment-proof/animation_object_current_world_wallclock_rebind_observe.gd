@@ -16,7 +16,7 @@ const ANIM_ANGLE_EPS_DEG := 0.0002
 const ANIM_POSITION_EPS_M := 0.000001
 const ANIM_MAX_TIMED_FRAMES := 2000
 const ANIM_MAX_REVIEW_FRAMES := 240
-const ANIM_FRAME_RULE := "MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_TECHNICAL_ART_HOST_AXIS_THEN_MAP_HOST_ANGLE_BACK_TO_OWNER_CONVENTION__DO_NOT_ASSUME_SOURCE_EULER_X_EQUALS_HOST_EULER_X"
+const ANIM_FRAME_RULE := "MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_TECHNICAL_ART_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN__DO_NOT_ASSUME_SOURCE_EULER_X_EQUALS_HOST_EULER_X"
 
 var anim_receipt:Dictionary = {}
 var anim_host_axis := Vector3.RIGHT
@@ -48,30 +48,29 @@ func _anim_collect_pivots(container:Node3D, plan:Dictionary)->Dictionary:
     for raw in plan.get("stations", []) as Array:
         var station := raw as Dictionary
         var sid := String(station.get("station_id", ""))
-        var node := _motion_find_node(container, "technical_art_motion_pivot_" + sid)
+        var node := _motion_find_node(container, "technical_art_motion_latch_world_pivot_" + sid)
         if node == null:
             return {}
         pivots[sid] = node
     return pivots
 
-func _anim_owner_angle(node:Node3D)->float:
+func _anim_adapted_receiver_angle(node:Node3D)->float:
     var q := node.quaternion.normalized()
     if q.w < 0.0:
         q = Quaternion(-q.x, -q.y, -q.z, -q.w)
     var signed_sin_half := Vector3(q.x, q.y, q.z).dot(anim_host_axis)
-    var host_angle_rad := 2.0 * atan2(signed_sin_half, q.w)
-    return -rad_to_deg(host_angle_rad)
+    return rad_to_deg(2.0 * atan2(signed_sin_half, q.w))
 
 func _anim_latch_angles(pivots:Dictionary)->Array:
     var values:Array = []
     var keys:Array = pivots.keys()
     keys.sort()
     for sid in keys:
-        values.append(_anim_owner_angle(pivots[sid] as Node3D))
+        values.append(_anim_adapted_receiver_angle(pivots[sid] as Node3D))
     return values
 
 func _anim_match_owner_sample(plan:Dictionary, position_s:float, lid:Node3D, pivots:Dictionary)->Dictionary:
-    var lid_angle := _anim_owner_angle(lid)
+    var lid_angle := _anim_adapted_receiver_angle(lid)
     var latch_angles := _anim_latch_angles(pivots)
     var best_error := INF
     var best_time_error := INF
@@ -90,8 +89,8 @@ func _anim_match_owner_sample(plan:Dictionary, position_s:float, lid:Node3D, piv
         "index":best_index,
         "max_error_deg":best_error,
         "time_error_s":best_time_error,
-        "owner_lid_rotation_deg":lid_angle,
-        "owner_latch_rotation_deg":latch_angles
+        "adapted_receiver_lid_rotation_deg":lid_angle,
+        "adapted_receiver_latch_rotation_deg":latch_angles
     }
 
 func _anim_mesh_center(container:Node3D, name:String)->Vector3:
@@ -274,11 +273,11 @@ func _anim_timed_playback(world:Dictionary)->Dictionary:
         var sample_error := float(matched["max_error_deg"])
         max_sample_error_deg = maxf(max_sample_error_deg, sample_error)
         if sample_error > ANIM_ANGLE_EPS_DEG:
-            _anim_fail("Animation current-world wall-clock pose escaped exact owner samples")
+            _anim_fail("Animation current-world wall-clock pose escaped exact adapted receiver samples")
             return {}
         var matched_index := int(matched["index"])
-        var lid_angle := float(matched["owner_lid_rotation_deg"])
-        var latch_angles := matched["owner_latch_rotation_deg"] as Array
+        var lid_angle := float(matched["adapted_receiver_lid_rotation_deg"])
+        var latch_angles := matched["adapted_receiver_latch_rotation_deg"] as Array
         seen_indices[matched_index] = true
         max_lid_angle_deg = maxf(max_lid_angle_deg, absf(lid_angle))
         for raw_angle in latch_angles:
@@ -292,8 +291,8 @@ func _anim_timed_playback(world:Dictionary)->Dictionary:
                 "animation_position_s":position_s,
                 "matched_owner_sample_index":matched_index,
                 "max_owner_sample_error_deg":sample_error,
-                "owner_lid_rotation_deg":lid_angle,
-                "owner_latch_rotation_deg":latch_angles
+                "adapted_receiver_lid_rotation_deg":lid_angle,
+                "adapted_receiver_latch_rotation_deg":latch_angles
             })
         if not player.is_playing():
             natural_stop = true
@@ -389,7 +388,7 @@ func _anim_review_playback(world:Dictionary)->Dictionary:
         var position_s := player.current_animation_position
         var matched := _anim_match_owner_sample(plan, position_s, lid, pivots)
         if float(matched["max_error_deg"]) > ANIM_ANGLE_EPS_DEG:
-            _anim_fail("Animation current-world captured playback escaped exact owner sample")
+            _anim_fail("Animation current-world captured playback escaped exact adapted receiver sample")
             return {}
         var image := viewport.get_texture().get_image()
         if image == null or image.is_empty():
@@ -404,8 +403,8 @@ func _anim_review_playback(world:Dictionary)->Dictionary:
             "animation_position_s":position_s,
             "matched_owner_sample_index":int(matched["index"]),
             "max_owner_sample_error_deg":float(matched["max_error_deg"]),
-            "owner_lid_rotation_deg":float(matched["owner_lid_rotation_deg"]),
-            "owner_latch_rotation_deg":matched["owner_latch_rotation_deg"],
+            "adapted_receiver_lid_rotation_deg":float(matched["adapted_receiver_lid_rotation_deg"]),
+            "adapted_receiver_latch_rotation_deg":matched["adapted_receiver_latch_rotation_deg"],
             "path":path,
             "bytes":FileAccess.get_file_as_bytes(path).size()
         })
@@ -444,7 +443,8 @@ func _initialize()->void:
         "receiver_construction_owned_by_technical_art":true,
         "receiver_frame_matching_rule":ANIM_FRAME_RULE,
         "acceptance_pose_match_uses_host_quaternion_projected_to_exact_receiver_axis":true,
-        "legacy_lid_rotation_deg_x_fields_are_host_euler_diagnostics_only":true,
+        "receiver_plan_already_encodes_owner_to_host_angle_adaptation":true,
+        "source_euler_x_not_used_for_acceptance":true,
         "source_motion_retimed":false,
         "source_keys_changed":false,
         "source_easing_changed":false,
@@ -473,6 +473,6 @@ func _initialize()->void:
     anim_receipt["state"] = ANIM_PASS_STATE
     anim_receipt["timed_playback"] = timed
     anim_receipt["shaded_review_playback"] = review
-    anim_receipt["truth_boundary"] = "The frozen 2.5 s / 40 Hz / 101-key owner sequence is replayed on exact Technical-Art successor e085 after its verified owner-glTF to Godot-host frame adapter. Acceptance pose membership is measured from actual pivot quaternions about the exact receiver axis and mapped back to owner angle convention; source Euler X is not assumed to equal host Euler X. The first playback uses frame_post_draw metadata only; the second retains shaded review frames. No source retime, receiver-construction authority, Runtime/controller, target-device/display performance, VFX, Environment adoption, gameplay, physics, Art/QA, CANON or production acceptance transfers."
+    anim_receipt["truth_boundary"] = "The frozen 2.5 s / 40 Hz / 101-key owner sequence is replayed on exact Technical-Art successor e085 after its verified owner-to-Godot-host frame adapter. Acceptance pose membership is measured from actual pivot quaternions about the exact receiver axis against Technical Art's already-adapted receiver plan; source Euler X is not assumed to equal host Euler X. The first playback uses frame_post_draw metadata only; the second retains shaded review frames. No source retime, receiver-construction authority, Runtime/controller, target-device/display performance, VFX, Environment adoption, gameplay, physics, Art/QA, CANON or production acceptance transfers."
     _anim_write_receipt()
     quit(0)
