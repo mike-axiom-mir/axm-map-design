@@ -1,6 +1,6 @@
 extends "res://atmosphere_current_world_compact_east_visual_response_observe.gd"
 
-const ANIMATION_CONTRACT := "axm.animation-compact-east-current-world-discrete-playback/v0.1"
+const ANIMATION_CONTRACT := "axm.animation-compact-east-current-world-discrete-playback/v0.2"
 const PARENT_VFX_HEAD := "29ef2d4cc4398b3f26290e4e1f1f10398ca9898c"
 const DURATION_S := 0.5
 const INTERVALS := 16
@@ -9,6 +9,7 @@ const UNIQUE_LOOP_PHASES := 16
 const OUTPUT_PATH := "res://animation-compact-east-current-world-runtime.json"
 const CONTEXT := "elevated_oblique"
 const MOTION_TRUTH := "DISCRETE_EXACT_VFX_STATES_NOT_SMOOTH_INTERPOLATION"
+const DELIVERY_SEMANTICS := "PROCESS_FRAME_OBSERVATION_CHARACTERIZED_NOT_FULL_SOURCE_SLOT_DELIVERY_ACCEPTANCE"
 
 func _source_for_phase(states:Array, phase:int)->Dictionary:
     var row := states[phase] as Dictionary
@@ -102,6 +103,7 @@ func _initialize()->void:
         "parent_vfx_receiving_head":PARENT_VFX_HEAD,
         "nature_vfx_head":COMPACT_EAST_VFX_HEAD,
         "source_motion_truth":MOTION_TRUTH,
+        "real_playback_delivery_semantics":DELIVERY_SEMANTICS,
         "duration_s":DURATION_S,
         "intervals":INTERVALS,
         "authored_endpoint_inclusive_states":17,
@@ -249,12 +251,18 @@ func _initialize()->void:
     var previous_phase:=0
     var process_frames:=0
     var playback_start_usec:=Time.get_ticks_usec()
+    var previous_frame_usec:=playback_start_usec
     var wrap_times_s:Array=[]
+    var process_frame_intervals_ms:Array=[]
+    var observed_phase_changes:=0
     var safety_frames:=0
     while completed_cycles.size()<3 and safety_frames<12000:
         await process_frame
         safety_frames+=1
         process_frames+=1
+        var now_usec:=Time.get_ticks_usec()
+        process_frame_intervals_ms.append(float(now_usec-previous_frame_usec)/1000.0)
+        previous_frame_usec=now_usec
         if player.get_instance_id()!=player_id or dynamic_node.get_instance_id()!=node_id:
             fail("compact-east Animation playback receiver identity changed")
             return
@@ -262,9 +270,11 @@ func _initialize()->void:
         if active_phase<0:
             fail("compact-east Animation playback produced an unknown mesh resource")
             return
+        if active_phase!=previous_phase:
+            observed_phase_changes+=1
         if active_phase<previous_phase:
             completed_cycles.append(current_cycle.duplicate())
-            wrap_times_s.append(float(Time.get_ticks_usec()-playback_start_usec)/1000000.0)
+            wrap_times_s.append(float(now_usec-playback_start_usec)/1000000.0)
             current_cycle=[active_phase]
         elif not current_cycle.has(active_phase):
             current_cycle.append(active_phase)
@@ -273,15 +283,24 @@ func _initialize()->void:
     if completed_cycles.size()!=3:
         fail("compact-east Animation real playback did not cross three loop seams")
         return
+    if observed_phase_changes<3:
+        fail("compact-east Animation real playback did not show repeated phase progression")
+        return
+
+    var missing_phases_by_cycle:Array=[]
+    var full_source_state_delivery_observed:=true
     for cycle_index in range(completed_cycles.size()):
         var phases:=completed_cycles[cycle_index] as Array
-        if phases.size()!=16:
-            fail("compact-east Animation real playback missed exact states in cycle %s: %s" % [cycle_index,phases])
+        if phases.size()<2:
+            fail("compact-east Animation real playback cycle %s had insufficient process-frame phase progression: %s" % [cycle_index,phases])
             return
-        for phase in range(16):
+        var missing:Array=[]
+        for phase in range(UNIQUE_LOOP_PHASES):
             if not phases.has(phase):
-                fail("compact-east Animation real playback missing phase %s in cycle %s" % [phase,cycle_index])
-                return
+                missing.append(phase)
+        if not missing.is_empty():
+            full_source_state_delivery_observed=false
+        missing_phases_by_cycle.append(missing)
 
     var cycle_durations:Array=[]
     var prior:=0.0
@@ -289,7 +308,21 @@ func _initialize()->void:
         cycle_durations.append(float(wrap_time)-prior)
         prior=float(wrap_time)
 
-    receipt["state"]="PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_STATE_ANIMATIONPLAYER_PLAYBACK_AND_LOOP"
+    var frame_interval_min_ms:=0.0
+    var frame_interval_mean_ms:=0.0
+    var frame_interval_max_ms:=0.0
+    if not process_frame_intervals_ms.is_empty():
+        frame_interval_min_ms=float(process_frame_intervals_ms[0])
+        frame_interval_max_ms=float(process_frame_intervals_ms[0])
+        var interval_sum:=0.0
+        for value in process_frame_intervals_ms:
+            var interval:=float(value)
+            frame_interval_min_ms=min(frame_interval_min_ms,interval)
+            frame_interval_max_ms=max(frame_interval_max_ms,interval)
+            interval_sum+=interval
+        frame_interval_mean_ms=interval_sum/float(process_frame_intervals_ms.size())
+
+    receipt["state"]="PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_KEY_BINDING_AND_REAL_LOOP_DELIVERY_CHARACTERIZED"
     receipt["receiver_context"]=CONTEXT
     receipt["animation_track_interpolation"]="NEAREST"
     receipt["animation_update_mode"]="DISCRETE"
@@ -304,15 +337,22 @@ func _initialize()->void:
     receipt["negative_control_result"]="REJECTED_AS_REQUIRED"
     receipt["real_playback_wraps"]=completed_cycles.size()
     receipt["real_playback_process_frames"]=process_frames
+    receipt["real_playback_observed_phase_changes"]=observed_phase_changes
     receipt["real_playback_cycles_observed_phases"]=completed_cycles
+    receipt["real_playback_missing_phases_by_cycle"]=missing_phases_by_cycle
+    receipt["full_source_state_delivery_observed"]=full_source_state_delivery_observed
+    receipt["full_source_state_delivery_accepted"]=false
     receipt["real_playback_wrap_times_s"]=wrap_times_s
     receipt["real_playback_cycle_durations_s"]=cycle_durations
+    receipt["process_frame_interval_min_ms"]=frame_interval_min_ms
+    receipt["process_frame_interval_mean_ms"]=frame_interval_mean_ms
+    receipt["process_frame_interval_max_ms"]=frame_interval_max_ms
     receipt["persistent_receiver_instance_id"]=node_id
     receipt["persistent_animation_player_instance_id"]=player_id
     receipt["frozen_weather_phase"]=0
     receipt["frozen_west_sapling_phase"]=0
     receipt["captures"]=captures
-    receipt["truth_boundary"]="Exact current-world AnimationPlayer playback witness for the already-authored compact-east 17-state VFX response. The looping track uses the 16 unique source states at the exact 31.25 ms source cadence and omits only the duplicate phase-16 neutral endpoint, whose geometry equality and seam step are checked separately. This proves discrete exact-state playback and repeated loop continuity in the accepted current-world proof receiver; it does not establish smooth interpolation, physical wind, final motion naturalness, Runtime controller/state-machine policy, target-device delivery, collision/gameplay, Art/QA acceptance, CANON or production readiness."
+    receipt["truth_boundary"]="Exact-key binding and repeated current-world AnimationPlayer loop-delivery characterization for the already-authored compact-east 17-state VFX response. The looping track uses the 16 unique source states at the exact 31.25 ms source cadence and omits only the duplicate phase-16 neutral endpoint, whose geometry equality and seam step are checked separately. Deterministic seek proves all 16 exact keys can be applied. Real process-frame observation records any source slots not observed on the proof host instead of treating them as a motion defect or silently retiming the source. This does not establish full source-slot delivery, smooth interpolation, physical wind, final motion naturalness, Runtime controller/state-machine policy, target-device/display delivery, collision/gameplay, Art/QA acceptance, CANON or production readiness."
     write_receipt()
     quit(0)
 
