@@ -30,10 +30,6 @@ def load(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
 def parse_frame_name(name: str) -> tuple[str, str, int]:
     stem = name.removesuffix(".png")
     prefix = "atmosphere-width-"
@@ -62,12 +58,7 @@ def contains(outer: list[int], inner: list[int] | None) -> bool:
 
 
 def expand(box: list[int], padding: int, width: int, height: int) -> list[int]:
-    return [
-        max(0, box[0] - padding),
-        max(0, box[1] - padding),
-        min(width - 1, box[2] + padding),
-        min(height - 1, box[3] + padding),
-    ]
+    return [max(0, box[0] - padding), max(0, box[1] - padding), min(width - 1, box[2] + padding), min(height - 1, box[3] + padding)]
 
 
 def crop_inclusive(image: Image.Image, box: list[int]) -> Image.Image:
@@ -79,9 +70,7 @@ def fit_panel(image: Image.Image, size: tuple[int, int], nearest: bool = False) 
     clone = image.copy()
     clone.thumbnail(size, resample=resample)
     canvas = Image.new("RGB", size, (24, 24, 24))
-    x = (size[0] - clone.width) // 2
-    y = (size[1] - clone.height) // 2
-    canvas.paste(clone.convert("RGB"), (x, y))
+    canvas.paste(clone.convert("RGB"), ((size[0] - clone.width) // 2, (size[1] - clone.height) // 2))
     return canvas
 
 
@@ -89,39 +78,29 @@ def labelled(panel: Image.Image, label: str) -> Image.Image:
     header = 24
     out = Image.new("RGB", (panel.width, panel.height + header), (16, 16, 16))
     out.paste(panel, (0, header))
-    draw = ImageDraw.Draw(out)
-    draw.text((6, 6), label, fill=(235, 235, 235), font=ImageFont.load_default())
+    ImageDraw.Draw(out).text((6, 6), label, fill=(235, 235, 235), font=ImageFont.load_default())
     return out
 
 
 def make_sheet(parent: Image.Image, candidate: Image.Image, delta: np.ndarray, context: str, mode: str, state: int,
                local_box: list[int], neighborhood_box: list[int], amplification: int, output: Path) -> None:
-    full_size = (300, 196)
-    crop_size = (300, 196)
-    delta_rgb = np.clip(delta * amplification, 0, 255).astype(np.uint8)
-    delta_image = Image.fromarray(delta_rgb, mode="RGB")
+    size = (300, 196)
+    delta_image = Image.fromarray(np.clip(delta * amplification, 0, 255).astype(np.uint8), mode="RGB")
     panels = [
-        labelled(fit_panel(parent, full_size), "parent full scene"),
-        labelled(fit_panel(candidate, full_size), "candidate full scene"),
-        labelled(fit_panel(crop_inclusive(candidate, neighborhood_box), crop_size, nearest=True), "candidate neighborhood"),
-        labelled(fit_panel(crop_inclusive(parent, local_box), crop_size, nearest=True), "parent local"),
-        labelled(fit_panel(crop_inclusive(candidate, local_box), crop_size, nearest=True), "candidate local"),
-        labelled(fit_panel(crop_inclusive(delta_image, local_box), crop_size, nearest=True), f"abs diff x{amplification}"),
+        labelled(fit_panel(parent, size), "parent full scene"),
+        labelled(fit_panel(candidate, size), "candidate full scene"),
+        labelled(fit_panel(crop_inclusive(candidate, neighborhood_box), size, nearest=True), "candidate neighborhood"),
+        labelled(fit_panel(crop_inclusive(parent, local_box), size, nearest=True), "parent local"),
+        labelled(fit_panel(crop_inclusive(candidate, local_box), size, nearest=True), "candidate local"),
+        labelled(fit_panel(crop_inclusive(delta_image, local_box), size, nearest=True), f"abs diff x{amplification}"),
     ]
-    margin = 8
-    title_h = 30
-    cols = 3
-    rows = 2
-    cell_w = max(p.width for p in panels)
-    cell_h = max(p.height for p in panels)
-    sheet = Image.new("RGB", (margin + cols * (cell_w + margin), title_h + margin + rows * (cell_h + margin)), (12, 12, 12))
-    draw = ImageDraw.Draw(sheet)
-    draw.text((margin, 8), f"derived review only | {mode} | {context} | state {state:02d}", fill=(240, 240, 240), font=ImageFont.load_default())
+    margin, title_h, cols = 8, 30, 3
+    cell_w, cell_h = max(p.width for p in panels), max(p.height for p in panels)
+    sheet = Image.new("RGB", (margin + cols * (cell_w + margin), title_h + margin + 2 * (cell_h + margin)), (12, 12, 12))
+    ImageDraw.Draw(sheet).text((margin, 8), f"derived review only | {mode} | {context} | state {state:02d}", fill=(240, 240, 240), font=ImageFont.load_default())
     for index, panel in enumerate(panels):
         row, col = divmod(index, cols)
-        x = margin + col * (cell_w + margin)
-        y = title_h + margin + row * (cell_h + margin)
-        sheet.paste(panel, (x, y))
+        sheet.paste(panel, (margin + col * (cell_w + margin), title_h + margin + row * (cell_h + margin)))
     output.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(output)
 
@@ -162,9 +141,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     verify_contract(contract)
     source_report = load(Path(args.candidate_report))
     verify_candidate_report(source_report)
-
-    parent = frame_map(Path(args.parent_rendered))
-    candidate = frame_map(Path(args.candidate_rendered))
+    parent, candidate = frame_map(Path(args.parent_rendered)), frame_map(Path(args.candidate_rendered))
     if len(parent) != EXPECTED_FRAMES or set(parent) != set(candidate):
         raise ValueError(f"multiscale review requires exact 68-frame A/B; parent={len(parent)} candidate={len(candidate)}")
 
@@ -175,11 +152,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     local_padding = int(contract["review"]["local_padding_px"])
     neighborhood_padding = int(contract["review"]["neighborhood_padding_px"])
     amplification = int(contract["review"]["difference_amplification"])
-
     aggregate: dict[str, Any] = {}
-    raw_total = 0
-    gt1_total = 0
-    max_lsb = 0
+    raw_total = gt1_total = max_lsb = 0
     generated: list[str] = []
     inject_target = sorted(candidate)[0] if args.inject_outside_delta else None
 
@@ -187,22 +161,17 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         mode, context, state = parse_frame_name(name)
         if context not in EXPECTED_ENVELOPES:
             raise ValueError(f"unexpected review context: {context}")
-        a_img = Image.open(parent[name]).convert("RGBA")
-        b_img = Image.open(candidate[name]).convert("RGBA")
+        a_img, b_img = Image.open(parent[name]).convert("RGBA"), Image.open(candidate[name]).convert("RGBA")
         if a_img.size != (1100, 720) or b_img.size != a_img.size:
             raise ValueError(f"full-scene frame dimensions drift: {name}")
-        a = np.asarray(a_img, dtype=np.int16)
-        b = np.asarray(b_img, dtype=np.int16).copy()
+        a, b = np.asarray(a_img, dtype=np.int16), np.asarray(b_img, dtype=np.int16).copy()
         if name == inject_target:
-            b[10, 10, 0] = min(255, int(b[10, 10, 0]) + 12)
+            old = int(b[10, 10, 0])
+            b[10, 10, 0] = old - 12 if old >= 244 else old + 12
         delta = np.abs(a[:, :, :3] - b[:, :, :3])
-        raw_mask = np.any(delta > 0, axis=2)
-        gt1_mask = np.any(delta > 1, axis=2)
-        raw = int(raw_mask.sum())
-        gt1 = int(gt1_mask.sum())
-        frame_max = int(delta.max(initial=0))
-        raw_box = bbox(raw_mask)
-        expected = EXPECTED_ENVELOPES[context]
+        raw_mask, gt1_mask = np.any(delta > 0, axis=2), np.any(delta > 1, axis=2)
+        raw, gt1, frame_max = int(raw_mask.sum()), int(gt1_mask.sum()), int(delta.max(initial=0))
+        raw_box, expected = bbox(raw_mask), EXPECTED_ENVELOPES[context]
         if not contains(expected, raw_box):
             raise ValueError(f"selected roughness raster change escaped localized Environment envelope: {name} bbox={raw_box} expected={expected}")
         key = f"{mode}/{context}"
@@ -211,10 +180,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         item["raw_changed_pixels"] += raw
         item["gt1_changed_pixels"] += gt1
         item["maximum_channel_delta_lsb"] = max(item["maximum_channel_delta_lsb"], frame_max)
-        raw_total += raw
-        gt1_total += gt1
-        max_lsb = max(max_lsb, frame_max)
-
+        raw_total, gt1_total, max_lsb = raw_total + raw, gt1_total + gt1, max(max_lsb, frame_max)
         if state in representative_states:
             local_box = expand(expected, local_padding, a_img.width, a_img.height)
             neighborhood_box = expand(expected, neighborhood_padding, a_img.width, a_img.height)
@@ -235,13 +201,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         "source_environment_head": SOURCE_HEAD,
         "parent_environment_head": PARENT_HEAD,
         "reusable_rule": RULE,
-        "evidence_identity": {
-            "parent_artifact_id": contract["evidence"]["parent_artifact_id"],
-            "parent_artifact_sha256": contract["evidence"]["parent_artifact_sha256"],
-            "candidate_artifact_id": contract["evidence"]["candidate_artifact_id"],
-            "candidate_artifact_sha256": contract["evidence"]["candidate_artifact_sha256"],
-            "candidate_run_id": contract["evidence"]["candidate_run_id"],
-        },
+        "evidence_identity": {k: contract["evidence"][k] for k in ("parent_artifact_id", "parent_artifact_sha256", "candidate_artifact_id", "candidate_artifact_sha256", "candidate_run_id")},
         "full_scene_proof": {
             "matched_frames": EXPECTED_FRAMES,
             "frame_dimensions": [1100, 720],
