@@ -1,0 +1,197 @@
+name: Runtime Building planar-role primitive scaling budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-building-planar-role-primitive-scaling-budget-001]
+    paths:
+      - "environment-proof/runtime_building_planar_role_primitive_scaling_benchmark.gd"
+      - "tools/runtime_building_planar_role_primitive_scaling_budget.py"
+      - "docs/RUNTIME_BUILDING_PLANAR_ROLE_PRIMITIVE_SCALING_BUDGET_001.md"
+      - ".github/workflows/runtime-building-planar-role-primitive-scaling-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  primitive-scaling-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact parent and proof contract
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+          git cat-file -e 038925282240441c475651bdc3737d1749c31d06^{commit}
+          git merge-base --is-ancestor 038925282240441c475651bdc3737d1749c31d06 HEAD
+          python -m py_compile tools/runtime_building_planar_role_primitive_scaling_budget.py
+          grep -F 'const INSTANCE_COUNTS := [1,16,64,256]' environment-proof/runtime_building_planar_role_primitive_scaling_benchmark.gd
+          grep -F 'const TRIALS := 41' environment-proof/runtime_building_planar_role_primitive_scaling_benchmark.gd
+          grep -F 'NO_NEW_VISUAL_MUTATION' environment-proof/runtime_building_planar_role_primitive_scaling_benchmark.gd
+
+      - name: Download exact active segmented current-world donor
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/runtime_building_primitive_scaling_001/active-donor
+          github-token: ${{ github.token }}
+          run-id: 35174899697
+
+      - name: Download exact planar-role current-world donor
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+          path: evidence/runtime_building_primitive_scaling_001/planar-donor
+          github-token: ${{ github.token }}
+          run-id: 35182784756
+
+      - name: Verify donor identities and install benchmark payloads
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_primitive_scaling_001
+          test "$(tr -d '\n\r' < "$root/active-donor/exact-head.txt")" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test "$(tr -d '\n\r' < "$root/planar-donor/exact-head.txt")" = b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+          test -f "$root/active-donor/combined_current_world.json"
+          test -f "$root/planar-donor/combined_current_world.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/runtime_building_primitive_scaling_001')
+          active=json.loads((root/'active-donor'/'combined_current_world.json').read_text())
+          planar=json.loads((root/'planar-donor'/'combined_current_world.json').read_text())
+          assert len(active['states'])==17 and len(planar['states'])==17,(len(active.get('states',[])),len(planar.get('states',[])))
+          ap=active['states'][0]['scene']['environment_building_material_receiving']
+          pp=planar['states'][0]['scene']['environment_building_material_receiving']
+          assert ap['asset_id']=='source:building:service-pavilion-001',ap
+          assert len(ap['vertices_source_xyz_m'])==184 and len(ap['surfaces'])==5,ap
+          assert sum(len(s['triangles']) for s in ap['surfaces'])==276,ap
+          assert pp['asset_id']=='source:building:service-pavilion-001',pp
+          assert len(pp['vertices_source_xyz_m'])==672 and len(pp['surfaces'])==5,pp
+          assert sum(len(s['triangles']) for s in pp['surfaces'])==336,pp
+          assert planar['building_planar_role_selected_representation_id']=='boundary-only-planar-role-rectangle-render-001',planar
+          print('PASS_EXACT_ACTIVE_AND_PLANAR_BUILDING_DONORS')
+          PY
+          mkdir -p environment-proof/generated
+          cp "$root/active-donor/combined_current_world.json" environment-proof/generated/runtime-building-active.json
+          cp "$root/planar-donor/combined_current_world.json" environment-proof/generated/runtime-building-planar.json
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Run same-process primitive scaling benchmark
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_primitive_scaling_001
+          mkdir -p "$root/result"
+          rm -f environment-proof/runtime-building-planar-role-primitive-scaling.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script runtime_building_planar_role_primitive_scaling_benchmark.gd \
+            2>&1 | tee "$root/result/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/runtime-building-planar-role-primitive-scaling.json "$root/result/raw.json" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify primitive scaling budget
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_primitive_scaling_001
+          test -f "$root/result/raw.json"
+          python tools/runtime_building_planar_role_primitive_scaling_budget.py \
+            --raw "$root/result/raw.json" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$root/report.json"
+          cp exact-head.txt "$root/exact-head.txt"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('evidence/runtime_building_primitive_scaling_001/report.json').read_text())
+          assert p['logical_extra_triangles_per_building']==60,p
+          assert p['observed_renderingserver_extra_primitives_per_instance']>0,p
+          assert len(p['results'])==4,p
+          print(json.dumps({
+            'state':p['state'],
+            'decision':p['decision'],
+            'observed_renderingserver_extra_primitives_per_instance':p['observed_renderingserver_extra_primitives_per_instance'],
+            'results':p['results'],
+            'high_stress_256x':p['high_stress_256x'],
+          },indent=2,sort_keys=True))
+          PY
+
+      - name: Deliberate fail-closed primitive-residual mutation
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_primitive_scaling_001
+          python - <<'PY'
+          import copy,json
+          from pathlib import Path
+          source=Path('evidence/runtime_building_primitive_scaling_001/result/raw.json')
+          data=json.loads(source.read_text())
+          mutated=copy.deepcopy(data)
+          row=mutated['results'][-1]
+          row['candidate_runtime']['primitives_in_frame']=row['control_runtime']['primitives_in_frame']
+          Path('evidence/runtime_building_primitive_scaling_001/result/mutated.json').write_text(json.dumps(mutated,indent=2,sort_keys=True)+'\n')
+          PY
+          if python tools/runtime_building_planar_role_primitive_scaling_budget.py \
+            --raw "$root/result/mutated.json" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$root/mutated-report.json"; then
+            echo "ERROR: verifier accepted removed primitive residual" >&2
+            exit 1
+          fi
+          echo PASS_FAIL_CLOSED_PRIMITIVE_RESIDUAL
+
+      - name: Remove bulky donor packets before retention
+        if: always()
+        run: |
+          rm -rf evidence/runtime_building_primitive_scaling_001/active-donor
+          rm -rf evidence/runtime_building_primitive_scaling_001/planar-donor
+          rm -f evidence/runtime_building_primitive_scaling_001/result/mutated.json
+          rm -f evidence/runtime_building_primitive_scaling_001/mutated-report.json
+
+      - name: Upload exact Runtime evidence
+        if: always()
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-building-planar-role-primitive-scaling-budget-001-${{ github.sha }}
+          path: evidence/runtime_building_primitive_scaling_001
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Record artifact identity
+        if: always()
+        run: |
+          {
+            echo "artifact-id: ${{ steps.upload.outputs.artifact-id }}"
+            echo "artifact-digest: ${{ steps.upload.outputs.artifact-digest }}"
+            echo "artifact-url: ${{ steps.upload.outputs.artifact-url }}"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
