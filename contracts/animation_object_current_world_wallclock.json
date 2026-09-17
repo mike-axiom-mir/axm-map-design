@@ -13,6 +13,7 @@
   "playback_engine": "Godot 4.7.2 AnimationPlayer",
   "timed_pass": "frame_post_draw metadata only; no viewport readback or disk writes while timing is observed",
   "review_pass": "second real AnimationPlayer.play() with shaded frame capture; capture timing is instrumentation and is not performance evidence",
-  "reusable_rule": "REPLAY_FROZEN_OWNER_MOTION_ON_EACH_VERIFIED_TECHNICAL_ART_RECEIVER_SUCCESSOR__DO_NOT_TRANSFER_WALLCLOCK_ACCEPTANCE_BY_ANCESTRY__MATCH_POSES_IN_THE_RECEIVER_FRAME_NOT_BY_SOURCE_EULER_COMPONENTS",
+  "reusable_rule": "REPLAY_FROZEN_OWNER_MOTION_ON_EACH_VERIFIED_TECHNICAL_ART_RECEIVER_SUCCESSOR__DO_NOT_TRANSFER_WALLCLOCK_ACCEPTANCE_BY_ANCESTRY__MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN",
+  "frame_boundary": "Technical Art already owns and verifies source-to-host coordinate/angle adaptation in the receiver plan. Animation observes the actual host pivot quaternion around that exact host axis and compares it to the adapted receiver target; it does not apply a second source-to-host sign conversion or assume source Euler X equals host Euler X.",
   "truth_boundary": "Animation may replay and characterize the exact owner clip on the exact Technical-Art current-world receiver successor. It does not own receiver construction or frame conversion, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness."
 }
