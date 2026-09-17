@@ -54,7 +54,11 @@ func load_payload()->Dictionary:
             return {}
         if String(receiving.get("weather_semantics", "")) != COMPACT_EAST_WEATHER_SEMANTICS:
             return {}
-    return compat
+    # Inherited observers validate the same canonical file but intentionally return
+    # their earlier compatible payload. This lane must render the newly validated
+    # compact-east phase states themselves; returning compat would freeze the
+    # compact-east receiver at phase 00 while the west-sapling sequence still moves.
+    return canonical
 
 func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:String)->Dictionary:
     var result := super.add_static_source(root3d, source, cull_target_asset_id)
