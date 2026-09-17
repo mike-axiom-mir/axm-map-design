@@ -1,0 +1,245 @@
+name: Runtime Building planar-role direct-indexed import budget evidence
+
+on:
+  push:
+    branches: [studio/runtime-building-planar-role-direct-indexed-import-budget-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_building_planar_role_index_control_timed_observe.gd"
+      - "environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd"
+      - "environment-proof/runtime_building_planar_role_prepare_benchmark.gd"
+      - "tools/runtime_building_planar_role_direct_indexed_import_budget.py"
+      - "docs/RUNTIME_BUILDING_PLANAR_ROLE_DIRECT_INDEXED_IMPORT_BUDGET_001.md"
+      - ".github/workflows/runtime-building-planar-role-direct-indexed-import-budget.yml"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_building_planar_role_index_control_timed_observe.gd"
+      - "environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd"
+      - "environment-proof/runtime_building_planar_role_prepare_benchmark.gd"
+      - "tools/runtime_building_planar_role_direct_indexed_import_budget.py"
+      - "docs/RUNTIME_BUILDING_PLANAR_ROLE_DIRECT_INDEXED_IMPORT_BUDGET_001.md"
+      - ".github/workflows/runtime-building-planar-role-direct-indexed-import-budget.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  direct-indexed-receiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      ENVIRONMENT_HEAD: 038925282240441c475651bdc3737d1749c31d06
+      UNINDEXED_ENVIRONMENT_HEAD: b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      UNINDEXED_RUN: "35182784756"
+      UNINDEXED_ARTIFACT: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact ancestry and proof files
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$ENVIRONMENT_HEAD^{commit}"
+          git cat-file -e "$UNINDEXED_ENVIRONMENT_HEAD^{commit}"
+          git merge-base --is-ancestor "$ENVIRONMENT_HEAD" HEAD
+          git merge-base --is-ancestor "$UNINDEXED_ENVIRONMENT_HEAD" HEAD
+          python -m py_compile tools/runtime_building_planar_role_direct_indexed_import_budget.py
+          grep -F 'DIRECT_INDEXED_POSITION_DOMAIN_THEN_GENERATE_NORMALS' environment-proof/atmosphere_current_world_building_planar_role_direct_indexed_observe.gd
+          grep -F 'POST_NORMAL_SURFACETOOL_INDEX_CONTROL' environment-proof/atmosphere_current_world_building_planar_role_index_control_timed_observe.gd
+          grep -F 'const TRIALS := 41' environment-proof/runtime_building_planar_role_prepare_benchmark.gd
+
+      - name: Download exact canonical unindexed Environment payload donor
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.UNINDEXED_ARTIFACT }}
+          path: evidence/runtime_building_direct_indexed_001/environment-donor
+          github-token: ${{ github.token }}
+          run-id: ${{ env.UNINDEXED_RUN }}
+
+      - name: Install exact current-world payload
+        run: |
+          set -euo pipefail
+          donor=evidence/runtime_building_direct_indexed_001/environment-donor
+          test "$(cat "$donor/exact-head.txt" | tr -d '\n\r')" = "$UNINDEXED_ENVIRONMENT_HEAD"
+          test -f "$donor/combined_current_world.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/runtime_building_direct_indexed_001/environment-donor/combined_current_world.json'))
+          assert p['environment_head']=='b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464',p.get('environment_head')
+          assert p['building_planar_role_structure_result']=='PASS_CURRENT_WORLD_BUILDING_PLANAR_ROLE_RENDER_RECEIVER_STRUCTURE',p
+          assert p['building_planar_role_selected_representation_id']=='boundary-only-planar-role-rectangle-render-001',p
+          assert len(p['states'])==17,p
+          print('PASS_EXACT_CANONICAL_PLANAR_ROLE_CURRENT_WORLD_PAYLOAD')
+          PY
+          mkdir -p environment-proof/generated
+          cp "$donor/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+
+      - name: Checkout exact inherited Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.WEATHER_WIDTH_OBSERVER_HEAD }}
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Restore exact observer-chain setup
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = "$WEATHER_WIDTH_OBSERVER_HEAD"
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_planar_role_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install proof dependencies and virtual display
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pillow
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Benchmark independent receiver geometry construction
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_direct_indexed_001
+          rm -f environment-proof/runtime-building-planar-role-prepare-benchmark.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script runtime_building_planar_role_prepare_benchmark.gd \
+            2>&1 | tee "$out/prepare-benchmark.log"
+          cp environment-proof/runtime-building-planar-role-prepare-benchmark.json "$out/prepare-benchmark.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/runtime_building_direct_indexed_001/prepare-benchmark.json'))
+          assert p['trials']==41,p
+          assert p['warmups']==5,p
+          assert p['final_identity']=={'surface_count':5,'stored_vertices':312,'indices':1008,'primitives':336},p
+          print(json.dumps(p,indent=2,sort_keys=True))
+          PY
+
+      - name: Observe timed post-normal indexing control
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_direct_indexed_001/control
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_planar_role_index_control_timed_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Observe index-before-normal candidate
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_direct_indexed_001/candidate
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_planar_role_direct_indexed_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify repeated preparation cost renderer identity and visual tradeoff
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_direct_indexed_001
+          test -f "$out/control/runtime.json"
+          test -f "$out/candidate/runtime.json"
+          test -f "$out/prepare-benchmark.json"
+          test "$(find "$out/control/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$out/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          python tools/runtime_building_planar_role_direct_indexed_import_budget.py \
+            --control-root "$out/control" \
+            --candidate-root "$out/candidate" \
+            --benchmark "$out/prepare-benchmark.json" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/report.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/runtime_building_direct_indexed_001/report.json'))
+          assert p['representation']['stored_vertices']==312,p
+          assert p['representation']['indices']==1008,p
+          assert p['preparation_benchmark']['paired_trials']==41,p
+          assert p['proof_host_renderer_delta_sets_candidate_minus_control']['draw_calls_in_frame']==[0],p
+          print(json.dumps(p,indent=2,sort_keys=True))
+          PY
+
+      - name: Deliberate fail-closed storage-identity mutation
+        run: |
+          set -euo pipefail
+          out=evidence/runtime_building_direct_indexed_001
+          rm -rf "$out/mutated"
+          cp -a "$out/candidate" "$out/mutated"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('evidence/runtime_building_direct_indexed_001/mutated/runtime.json')
+          d=json.loads(p.read_text())
+          row=next(r for r in d['samples'][0]['static_source_meshes'] if r.get('asset_id')=='source:building:service-pavilion-001')
+          row['runtime_building_direct_indexed']['stored_vertices']=311
+          p.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          if python tools/runtime_building_planar_role_direct_indexed_import_budget.py \
+            --control-root "$out/control" \
+            --candidate-root "$out/mutated" \
+            --benchmark "$out/prepare-benchmark.json" \
+            --exact-head "$(cat exact-head.txt)" \
+            --output "$out/mutated-report.json"; then
+            echo "ERROR: verifier accepted mutated final storage identity" >&2
+            exit 1
+          fi
+          echo PASS_FAIL_CLOSED_DIRECT_STORAGE_IDENTITY
+
+      - name: Upload exact Runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-building-planar-role-direct-indexed-import-budget-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/runtime_building_direct_indexed_001/exact-head.txt
+            evidence/runtime_building_direct_indexed_001/report.json
+            evidence/runtime_building_direct_indexed_001/prepare-benchmark.json
+            evidence/runtime_building_direct_indexed_001/prepare-benchmark.log
+            evidence/runtime_building_direct_indexed_001/control/runtime.json
+            evidence/runtime_building_direct_indexed_001/control/godot.log
+            evidence/runtime_building_direct_indexed_001/control/rendered/*.png
+            evidence/runtime_building_direct_indexed_001/candidate/runtime.json
+            evidence/runtime_building_direct_indexed_001/candidate/godot.log
+            evidence/runtime_building_direct_indexed_001/candidate/rendered/*.png
+          if-no-files-found: error
+          retention-days: 30
