@@ -187,8 +187,8 @@ jobs:
           assert p['selected_roughness_adopted'] is False and p['environment_adoption'] is False,p
           for row in p['uv0_observation']['selected_surfaces'].values():
               assert row['referenced_vertex_count']==4 and row['matched_ta_corner_count']==4,row
-              assert row['exact_position_to_texcoord_pairs_bound'] is True,row
-              assert row['maximum_position_match_delta_m']<=1e-6,row
+              assert row['exact_source_vertex_to_texcoord_identity_bound'] is True,row
+              assert row['maximum_source_world_position_delta_m']<=1e-6,row
           assert all(p['checks'].values()),p
           print('PASS_EXACT_CURRENT_WORLD_OBJECT_SELECTED_UV0_BINDING')
           PY
