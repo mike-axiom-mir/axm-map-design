@@ -1,0 +1,40 @@
+{
+  "schema": "axm.environment-building-consumer-representation/v0.1",
+  "consumer_representation_id": "map-consumer:service-pavilion-001:planar-role-post-normal-indexed-001",
+  "owner": "Map Environment / World Art",
+  "asset_id": "service-pavilion-001",
+  "source_representation": {
+    "representation_id": "boundary-only-planar-role-rectangle-render-001",
+    "semantic_source_variant": "header-segmented-23",
+    "hard_surface_parent_head": "93f22e4eeb9bb32516d4b11f8d8bcf47d9792910",
+    "hard_surface_split_policy_head": "0caa9ac9644f027350935240476bd0bf3bb66e18",
+    "source_triangle_corners": 1008,
+    "source_intent_equivalence_groups": 604,
+    "source_cardinal_hard_normal_equivalence_is_consumer_identity": false
+  },
+  "consumer_derivation": {
+    "kind": "GODOT_POST_NORMAL_PER_MATERIAL_SURFACE_INDEX",
+    "runtime_donor_head": "8d5860c308c244d314ede5b79021e46f35c4040d",
+    "material_surface_count": 5,
+    "triangle_count": 336,
+    "stored_vertices": 312,
+    "indices": 1008,
+    "consumer_generated_normal_index_domain": true,
+    "source_owner_equivalence_identity_claimed": false,
+    "post_index_normal_byte_identity_claimed": false
+  },
+  "current_world": {
+    "active_segmented_rollback_head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+    "environment_adoption": false,
+    "review_target_only": true
+  },
+  "authority": {
+    "hard_surface": "source representation and exact cardinal-hard-normal split intent",
+    "environment": "consumer representation identity, receiving composition, review target and rollback",
+    "runtime": "storage, primitive and target-device cost evidence",
+    "technical_art": "transport/import and receiver exactness evidence",
+    "art_direction": "visual preference",
+    "visual_qa": "independent retained-view acceptance"
+  },
+  "truth_boundary": "This declaration prevents the current 312-vertex Godot receiver from being silently relabeled as the exact 604-group source-owned cardinal-hard-normal equivalence domain. It preserves the source representation and split policy as upstream intent while naming the 312-vertex result as a distinct consumer-generated normal/index representation. It does not authorize default Environment adoption, waive the measured normal repack, accept the residual +180 primitives or target-device cost, establish arbitrary transport safety, CANON or production readiness."
+}
