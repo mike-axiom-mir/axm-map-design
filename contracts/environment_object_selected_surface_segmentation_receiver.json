@@ -1,0 +1,56 @@
+{
+  "schema": "axm.environment-object-selected-surface-segmentation-receiver/v0.1",
+  "scope_id": "environment-object-selected-surface-segmentation-receiver-001",
+  "object_asset_id": "source:object:modular-equipment-case-001",
+  "parent_environment_head": "be4e0dbf245c4658c48b902024cf397cc6557b5f",
+  "accepted_real_scene_head": "7713cbe5863c3bc38dabb6236eb4b393401224b6",
+  "source_surface_correspondence": {
+    "head": "be4e0dbf245c4658c48b902024cf397cc6557b5f",
+    "workflow_run": 35216808559,
+    "artifact_id": 10495361901,
+    "artifact_sha256": "d7c1d65d6689d8fda54580676be98887e381d6528df25cfaf8de844f1e66bd6d",
+    "lid_inner_service_surface_source_triangles": [12, 13],
+    "front_service_panel_outer_service_surface_source_triangles": [28, 29]
+  },
+  "receiver_readiness_parent": {
+    "head": "1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33",
+    "workflow_run": 35211529232,
+    "artifact_id": 10493255037,
+    "artifact_sha256": "72183856af6ba752c1ab94cfcc9621f6771a93b3d64605393f58110f18e82cb0"
+  },
+  "current_receiver_materials": {
+    "head": "c85517446a769e0d5f880fc0e9e32f47124f7b5e",
+    "profile_sha256": "dc200229d6c25fa84063aa51f66103abc022efa54b2167e4432a5b47fc40360c",
+    "unique_material_ids": [
+      "shell_coating",
+      "service_dark",
+      "hardware_steel",
+      "rubber_guard",
+      "interface_orange"
+    ],
+    "pre_split_surface_count": 5,
+    "post_split_surface_count": 7
+  },
+  "segmentation": {
+    "policy": "SPLIT_ONLY_EXACT_SOURCE_OWNED_SELECTED_FACES__PRESERVE_PARENT_VERTEX_NORMALS_AND_MATERIAL_OBJECTS",
+    "expected_segments": [
+      {"segment_id": "shell_coating_remainder", "material_id": "shell_coating", "triangle_count": 22},
+      {"segment_id": "lid_inner_service_surface", "material_id": "shell_coating", "triangle_count": 2},
+      {"segment_id": "service_dark_remainder", "material_id": "service_dark", "triangle_count": 10},
+      {"segment_id": "front_service_panel_outer_service_surface", "material_id": "service_dark", "triangle_count": 2},
+      {"segment_id": "hardware_steel", "material_id": "hardware_steel", "triangle_count": 656},
+      {"segment_id": "rubber_guard", "material_id": "rubber_guard", "triangle_count": 96},
+      {"segment_id": "interface_orange", "material_id": "interface_orange", "triangle_count": 24}
+    ],
+    "expected_total_triangles": 812,
+    "expected_uv0_count": 0
+  },
+  "decision": {
+    "pass_state": "PASS_CURRENT_WORLD_OBJECT_SELECTED_SERVICE_SURFACES_INDEPENDENTLY_ADDRESSABLE__UV0_AND_SELECTED_ROUGHNESS_ADOPTION_HELD",
+    "environment_adoption": false,
+    "selected_roughness_adopted": false,
+    "next_receiving_requirement": "Bind exact UV0/TEXCOORD_0 identity for the two source-owned selected surfaces under Materials/Technical-Art authority, then re-render the full world before any selected-roughness adoption claim."
+  },
+  "reusable_rule": "EXACT_SOURCE_SURFACE_SEGMENTATION_MAY_PRECEDE_UV_BINDING_ONLY_WHEN_PARENT_MATERIAL_AND_DIRECTION_FIELDS_ARE_PRESERVED_AND_REAL_SCENE_CONTINUITY_IS_RETESTED",
+  "truth_boundary": "Environment changes only the Map receiving partition so the two source-owned selected faces become independently addressable. It does not rewrite Object source geometry, author UVs, alter material values, adopt the selected roughness texture, certify runtime/device cost, replace Art/QA judgment, establish CANON, or claim production readiness."
+}
