@@ -83,6 +83,8 @@ func _make_player(root3d:Node3D,node:MeshInstance3D,phase_meshes:Array)->Animati
     var library:=AnimationLibrary.new()
     library.add_animation("compact_east_exact_states",animation)
     player.add_animation_library("",library)
+    player.play("compact_east_exact_states")
+    player.pause()
     return player
 
 func _capture(viewport:SubViewport,phase:int)->Dictionary:
