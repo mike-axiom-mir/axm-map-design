@@ -256,7 +256,7 @@ jobs:
             --parent-runtime "$root/parent/candidate/runtime.json" \
             --candidate-runtime "$root/candidate/runtime.json" \
             | tee "$root/negative-control.log"
-          grep -F 'PASS_REJECTED_MUTATED_BUILDING_CLEARANCE_RECEIVER' "$root/negative-control.log"
+          grep -F 'PASS_REJECTED_MUTATED_BUILDING_CLEARANCE_CURRENT_RECEIVER' "$root/negative-control.log"
 
       - name: Retain exact evidence
         if: always()
