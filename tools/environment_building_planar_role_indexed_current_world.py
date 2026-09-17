@@ -3,7 +3,7 @@
 
 This consumes the already-proven Runtime storage rewrite as a donor and verifies
 that the exact current-world observation remains inside Environment's receiving
-boundary.  It does not make the receiver the default and does not replace
+boundary. It does not make the receiver the default and does not replace
 independent Art/QA/Runtime/Technical-Art authority.
 """
 from __future__ import annotations
@@ -25,6 +25,9 @@ RUNTIME_PASS = "PASS_BUILDING_PLANAR_ROLE_POST_NORMAL_INDEX_REMOVES_BUFFER_PENAL
 ENVIRONMENT_PASS = "PASS_CURRENT_WORLD_INDEXED_PLANAR_ROLE_RECEIVER_REVIEW_READY"
 ENVIRONMENT_HOLD = "HOLD_DEFAULT_ADOPTION_PENDING_INDEPENDENT_QA_TECHNICAL_ART_AND_RESIDUAL_PRIMITIVE_ACCEPTANCE"
 BUILDING_ASSET_ID = "source:building:service-pavilion-001"
+WEATHER_WIDTH_RESIDUAL_LIMIT_PX = 0.05
+EXPECTED_WEATHER_WIDTH_OBSERVATIONS = 1224
+EXPECTED_WIDTH_PROFILE_DIGEST = "8d61b2dc11f2508d186a1e469185badda7217803f7c4634fb2d951d8579c0dd5"
 
 
 def load(path: Path) -> dict:
@@ -107,14 +110,21 @@ def verify(runtime_report: dict, indexed_runtime: dict, exact_head: str) -> dict
         raise ValueError("indexed runtime Hard-Surface provenance drift")
     if indexed_runtime.get("environment_building_planar_role_materials_head") != MATERIALS_HEAD:
         raise ValueError("indexed runtime Materials provenance drift")
+    if indexed_runtime.get("source_width_profile_digest") != EXPECTED_WIDTH_PROFILE_DIGEST:
+        raise ValueError("Weather source-width profile digest drift")
 
     samples = indexed_runtime.get("samples", [])
     if len(samples) != 17:
         raise ValueError(f"expected 17 current-world states, got {len(samples)}")
 
     context_count = 0
+    weather_width_observation_count = 0
+    maximum_weather_width_residual_px = 0.0
     receipt_after = None
     for sample in samples:
+        if sample.get("weather_width_profile_digest") != EXPECTED_WIDTH_PROFILE_DIGEST:
+            raise ValueError("per-state Weather source-width profile digest drift")
+
         row = find_building(sample)
         receipt = row.get("runtime_building_planar_role_surface_indexing", {})
         if receipt.get("schema") != RUNTIME_RECEIPT_SCHEMA:
@@ -134,10 +144,25 @@ def verify(runtime_report: dict, indexed_runtime: dict, exact_head: str) -> dict
             receipt_after = this_after
         elif this_after != receipt_after:
             raise ValueError("indexed storage changed across current-world states")
-        for modes in sample.get("contexts", {}).values():
-            context_count += len(modes)
+
+        for camera_context in sample.get("contexts", {}).values():
+            context_count += len(camera_context)
+            weather_update = camera_context.get("candidate", {}).get("weather_update", {})
+            measured_width_count = int(weather_update.get("measured_width_count", -1))
+            if measured_width_count != 36:
+                raise ValueError(f"Weather projected-width observation count drift: {measured_width_count}")
+            residual = float(weather_update.get("maximum_projected_width_residual_px", 999999.0))
+            if residual > WEATHER_WIDTH_RESIDUAL_LIMIT_PX:
+                raise ValueError(f"Weather projected-width residual exceeds gate: {residual}")
+            weather_width_observation_count += measured_width_count
+            maximum_weather_width_residual_px = max(maximum_weather_width_residual_px, residual)
+
     if context_count != 68:
         raise ValueError(f"expected 68 state/camera/presentation contexts, got {context_count}")
+    if weather_width_observation_count != EXPECTED_WEATHER_WIDTH_OBSERVATIONS:
+        raise ValueError(
+            f"expected {EXPECTED_WEATHER_WIDTH_OBSERVATIONS} Weather width observations, got {weather_width_observation_count}"
+        )
 
     return {
         "schema": SCHEMA,
@@ -165,6 +190,10 @@ def verify(runtime_report: dict, indexed_runtime: dict, exact_head: str) -> dict
             "max_indexing_changed_pixels_per_frame": int(visuals["max_changed_pixels"]),
             "max_indexing_pixels_over_1_lsb": int(visuals["max_pixels_over_1_lsb"]),
             "max_indexing_channel_delta_lsb": int(visuals["max_channel_delta_lsb"]),
+            "weather_width_observation_count": weather_width_observation_count,
+            "maximum_weather_width_residual_px": maximum_weather_width_residual_px,
+            "weather_width_residual_limit_px": WEATHER_WIDTH_RESIDUAL_LIMIT_PX,
+            "weather_width_profile_digest": EXPECTED_WIDTH_PROFILE_DIGEST,
         },
         "authority": {
             "environment": "receiving composition / rollback / review-target selection only",
@@ -183,6 +212,7 @@ def verify(runtime_report: dict, indexed_runtime: dict, exact_head: str) -> dict
         "truth_boundary": (
             "Environment now binds the exact Runtime-proven post-normal indexed planar-role Building as the current review target in the existing multi-asset world. "
             "The active segmented receiver remains the rollback/default baseline. The exact five material roles, Nature, indexed Object, visible footprint cue, Weather, route, cameras and lighting are not reauthored here. "
+            "The inherited source-width Weather contract is remeasured in the indexed receiver and must remain within the existing 0.05 px residual gate. "
             "A review-ready Environment PASS does not substitute for independent QA, Technical-Art transport, residual primitive/device acceptance, CANON or production readiness."
         ),
         "four_root_gate": {
