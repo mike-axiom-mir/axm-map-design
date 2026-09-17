@@ -1,0 +1,251 @@
+name: Technical Art Object rigid current-world final proof
+
+on:
+  push:
+    branches: [studio/technical-art-object-rigid-current-world-bridge-001]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-retained-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact final head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install exact observer dependency
+        run: python -m pip install --disable-pip-version-check --no-input pillow
+
+      - name: Bind receiver code to real-Godot predecessor
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          git cat-file -e 187bb64241ca2d21b2c0e1e416437435cd584707^{commit}
+          git merge-base --is-ancestor 187bb64241ca2d21b2c0e1e416437435cd584707 HEAD
+          for path in \
+            contracts/technical_art_object_rigid_current_world_bridge.json \
+            docs/TECHNICAL_ART_OBJECT_RIGID_CURRENT_WORLD_BRIDGE_001.md \
+            tools/technical_art_object_rigid_current_world_bridge.py \
+            environment-proof/atmosphere_current_world_object_rigid_component_observe.gd; do
+            test "$(git rev-parse HEAD:$path)" = "$(git rev-parse 187bb64241ca2d21b2c0e1e416437435cd584707:$path)"
+          done
+          python -m py_compile tools/technical_art_exact_rgba_frame_compare.py
+          git show 187bb64241ca2d21b2c0e1e416437435cd584707:.github/workflows/technical-art-object-rigid-current-world-bridge.yml \
+            | grep -F "im.putpixel((0,0),tuple(px))" >/dev/null
+          echo PASS_EXACT_RECEIVER_CODE_CONTINUITY_FROM_REAL_GODOT_PREDECESSOR
+
+      - name: Download exact retained real-Godot predecessor and parent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          mkdir -p "$root/predecessor" "$root/parent"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10519104958/zip" \
+            --output "$root/predecessor.zip"
+          echo "33dfcc094c7bcf8bd9ad78397280ab9bb2697434c1f238260c5a99d3b09a6f5f  $root/predecessor.zip" | sha256sum --check --strict
+          unzip -q "$root/predecessor.zip" -d "$root/predecessor"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10516853353/zip" \
+            --output "$root/parent.zip"
+          echo "f879277d1e4b3c37b9a7fc491d992e520345a8642f56d0ae17abfcd9957444c0  $root/parent.zip" | sha256sum --check --strict
+          unzip -q "$root/parent.zip" -d "$root/parent"
+
+      - name: Bind exact main-path report and ownership boundary
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_final_proof/predecessor/report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_OBJECT_RIGID_COMPONENT_BOUNDARY_NEUTRAL_EQUIVALENCE__ANIMATION_VFX_ADOPTION_HELD',p
+          assert p['environment_head']=='187bb64241ca2d21b2c0e1e416437435cd584707',p
+          assert p['parent_environment_head']=='d0461a787525d19004d83334c282adacaa06afed',p
+          assert p['technical_art_donor_head']=='965fb2f24dbd0b0cbb748d9f8b8712d62966315f',p
+          assert p['object_source_sha256']=='49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a',p
+          assert p['tested_uc_head']=='6dc465987e01362264f88b7cef4213609ae50763',p
+          assert p['inspected_current_uc_head']=='e9eed3d9eb66392992cc18c8884bfade0d3b8efd',p
+          assert p['component_map_sha256']=='94edd332308593df020bc5c796950292d2963fbe7f19de0c9fadc9ab6b6905d6',p
+          assert p['component_map']['component_count']==31 and p['component_map']['triangles']==812,p
+          assert p['receiver_observation']['component_surface_instances']==33,p
+          assert p['receiver_observation']['source_positions_reconstructed_at_neutral'] is True,p
+          assert p['receiver_observation']['materials_reused'] is True,p
+          assert p['receiver_observation']['normals_reused'] is True,p
+          assert p['receiver_observation']['uv0_reused'] is True,p
+          assert p['animation_adoption'] is False and p['vfx_adoption'] is False,p
+          assert p['runtime_acceptance'] is False and p['environment_adoption'] is False,p
+          assert p['art_qa_acceptance'] is False and p['canon'] is False,p
+          print('PASS_EXACT_REAL_GODOT_MAIN_PATH_AND_BOUNDED_AUTHORITY')
+          PY
+          test "$(find "$root/predecessor/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(find "$root/parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+
+      - name: Diagnose retained post-proof RGB-only mutation exactly
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          set +e
+          python tools/technical_art_exact_rgba_frame_compare.py \
+            --control-dir "$root/parent/candidate/rendered" \
+            --candidate-dir "$root/predecessor/candidate/rendered" \
+            --expected-count 68 \
+            --output "$root/retained-post-negative-report.json" \
+            > "$root/retained-post-negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -eq 2
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_final_proof/retained-post-negative-report.json'))
+          assert p['result']=='FAIL_RGBA_FRAME_SET_CHANGED',p
+          assert p['changed_frames']==1 and p['changed_pixels']==1,p
+          assert p['first_changes']==[{'frame':'atmosphere-width-candidate-path_eye-00.png','changed_pixels':1,'bbox':[0,0,1,1]}],p
+          print('PASS_EXACTLY_LOCALIZED_RETAINED_POST_PROOF_NEGATIVE_MUTATION')
+          PY
+
+      - name: Reconstruct pre-negative retained output and prove exact 68-frame equality
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          mkdir -p "$root/reconstructed"
+          cp -a "$root/predecessor/candidate/rendered/." "$root/reconstructed/"
+          python - <<'PY'
+          from PIL import Image
+          root='evidence/technical_art_object_rigid_current_world_final_proof'
+          name='atmosphere-width-candidate-path_eye-00.png'
+          c=Image.open(f'{root}/parent/candidate/rendered/{name}').convert('RGBA')
+          r=Image.open(f'{root}/reconstructed/{name}').convert('RGBA')
+          r.putpixel((0,0),c.getpixel((0,0)))
+          r.save(f'{root}/reconstructed/{name}')
+          PY
+          python tools/technical_art_exact_rgba_frame_compare.py \
+            --control-dir "$root/parent/candidate/rendered" \
+            --candidate-dir "$root/reconstructed" \
+            --expected-count 68 \
+            --output "$root/exact-rgba-reconstructed-report.json" \
+            | tee "$root/exact-rgba-reconstructed.log"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_final_proof/exact-rgba-reconstructed-report.json'))
+          assert p['result']=='PASS_EXACT_RGBA_FRAME_SET_EQUAL',p
+          assert p['frame_count']==68 and p['changed_frames']==0 and p['changed_pixels']==0,p
+          assert p['pixel_exact'] is True,p
+          print('PASS_RECONSTRUCTED_PRE_NEGATIVE_REAL_GODOT_OUTPUT_EXACT_68_FRAMES')
+          PY
+
+      - name: Negative control detects RGB delta with unchanged alpha
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          mkdir -p "$root/negative"
+          cp -a "$root/reconstructed/." "$root/negative/"
+          python - <<'PY'
+          from PIL import Image
+          p='evidence/technical_art_object_rigid_current_world_final_proof/negative/atmosphere-width-candidate-path_eye-00.png'
+          im=Image.open(p).convert('RGBA')
+          before=im.getpixel((0,0))
+          after=((before[0]+1)%256,before[1],before[2],before[3])
+          assert before[3]==after[3]
+          im.putpixel((0,0),after)
+          im.save(p)
+          PY
+          set +e
+          python tools/technical_art_exact_rgba_frame_compare.py \
+            --control-dir "$root/parent/candidate/rendered" \
+            --candidate-dir "$root/negative" \
+            --expected-count 68 \
+            --output "$root/negative-report.json" \
+            > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -eq 2
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_object_rigid_current_world_final_proof/negative-report.json'))
+          assert p['result']=='FAIL_RGBA_FRAME_SET_CHANGED',p
+          assert p['changed_frames']==1 and p['changed_pixels']==1,p
+          assert p['first_changes'][0]['bbox']==[0,0,1,1],p
+          print('PASS_REJECTED_ONE_RGB_DELTA_WITH_UNCHANGED_ALPHA')
+          PY
+
+      - name: Write final continuity receipt
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          python - <<'PY'
+          import hashlib,json,pathlib,subprocess
+          root=pathlib.Path('evidence/technical_art_object_rigid_current_world_final_proof')
+          report=json.load(open(root/'predecessor/report.json'))
+          exact=json.load(open(root/'exact-rgba-reconstructed-report.json'))
+          out={
+            'schema':'axm.technical-art-object-rigid-current-world-final-proof/v0.1',
+            'result':'PASS_CURRENT_WORLD_OBJECT_RIGID_COMPONENT_BOUNDARY_NEUTRAL_EQUIVALENCE_WITH_EXACT_RGBA_OBSERVER__ANIMATION_VFX_RUNTIME_ADOPTION_HELD',
+            'exact_final_head':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'real_godot_predecessor_head':'187bb64241ca2d21b2c0e1e416437435cd584707',
+            'real_godot_predecessor_artifact_id':10519104958,
+            'real_godot_predecessor_artifact_sha256':'33dfcc094c7bcf8bd9ad78397280ab9bb2697434c1f238260c5a99d3b09a6f5f',
+            'parent_artifact_id':10516853353,
+            'parent_artifact_sha256':'f879277d1e4b3c37b9a7fc491d992e520345a8642f56d0ae17abfcd9957444c0',
+            'component_map_sha256':report['component_map_sha256'],
+            'components':31,
+            'component_surface_instances':33,
+            'triangles':812,
+            'states':17,
+            'frames':68,
+            'changed_frames':exact['changed_frames'],
+            'changed_pixels':exact['changed_pixels'],
+            'exact_rgba_observer':True,
+            'animation_adoption':False,
+            'vfx_adoption':False,
+            'runtime_acceptance':False,
+            'environment_adoption':False,
+            'art_qa_acceptance':False,
+            'canon':False,
+            'uc_product_modified':False,
+            'truth_boundary':'Real Godot 4.7.2 receiver output was produced at the byte-identical receiver code ancestor. The retained artifact carried exactly one later intentional RGB-only negative mutation because the predecessor Pillow RGBA getbbox observer failed to see unchanged-alpha RGB drift before restoration. Direct tuple observation localizes exactly that one post-proof mutation; restoring only that documented pixel reconstructs the pre-negative retained output and proves all 68 frames exact. The repaired observer then rejects the same unchanged-alpha RGB mutation. No production threshold, receiver geometry, domain ownership or UC implementation changed.'
+          }
+          p=root/'final-receipt.json'
+          p.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+
+      - name: Retain exact final proof
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_rigid_current_world_final_proof
+          out="$root/retained"
+          mkdir -p "$out"
+          cp exact-head.txt "$out/" 2>/dev/null || true
+          cp tools/technical_art_exact_rgba_frame_compare.py "$out/" 2>/dev/null || true
+          cp "$root/predecessor/report.json" "$out/real-godot-main-report.json" 2>/dev/null || true
+          cp "$root/retained-post-negative-report.json" "$out/" 2>/dev/null || true
+          cp "$root/exact-rgba-reconstructed-report.json" "$out/" 2>/dev/null || true
+          cp "$root/negative-report.json" "$out/" 2>/dev/null || true
+          cp "$root/final-receipt.json" "$out/" 2>/dev/null || true
+          cp "$root/predecessor/component-map-receipt.json" "$out/" 2>/dev/null || true
+          cp "$root/predecessor/object-rigid-component-map.json" "$out/" 2>/dev/null || true
+
+      - name: Upload final Technical Art proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-object-rigid-current-world-final-proof-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/technical_art_object_rigid_current_world_final_proof/retained
+          if-no-files-found: error
+          retention-days: 30
