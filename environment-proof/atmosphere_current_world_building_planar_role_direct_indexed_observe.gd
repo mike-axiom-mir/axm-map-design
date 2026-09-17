@@ -2,6 +2,7 @@ extends "res://atmosphere_current_world_building_planar_role_observe.gd"
 
 const RUNTIME_DIRECT_INDEX_SCHEMA := "axm.runtime-building-planar-role-direct-indexed-receiver/v0.2"
 const RUNTIME_DIRECT_INDEX_MODE := "DIRECT_INDEXED_POSITION_DOMAIN_THEN_GENERATE_NORMALS"
+const RUNTIME_SUPERSEDED_DIRECT_ARRAY_MODE := "DIRECT_FINAL_POSITION_NORMAL_INDEX_ARRAYS" # retained only so the failed v0.1 experiment stays machine-discoverable provenance
 
 func _add_direct_surface(mesh:ArrayMesh,vertices:Array,surface:Dictionary)->Dictionary:
     var triangles:=surface.get("triangles",[]) as Array
