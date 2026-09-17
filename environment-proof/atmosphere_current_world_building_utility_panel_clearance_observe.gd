@@ -38,9 +38,8 @@ func _group_center(vertices:Array,indices:Array)->Vector3:
         total+=_source_vec(vertices[index])
     return total/float(indices.size())
 
-func _require_center(actual:Vector3,expected:Vector3,label:String)->void:
-    if actual.distance_to(expected)>CENTER_EPS:
-        fail("Building clearance "+label+" center drift: "+str(actual)+" expected "+str(expected))
+func _center_matches(actual:Vector3,expected:Vector3)->bool:
+    return actual.distance_to(expected)<=CENTER_EPS
 
 func _translate_group(vertices:Array,indices:Array,translation:Vector3)->void:
     for raw in indices:
@@ -60,18 +59,22 @@ func add_building_material(root3d:Node3D,data:Dictionary)->Dictionary:
 
     var front_before:=_group_center(vertices,FRONT_PANEL_INDICES)
     var east_before:=_group_center(vertices,EAST_PANEL_INDICES)
-    _require_center(front_before,FRONT_OLD_CENTER,"front predecessor")
-    _require_center(east_before,EAST_OLD_CENTER,"east predecessor")
-    if failed:
+    if not _center_matches(front_before,FRONT_OLD_CENTER):
+        fail("Building clearance front predecessor center drift: "+str(front_before))
+        return {}
+    if not _center_matches(east_before,EAST_OLD_CENTER):
+        fail("Building clearance east predecessor center drift: "+str(east_before))
         return {}
 
     _translate_group(vertices,FRONT_PANEL_INDICES,FRONT_TRANSLATION)
     _translate_group(vertices,EAST_PANEL_INDICES,EAST_TRANSLATION)
     var front_after:=_group_center(vertices,FRONT_PANEL_INDICES)
     var east_after:=_group_center(vertices,EAST_PANEL_INDICES)
-    _require_center(front_after,FRONT_NEW_CENTER,"front successor")
-    _require_center(east_after,EAST_NEW_CENTER,"east successor")
-    if failed:
+    if not _center_matches(front_after,FRONT_NEW_CENTER):
+        fail("Building clearance front successor center drift: "+str(front_after))
+        return {}
+    if not _center_matches(east_after,EAST_NEW_CENTER):
+        fail("Building clearance east successor center drift: "+str(east_after))
         return {}
 
     proof["vertices_source_xyz_m"]=vertices
