@@ -1,0 +1,298 @@
+name: Technical Art Object motion current-world bridge
+
+on:
+  push:
+    branches: [studio/technical-art-object-rigid-current-world-bridge-001]
+    paths:
+      - "contracts/technical_art_object_motion_current_world_bridge.json"
+      - "tools/technical_art_object_motion_current_world_bridge.py"
+      - "environment-proof/atmosphere_current_world_object_motion_observe.gd"
+      - ".github/workflows/technical-art-object-motion-current-world-bridge.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-motion-current-world-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Technical Art head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install proof dependency and bind syntax
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input pillow
+          python -m py_compile tools/technical_art_object_motion_current_world_bridge.py tools/technical_art_exact_rgba_frame_compare.py
+          python -m json.tool contracts/technical_art_object_motion_current_world_bridge.json >/dev/null
+          git rev-parse HEAD > exact-head.txt
+
+      - name: Download exact retained current-world, rigid-component and Animation evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          mkdir -p "$root/parent" "$root/rigid" "$root/animation"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10516853353/zip" -o "$root/parent.zip"
+          echo "f879277d1e4b3c37b9a7fc491d992e520345a8642f56d0ae17abfcd9957444c0  $root/parent.zip" | sha256sum --check --strict
+          unzip -q "$root/parent.zip" -d "$root/parent"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10518844966/zip" -o "$root/rigid.zip"
+          echo "e5c4de2ed90e68878b2ede2ab00bb502fb2c219be4d8617821b7f73a7c169fc9  $root/rigid.zip" | sha256sum --check --strict
+          unzip -q "$root/rigid.zip" -d "$root/rigid"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-object-design/actions/artifacts/10518631882/zip" -o "$root/animation.zip"
+          echo "c0e9b6325346d6bc5db84e8297347b9eb9e9edc18f5c4262f8cacbe41c3862ff  $root/animation.zip" | sha256sum --check --strict
+          unzip -q "$root/animation.zip" -d "$root/animation"
+          test -f "$root/rigid/object-rigid-component-map.json"
+          test -f "$root/animation/animation-proof/generated/lid-latch-motion-evidence.json"
+          test -f "$root/animation/animation-proof/generated/front-latch-articulation.receipt.json"
+          test -f "$root/animation/animation-proof/animationplayer-target-receipt.json"
+          test "$(find "$root/parent/candidate/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' -type f | wc -l | tr -d ' ')" = 68
+
+      - name: Prepare exact receiver-only motion plan
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          mkdir -p environment-proof/generated "$root/receipts"
+          cp "$root/rigid/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
+          python tools/technical_art_object_motion_current_world_bridge.py prepare \
+            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --component-map environment-proof/generated/object-rigid-component-map.json \
+            --sequence "$root/animation/animation-proof/generated/lid-latch-motion-evidence.json" \
+            --rig "$root/animation/animation-proof/generated/front-latch-articulation.receipt.json" \
+            --target-receipt "$root/animation/animation-proof/animationplayer-target-receipt.json" \
+            --output environment-proof/generated/object-motion-receiver-plan.json \
+            --receipt "$root/receipts/motion-plan-receipt.json"
+          python tools/technical_art_object_motion_current_world_bridge.py validate-plan \
+            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --plan environment-proof/generated/object-motion-receiver-plan.json
+
+      - name: Negative rejects Animation identity drift
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          cp "$root/animation/animation-proof/generated/lid-latch-motion-evidence.json" "$root/negative-sequence.json"
+          python - <<'PY'
+          import json
+          p='evidence/technical_art_object_motion_current_world_bridge/negative-sequence.json'
+          d=json.load(open(p)); d['sequence_digest']='0'*64
+          open(p,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/technical_art_object_motion_current_world_bridge.py prepare \
+            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --component-map environment-proof/generated/object-rigid-component-map.json \
+            --sequence "$root/negative-sequence.json" \
+            --rig "$root/animation/animation-proof/generated/front-latch-articulation.receipt.json" \
+            --target-receipt "$root/animation/animation-proof/animationplayer-target-receipt.json" \
+            --output "$root/negative-plan.json" --receipt "$root/negative-receipt.json" > "$root/negative.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_MUTATED_ANIMATION_SEQUENCE_IDENTITY
+
+      - name: Checkout exact generic UC donor and fresh current UC
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: 6dc465987e01362264f88b7cef4213609ae50763
+          path: .uc-donor
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: 95b618f6e6028c2ac8c1a106cfa009a3c106f48c
+          path: .uc-current
+          fetch-depth: 1
+
+      - name: Prove UC rigid-scene implementation remained generic and byte-identical
+        run: |
+          set -euo pipefail
+          test "$(git -C .uc-donor rev-parse HEAD:src/axm_uc/rigid_scene_graph.py)" = "$(git -C .uc-current rev-parse HEAD:src/axm_uc/rigid_scene_graph.py)"
+          git -C .uc-current rev-parse HEAD > evidence/technical_art_object_motion_current_world_bridge/current-uc-head.txt
+          git -C .uc-current rev-parse HEAD:src/axm_uc/rigid_scene_graph.py > evidence/technical_art_object_motion_current_world_bridge/current-uc-rigid-scene-blob.txt
+          echo PASS_CURRENT_UC_GENERIC_RIGID_SCENE_EXECUTABLE_CONTINUITY
+
+      - name: Download exact retained world payload and selected-roughness inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          mkdir -p "$root/world-input" "$root/roughness"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" -o "$root/world-input.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world-input.zip" | sha256sum --check --strict
+          unzip -q "$root/world-input.zip" -d "$root/world-input"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" -o "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          cp "$root/world-input/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+
+      - name: Checkout exact retained receiver dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Compose exact current-world observer dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/receipts/observer-composition.json"
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Render exact owner samples 0 10 50 100 in current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          for sample in 0 10 50 100; do
+            out="$root/sample-$sample"; mkdir -p "$out/rendered"
+            rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+            AXM_OBJECT_MOTION_SAMPLE_INDEX="$sample" xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+              .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+              --path environment-proof --script atmosphere_current_world_object_motion_observe.gd 2>&1 | tee "$out/godot.log"
+            cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json"
+            cp environment-proof/atmosphere-width-*.png "$out/rendered/"
+            test "$(find "$out/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' -type f | wc -l | tr -d ' ')" = 68
+          done
+
+      - name: Verify exact motion observations and rendered closure
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('evidence/technical_art_object_motion_current_world_bridge')
+          def find(v):
+              if isinstance(v,dict):
+                  if v.get('schema')=='axm.environment-object-motion-current-world-observation/v0.2': return [v]
+                  out=[]
+                  for x in v.values(): out+=find(x)
+                  return out
+              if isinstance(v,list):
+                  out=[]
+                  for x in v: out+=find(x)
+                  return out
+              return []
+          for expected in (0,10,50,100):
+              data=json.load(open(root/f'sample-{expected}'/'runtime.json'))
+              rows=find(data); assert rows, (expected,'motion observation missing')
+              for row in rows:
+                  assert row['state']=='PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLE_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD',row
+                  assert row['track_count']==3 and row['key_counts']==[101,101,101],row
+                  assert row['neutral_pivot_wrapper_max_drift_m']<=1e-6,row
+                  assert row['release_keeper_drift_m']<=1e-6 and row['release_min_lever_move_m']>0.001,row
+                  assert row['peak_min_keeper_move_m']>0.03,row
+                  assert row['endpoint_keeper_drift_m']<=1e-6 and row['endpoint_lever_drift_m']<=1e-6,row
+                  assert row['selected_sample']['index']==expected,row
+                  assert row['vfx_adoption'] is False and row['runtime_acceptance'] is False and row['environment_adoption'] is False,row
+              print('PASS_RUNTIME_SAMPLE',expected,'observations',len(rows))
+          PY
+          python tools/technical_art_exact_rgba_frame_compare.py --control-dir "$root/parent/candidate/rendered" --candidate-dir "$root/sample-0/rendered" --expected-count 68 --output "$root/neutral-vs-parent.json"
+          python tools/technical_art_exact_rgba_frame_compare.py --control-dir "$root/sample-0/rendered" --candidate-dir "$root/sample-100/rendered" --expected-count 68 --output "$root/endpoint-vs-neutral.json"
+          for sample in 10 50; do
+            set +e
+            python tools/technical_art_exact_rgba_frame_compare.py --control-dir "$root/sample-0/rendered" --candidate-dir "$root/sample-$sample/rendered" --expected-count 68 --output "$root/sample-$sample-vs-neutral.json"
+            code=$?; set -e
+            test "$code" -eq 2
+          done
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('evidence/technical_art_object_motion_current_world_bridge')
+          n=json.load(open(root/'neutral-vs-parent.json')); e=json.load(open(root/'endpoint-vs-neutral.json'))
+          r=json.load(open(root/'sample-10-vs-neutral.json')); p=json.load(open(root/'sample-50-vs-neutral.json'))
+          assert n['changed_frames']==0 and n['changed_pixels']==0,n
+          assert e['changed_frames']==0 and e['changed_pixels']==0,e
+          assert r['changed_frames']>0 and r['changed_pixels']>0,r
+          assert p['changed_frames']>0 and p['changed_pixels']>0,p
+          out={
+            'schema':'axm.technical-art-object-motion-current-world-proof/v0.1',
+            'result':'PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLES_THROUGH_RIGID_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD',
+            'exact_head':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'animation_head':'c688936a84f80f292e43587c9d3386bd717f8178',
+            'object_technical_art_head':'965fb2f24dbd0b0cbb748d9f8b8712d62966315f',
+            'current_uc_head':'95b618f6e6028c2ac8c1a106cfa009a3c106f48c',
+            'samples_proven':[0,10,50,100],
+            'neutral_changed_pixels_vs_retained_parent':n['changed_pixels'],
+            'endpoint_changed_pixels_vs_neutral':e['changed_pixels'],
+            'release_changed_frames':r['changed_frames'],'release_changed_pixels':r['changed_pixels'],
+            'peak_changed_frames':p['changed_frames'],'peak_changed_pixels':p['changed_pixels'],
+            'vfx_adoption':False,'runtime_acceptance':False,'environment_adoption':False,'art_qa_acceptance':False,'canon':False,
+            'uc_product_modified':False,
+            'truth_boundary':'Exact owner-authored discrete Animation samples are transported into the already-proven current-world rigid Object receiver. Neutral and endpoint are pixel-exact to the retained world/each other; release and peak visibly change the world receiver. This is transport evidence only, not wall-clock motion quality, VFX adoption, Runtime/device acceptance, Environment adoption, Art/QA acceptance or production readiness.'
+          }
+          (root/'final-receipt.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+
+      - name: Retain exact bridge evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_object_motion_current_world_bridge
+          out="$root/retained"; mkdir -p "$out"
+          cp exact-head.txt "$out/" 2>/dev/null || true
+          cp "$root/receipts/motion-plan-receipt.json" "$out/" 2>/dev/null || true
+          cp "$root/final-receipt.json" "$out/" 2>/dev/null || true
+          cp "$root/neutral-vs-parent.json" "$root/endpoint-vs-neutral.json" "$root/sample-10-vs-neutral.json" "$root/sample-50-vs-neutral.json" "$out/" 2>/dev/null || true
+          cp environment-proof/generated/object-motion-receiver-plan.json "$out/" 2>/dev/null || true
+          cp environment-proof/generated/object-rigid-component-map.json "$out/" 2>/dev/null || true
+          cp "$root/current-uc-head.txt" "$root/current-uc-rigid-scene-blob.txt" "$out/" 2>/dev/null || true
+          for sample in 0 10 50 100; do cp "$root/sample-$sample/runtime.json" "$out/runtime-$sample.json" 2>/dev/null || true; done
+          mkdir -p "$out/rendered-release" "$out/rendered-peak"
+          cp "$root/sample-10/rendered/"*.png "$out/rendered-release/" 2>/dev/null || true
+          cp "$root/sample-50/rendered/"*.png "$out/rendered-peak/" 2>/dev/null || true
+
+      - name: Upload Technical Art motion bridge evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-object-motion-current-world-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/technical_art_object_motion_current_world_bridge/retained
+          if-no-files-found: error
+          retention-days: 30

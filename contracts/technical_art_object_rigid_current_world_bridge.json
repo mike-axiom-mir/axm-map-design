@@ -1,0 +1,81 @@
+{
+  "schema": "axm.technical-art-object-rigid-current-world-bridge/v0.1",
+  "coordination_parent": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "head": "061dbf12604f8a4ee19a62a79f0d9d2f99503181",
+    "role": "current Environment/Object receiver-readiness state; this Technical Art lane stacks on it without changing Environment ownership"
+  },
+  "parent_current_world": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "head": "d0461a787525d19004d83334c282adacaa06afed",
+    "artifact_id": 10516853353,
+    "artifact_sha256": "f879277d1e4b3c37b9a7fc491d992e520345a8642f56d0ae17abfcd9957444c0",
+    "required_report_state": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_RECEIVER__VISUAL_OBSERVABILITY_CHARACTERIZED__ADOPTION_HELD",
+    "required_runtime_state": "PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_LIVE_OBSERVATION",
+    "required_states": 17,
+    "required_frames": 68
+  },
+  "world_input": {
+    "artifact_id": 10509037278,
+    "artifact_sha256": "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97",
+    "required_payload": "combined_current_world.json"
+  },
+  "selected_roughness_input": {
+    "artifact_id": 10502588586,
+    "artifact_sha256": "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e",
+    "surface_path": "donor-receipts/service-dark-selected-roughness-two-surface.surface.json",
+    "png_path": "donor-receipts/service-dark-roughness-selected-field.png",
+    "png_sha256": "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949"
+  },
+  "object_source": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "head": "d3fa10a270faae7925811f44f03381fe5c5d0215",
+    "path": "assets/modular-equipment-case-001/source.json",
+    "blob": "018e36bb08539f212d2c65e6408566e3540fd983",
+    "sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a"
+  },
+  "technical_art_donor": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 16,
+    "head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+    "artifact_id": 10440591535,
+    "artifact_sha256": "24298ae6b7467e3a90282cb485722ffbd4c6e5f0c84925370a6a1bcbf0125eee",
+    "required_result": "PASS_OBJECT_SOURCE_OWNED_RIGID_PARTS_THROUGH_UC_SCENE_GRAPH",
+    "required_lid_owned_children": [
+      "hinge_lid_l0",
+      "hinge_lid_l1",
+      "latch_0_keeper",
+      "latch_1_keeper"
+    ],
+    "required_fixed_levers": [
+      "latch_0_lever",
+      "latch_1_lever"
+    ]
+  },
+  "uc": {
+    "repository": "mike-axiom-mir/axm-universal-creation",
+    "donor_head": "6dc465987e01362264f88b7cef4213609ae50763",
+    "inspected_current_head": "e9eed3d9eb66392992cc18c8884bfade0d3b8efd",
+    "rigid_scene_graph_path": "src/axm_uc/rigid_scene_graph.py",
+    "required_schema": "axm.rigid-scene-graph/v0.1",
+    "policy": "Only exact generic rigid-scene executable continuity is checked. No Object, Map, Animation, VFX, material or receiver semantics may be added to UC for this bridge."
+  },
+  "receiver": {
+    "required_component_count": 31,
+    "required_triangles": 812,
+    "required_parent_surface_count": 7,
+    "required_moving_components": [
+      "lid_shell",
+      "latch_0_lever",
+      "latch_1_lever"
+    ],
+    "neutral_frame_policy": "PIXEL_EXACT_ALL_68_RETAINED_CURRENT_WORLD_FRAMES",
+    "animation_adoption": false,
+    "vfx_adoption": false,
+    "runtime_acceptance": false,
+    "environment_adoption": false
+  },
+  "result_state": "PASS_CURRENT_WORLD_OBJECT_RIGID_COMPONENT_BOUNDARY_NEUTRAL_EQUIVALENCE__ANIMATION_VFX_ADOPTION_HELD",
+  "reusable_rule": "SOURCE_OWNED_RIGID_COMPONENT_BOUNDARIES_MAY_REPLACE_A_STATIC_RECEIVER_ONLY_WHEN_THE_EXISTING_MATERIAL_NORMAL_UV_AND_NEUTRAL_WORLD_IMAGE_IDENTITIES_REMAIN_EXACT",
+  "truth_boundary": "This Technical Art bridge may expose exact Object-owned rigid groups as independently transformable receiver nodes and may localize the exact lid-owned subtree around the already-proven Object hinge pivot. It must reuse the current Map receiver's material resources, generated normals, selected UV0 and selected roughness bindings and must prove all 68 retained neutral current-world frames pixel-exact. It does not apply Animation samples, render phase-bound VFX, approve Environment adoption, establish target-device performance, make Art/QA decisions, modify Object ownership, or promote CANON/production readiness. UC remains generic and unchanged."
+}
