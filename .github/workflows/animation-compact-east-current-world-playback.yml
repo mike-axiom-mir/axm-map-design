@@ -41,6 +41,7 @@ jobs:
           python -m py_compile tools/verify_animation_compact_east_current_world_playback.py
           grep -F 'PARENT_VFX_HEAD := "29ef2d4cc4398b3f26290e4e1f1f10398ca9898c"' environment-proof/animation_compact_east_current_world_playback_observe.gd
           grep -F 'MOTION_TRUTH := "DISCRETE_EXACT_VFX_STATES_NOT_SMOOTH_INTERPOLATION"' environment-proof/animation_compact_east_current_world_playback_observe.gd
+          grep -F 'DELIVERY_SEMANTICS := "PROCESS_FRAME_OBSERVATION_CHARACTERIZED_NOT_FULL_SOURCE_SLOT_DELIVERY_ACCEPTANCE"' environment-proof/animation_compact_east_current_world_playback_observe.gd
 
       - uses: actions/setup-python@v5
         with:
@@ -125,10 +126,11 @@ jobs:
           python - <<'PY'
           import json
           p=json.load(open('evidence/animation_compact_east_current_world_playback_001/report.json'))
-          assert p['state']=='PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_STATE_ANIMATIONPLAYER_PLAYBACK_AND_LOOP',p
+          assert p['state']=='PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_KEY_BINDING_AND_REAL_LOOP_DELIVERY_CHARACTERIZED',p
           assert p['real_playback_wraps']==3,p
+          assert p['full_source_state_delivery_accepted'] is False,p
           assert all(p['checks'].values()),p
-          print('PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_STATE_ANIMATIONPLAYER_PLAYBACK_AND_LOOP')
+          print('PASS_COMPACT_EAST_CURRENT_WORLD_EXACT_KEY_BINDING_AND_REAL_LOOP_DELIVERY_CHARACTERIZED')
           PY
 
       - name: Remove downloaded prerequisite before upload
