@@ -1,0 +1,54 @@
+{
+  "schema": "axm.environment-object-selected-roughness-current-world/v0.1",
+  "intent": "bind the exact Materials-selected bounded roughness field to the already source-segmented and exact-UV0-bound Object faces as a separate real current-world appearance candidate without taking Art, Runtime or source-owner acceptance authority",
+  "parent_environment_head": "4eed6da68f746ca2849c89fa88533f82bc836b26",
+  "reusable_rule": "SPATIAL_MATERIAL_FIELD_MAY_ENTER_CURRENT_WORLD_REVIEW_ONLY_AFTER_EXACT_SURFACE_AND_UV_IDENTITY__APPEARANCE_AND_RUNTIME_ACCEPTANCE_REMAIN_SEPARATE",
+  "object_source": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "head": "d3fa10a270faae7925811f44f03381fe5c5d0215",
+    "host_source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a"
+  },
+  "materials": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 6,
+    "head": "0515a2d5ad2c7a1eb545f2b7b327b7367530dfca",
+    "material_id": "service_dark"
+  },
+  "technical_art": {
+    "repository": "mike-axiom-mir/axm-object-design",
+    "pr": 28,
+    "head": "1bcdbae786e02f3ca46a89e4e0ff608d74f364b4",
+    "surface_spec_sha256": "1f87a7b287c7caa138deee64b687d0aba67a3485ddeae6f80a38ebd906a86aec",
+    "evidence_artifact_id": 10490650986,
+    "evidence_archive_sha256": "0e24efcbfefb129ef24c153b50020ac321a9789dbf8c148794dfc45f5c9f5f90"
+  },
+  "selected_field": {
+    "width_px": 512,
+    "height_px": 512,
+    "scalar_r8_sha256": "b8d13c07f9b71278042b0d42d44b84579a3f327c6adf6723cae4c8c8f06dd38e",
+    "png_sha256": "57cf746a9a7e0615884fe3c45c6c4df677c2bd0631def61b3ccb1684daa26949",
+    "observed_r8_min": 153,
+    "observed_r8_max": 183,
+    "observed_unique_r8_values": 31,
+    "selected_surfaces": [
+      "lid_inner_service_surface",
+      "front_service_panel_outer_service_surface"
+    ]
+  },
+  "receiver_policy": {
+    "surface_count": 7,
+    "texture_only_selected_surfaces": true,
+    "reuse_positions_normals_indices_uv0": true,
+    "preserve_current_receiver_albedo_and_metallic_per_face": true,
+    "weather_width_measurements_required": 1224,
+    "weather_width_tolerance_px": 0.05,
+    "real_scene_frames_required": 68
+  },
+  "decision": {
+    "environment_adoption": false,
+    "art_qa_acceptance_required": true,
+    "runtime_acceptance_required": true,
+    "canon": false,
+    "production_ready": false
+  }
+}
