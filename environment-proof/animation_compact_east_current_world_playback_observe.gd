@@ -75,7 +75,8 @@ func _make_player(root3d:Node3D,node:MeshInstance3D,phase_meshes:Array)->Animati
     animation.length=DURATION_S
     animation.loop_mode=Animation.LOOP_LINEAR
     var track:=animation.add_track(Animation.TYPE_VALUE)
-    animation.track_set_path(track,NodePath("compact-east-animation-receiver:mesh"))
+    var receiver_path:=root3d.get_path_to(node)
+    animation.track_set_path(track,NodePath("%s:mesh" % receiver_path))
     animation.track_set_interpolation_type(track,Animation.INTERPOLATION_NEAREST)
     animation.value_track_set_update_mode(track,Animation.UPDATE_DISCRETE)
     for phase in range(UNIQUE_LOOP_PHASES):
