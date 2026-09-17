@@ -1,11 +1,12 @@
-name: Animation Object current-world wall-clock proof
+name: Animation Object current-world wall-clock successor proof
 
 on:
   push:
-    branches: [studio/animation-object-current-world-wallclock-001]
+    branches: [studio/animation-object-current-world-wallclock-002]
     paths:
       - "contracts/animation_object_current_world_wallclock.json"
       - "environment-proof/animation_object_current_world_wallclock_observe.gd"
+      - "environment-proof/animation_object_current_world_wallclock_rebind_observe.gd"
       - "tools/verify_animation_object_current_world_wallclock.py"
       - ".github/workflows/animation-object-current-world-wallclock.yml"
   pull_request:
@@ -30,21 +31,22 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Bind exact parent and verifier syntax
+      - name: Bind exact successor parent and verifier syntax
         run: |
           set -euo pipefail
           python -m py_compile tools/verify_animation_object_current_world_wallclock.py tools/technical_art_object_motion_current_world_bridge.py
           python -m json.tool contracts/animation_object_current_world_wallclock.json >/dev/null
-          git merge-base --is-ancestor d2974dec5043ed9afad346574b23ef8bd4438a76 HEAD
-          git diff --exit-code d2974dec5043ed9afad346574b23ef8bd4438a76 -- \
+          git merge-base --is-ancestor e085437f6cc958bbf7c5c6464578923d542962b0 HEAD
+          git diff --exit-code e085437f6cc958bbf7c5c6464578923d542962b0 -- \
             environment-proof/atmosphere_current_world_object_motion_observe.gd \
+            environment-proof/atmosphere_current_world_object_motion_observe_base.gd \
             environment-proof/atmosphere_current_world_object_rigid_component_observe.gd \
             tools/technical_art_object_motion_current_world_bridge.py \
             contracts/technical_art_object_motion_current_world_bridge.json
           git rev-parse HEAD > animation-exact-head.txt
-          echo PASS_EXACT_TECHNICAL_ART_PARENT_UNMODIFIED
+          echo PASS_EXACT_TECHNICAL_ART_SUCCESSOR_UNMODIFIED
 
-      - name: Download exact Technical Art current-world motion parent
+      - name: Download exact Technical Art current-world motion successor
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -52,20 +54,23 @@ jobs:
           root=evidence/animation_object_current_world_wallclock
           mkdir -p "$root/ta-parent" environment-proof/generated
           curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10520039600/zip" -o "$root/ta-parent.zip"
-          echo "ed7acb94e1b10d7b8abe50a7b5ee0c79393cfa1e91e33b18dddd91c96eb3cc0b  $root/ta-parent.zip" | sha256sum --check --strict
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10521663924/zip" -o "$root/ta-parent.zip"
+          echo "2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24  $root/ta-parent.zip" | sha256sum --check --strict
           unzip -q "$root/ta-parent.zip" -d "$root/ta-parent"
           python - <<'PY'
           import json
           p='evidence/animation_object_current_world_wallclock/ta-parent/final-receipt.json'
           d=json.load(open(p))
-          assert d['exact_head']=='d2974dec5043ed9afad346574b23ef8bd4438a76', d
+          assert d['exact_head']=='e085437f6cc958bbf7c5c6464578923d542962b0', d
           assert d['result']=='PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLES_THROUGH_RIGID_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD', d
           assert d['animation_head']=='c688936a84f80f292e43587c9d3386bd717f8178', d
           assert d['samples_proven']==[0,10,50,100], d
           assert d['neutral_changed_pixels_vs_retained_parent']==0, d
           assert d['endpoint_changed_pixels_vs_neutral']==0, d
-          print('PASS_EXACT_TECHNICAL_ART_MOTION_PARENT')
+          assert d['uc_product_modified'] is False, d
+          assert d['runtime_acceptance'] is False, d
+          assert d['art_qa_acceptance'] is False, d
+          print('PASS_EXACT_TECHNICAL_ART_FRAME_ADAPTER_SUCCESSOR')
           PY
           cp "$root/ta-parent/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
           cp "$root/ta-parent/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
@@ -130,7 +135,7 @@ jobs:
           chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
           if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
 
-      - name: Run low-intrusion wall-clock pass then shaded review playback
+      - name: Run frame-aware low-intrusion wall-clock pass then shaded review playback
         env:
           AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
           AXM_OBJECT_MOTION_SAMPLE_INDEX: "0"
@@ -140,7 +145,7 @@ jobs:
           rm -f environment-proof/animation-object-current-world-wallclock-frame-*.png environment-proof/animation-object-current-world-wallclock-runtime.json
           xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
             .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
-            --path environment-proof --script animation_object_current_world_wallclock_observe.gd 2>&1 | tee "$root/godot.log"
+            --path environment-proof --script animation_object_current_world_wallclock_rebind_observe.gd 2>&1 | tee "$root/godot.log"
           test -f environment-proof/animation-object-current-world-wallclock-runtime.json
           cp environment-proof/animation-object-current-world-wallclock-runtime.json "$root/runtime.json"
           mkdir -p "$root/rendered"
@@ -165,6 +170,23 @@ jobs:
           code=$?; set -e
           test "$code" -ne 0
           echo PASS_REJECTED_RUNTIME_AUTHORITY_INFLATION
+
+      - name: Fail closed on receiver-frame acceptance inflation
+        run: |
+          set -euo pipefail
+          root=evidence/animation_object_current_world_wallclock
+          python - <<'PY'
+          import json
+          src='evidence/animation_object_current_world_wallclock/runtime.json'
+          out='evidence/animation_object_current_world_wallclock/negative-frame-match.json'
+          d=json.load(open(src)); d['acceptance_pose_match_uses_host_quaternion_projected_to_exact_receiver_axis']=False
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_animation_object_current_world_wallclock.py --receipt "$root/negative-frame-match.json" > "$root/negative-frame-match.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_RECEIVER_FRAME_ACCEPTANCE_INFLATION
 
       - name: Fail closed on phase-order corruption
         run: |
@@ -193,11 +215,13 @@ jobs:
           d=json.load(open(root/'runtime.json'))
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           summary={
-            'schema':'axm.animation-object-current-world-wallclock-summary/v0.1',
+            'schema':'axm.animation-object-current-world-wallclock-summary/v0.2',
             'result':d['state'],
             'exact_head':head,
             'technical_art_parent_head':d['technical_art_parent_head'],
+            'predecessor_animation_evidence_head':d['predecessor_animation_evidence_head'],
             'animation_head':d['animation_head'],
+            'receiver_frame_matching_rule':d['receiver_frame_matching_rule'],
             'timed_natural_stop':d['timed_playback']['natural_stop'],
             'timed_elapsed_s':d['timed_playback']['elapsed_s'],
             'timed_observed_owner_sample_count':d['timed_playback']['observed_owner_sample_count'],
@@ -219,7 +243,7 @@ jobs:
       - name: Upload retained Animation evidence
         uses: actions/upload-artifact@v4
         with:
-          name: animation-object-current-world-wallclock-${{ github.sha }}
+          name: animation-object-current-world-wallclock-successor-${{ github.sha }}
           path: |
             evidence/animation_object_current_world_wallclock/SUMMARY.json
             evidence/animation_object_current_world_wallclock/runtime.json
@@ -231,6 +255,8 @@ jobs:
             evidence/animation_object_current_world_wallclock/receipts/observer-composition.json
             evidence/animation_object_current_world_wallclock/negative-runtime-authority.json
             evidence/animation_object_current_world_wallclock/negative-runtime-authority.log
+            evidence/animation_object_current_world_wallclock/negative-frame-match.json
+            evidence/animation_object_current_world_wallclock/negative-frame-match.log
             evidence/animation_object_current_world_wallclock/negative-phase-order.json
             evidence/animation_object_current_world_wallclock/negative-phase-order.log
             evidence/animation_object_current_world_wallclock/rendered/*.png
