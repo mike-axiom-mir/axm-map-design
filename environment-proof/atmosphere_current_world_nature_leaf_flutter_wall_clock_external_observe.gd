@@ -103,9 +103,9 @@ func _run_external_context(states:Array, camera:Camera3D, context:String)->Dicti
             var ideal_due_us := start_us + due_slot * PHASE_STEP_US
             var selection_late := float(observed_us - ideal_due_us) / 1000.0
 
-            # The marker and source state are changed in the same main-loop turn,
-            # before one shared frame_post_draw. The external recorder never calls
-            # viewport.get_texture().get_image() or any in-process readback path.
+            # The marker and source state change in the same main-loop turn,
+            # before one shared frame_post_draw. The external recorder never invokes
+            # an in-process viewport image-readback API or PNG encoding path.
             _set_marker(context, due_slot, true)
             var apply_begin_us := Time.get_ticks_usec()
             var sapling_update := fill_sapling(scene["sapling"] as Dictionary)
@@ -345,8 +345,10 @@ func _initialize()->void:
     var total_presented := 0
     for context_value in PLAYBACK_CONTEXTS:
         total_presented += int((contexts[String(context_value)] as Dictionary).get("presented_slot_count", 0))
-    var path_mean := float((contexts["path_eye"] as Dictionary).get("post_draw_interval_ms", {}).get("mean", 999.0))
-    var elevated_mean := float((contexts["elevated_oblique"] as Dictionary).get("post_draw_interval_ms", {}).get("mean", 999.0))
+    var path_interval := (contexts["path_eye"] as Dictionary).get("post_draw_interval_ms", {}) as Dictionary
+    var elevated_interval := (contexts["elevated_oblique"] as Dictionary).get("post_draw_interval_ms", {}) as Dictionary
+    var path_mean := float(path_interval.get("mean", 999.0))
+    var elevated_mean := float(elevated_interval.get("mean", 999.0))
     var path_ratio := path_mean / CLEAN_REFERENCE_PATH_MEAN_MS
     var elevated_ratio := elevated_mean / CLEAN_REFERENCE_ELEVATED_MEAN_MS
     var coverage_ok := total_presented >= LOW_INTRUSION_MIN_PRESENTED_TOTAL
