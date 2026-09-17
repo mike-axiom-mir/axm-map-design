@@ -1,8 +1,9 @@
 {
-  "schema": "axm.animation-object-current-world-wallclock/v0.1",
-  "technical_art_parent_head": "d2974dec5043ed9afad346574b23ef8bd4438a76",
-  "technical_art_parent_artifact_id": 10520039600,
-  "technical_art_parent_artifact_sha256": "ed7acb94e1b10d7b8abe50a7b5ee0c79393cfa1e91e33b18dddd91c96eb3cc0b",
+  "schema": "axm.animation-object-current-world-wallclock/v0.2",
+  "technical_art_parent_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
+  "technical_art_parent_artifact_id": 10521663924,
+  "technical_art_parent_artifact_sha256": "2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24",
+  "predecessor_animation_evidence_head": "c2695f654f9dd44312ca5d205eceb27f7c2680ee",
   "animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
   "sequence_id": "lid-latch-open-hold-close-001",
   "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
@@ -12,6 +13,6 @@
   "playback_engine": "Godot 4.7.2 AnimationPlayer",
   "timed_pass": "frame_post_draw metadata only; no viewport readback or disk writes while timing is observed",
   "review_pass": "second real AnimationPlayer.play() with shaded frame capture; capture timing is instrumentation and is not performance evidence",
-  "reusable_rule": "PROVE_CURRENT_WORLD_OWNER_MOTION_WITH_A_LOW_INTRUSION_WALLCLOCK_PASS_FIRST_THEN_CAPTURE_A_SEPARATE_REAL_PLAYBACK_REVIEW_SEQUENCE_WITHOUT_RETIMING_SOURCE_MOTION",
-  "truth_boundary": "Animation may prove the exact owner clip on the Technical-Art current-world rigid receiver. It does not own receiver construction, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness."
+  "reusable_rule": "REPLAY_FROZEN_OWNER_MOTION_ON_EACH_VERIFIED_TECHNICAL_ART_RECEIVER_SUCCESSOR__DO_NOT_TRANSFER_WALLCLOCK_ACCEPTANCE_BY_ANCESTRY__MATCH_POSES_IN_THE_RECEIVER_FRAME_NOT_BY_SOURCE_EULER_COMPONENTS",
+  "truth_boundary": "Animation may replay and characterize the exact owner clip on the exact Technical-Art current-world receiver successor. It does not own receiver construction or frame conversion, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness."
 }
