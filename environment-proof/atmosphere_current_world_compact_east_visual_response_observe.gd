@@ -1,5 +1,9 @@
 extends "res://atmosphere_current_world_nature_leaf_flutter_observe.gd"
 
+# Proof-host continuity: atmosphere_current_world_weather_width_observe.gd is restored
+# byte-for-byte from Map commit 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b so the
+# already-accepted inherited current-world observer chain is self-contained at this head.
+
 const COMPACT_EAST_VFX_HEAD := "cef2ad78d8e36a55ada5dad07329f1a7125d48de"
 const COMPACT_EAST_STRUCTURE_RESULT := "PASS_CURRENT_WORLD_COMPACT_EAST_VISUAL_RESPONSE_STRUCTURE"
 const COMPACT_EAST_RECEIVING_SCHEMA := "axm.environment-compact-east-visual-response-receiving/v0.1"
