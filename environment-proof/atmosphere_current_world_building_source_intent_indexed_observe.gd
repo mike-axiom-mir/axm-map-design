@@ -6,9 +6,9 @@ const SOURCE_INTENT_RECEIVING_SCHEMA := "axm.environment-building-source-intent-
 const SOURCE_INTENT_GEOMETRY_HEAD := "b9b4ab63e23b9756ab79597e86ecc41ea75ea8b7"
 const SOURCE_INTENT_CANDIDATE_ID := "boundary-only-planar-role-source-intent-indexed-001"
 const SOURCE_INTENT_CANDIDATE_SHA256 := "f6a831058de66901fd42704b1d8c1cf187b13a0919ae3719c03c4369f107e6c0"
-const EXPECTED_MAP_PLACEMENT_TRANSLATION := Vector3(0.0, 7.2, 0.0)
-const EXPECTED_MAP_MIN_BOUNDS := Vector3(-3.8, 6.08, 0.0)
-const EXPECTED_MAP_MAX_BOUNDS := Vector3(3.92, 8.2, 3.4)
+const EXPECTED_MAP_PLACEMENT_TRANSLATION := Vector3(0.0, 0.0, -7.2)
+const EXPECTED_MAP_MIN_BOUNDS := Vector3(-3.8, 0.0, -8.2)
+const EXPECTED_MAP_MAX_BOUNDS := Vector3(3.92, 3.4, -6.08)
 
 func _load_source_intent_candidate()->Dictionary:
     if not FileAccess.file_exists(SOURCE_INTENT_INDEXED_PATH):
@@ -229,8 +229,9 @@ func add_segmented_building(root3d:Node3D,data:Dictionary)->Dictionary:
             "parent_representation_id":BUILDING_PLANAR_REPRESENTATION_ID,
             "source_owner_equivalence_identity_claimed":true,
             "environment_adoption":false,
-            "placement_translation_source_xyz_m":[placement.x,placement.y,placement.z],
-            "translated_bounds_source_xyz_m":{
+            "placement_translation_source_xyz_m":placement_raw.duplicate(),
+            "placement_translation_godot_xyz_m":[placement.x,placement.y,placement.z],
+            "translated_bounds_godot_xyz_m":{
                 "min":[(translated_bounds["min"] as Vector3).x,(translated_bounds["min"] as Vector3).y,(translated_bounds["min"] as Vector3).z],
                 "max":[(translated_bounds["max"] as Vector3).x,(translated_bounds["max"] as Vector3).y,(translated_bounds["max"] as Vector3).z],
             },
