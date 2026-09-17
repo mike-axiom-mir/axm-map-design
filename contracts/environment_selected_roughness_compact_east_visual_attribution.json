@@ -1,0 +1,39 @@
+{
+  "schema": "axm.environment-selected-roughness-compact-east-visual-attribution/v0.1",
+  "reusable_rule": "SEQUENTIAL_WORLD_CANDIDATES_REQUIRE_PIXEL_ATTRIBUTION_AGAINST_EXACT_RETAINED_PARENTS_BEFORE_COMBINED_ADOPTION",
+  "scope": "Environment-only derived attribution across exact retained current-world evidence. No source, camera, lighting, Weather, material, VFX, Runtime or product state is reauthored.",
+  "exact_retained_evidence": {
+    "uv0_parent": {
+      "head": "4eed6da68f746ca2849c89fa88533f82bc836b26",
+      "artifact_id": 10501901585,
+      "archive_sha256": "a3e3c3adc794877d84f3735f4f4ff69e3120843588da5c8aaa259d7ab7b965e3"
+    },
+    "roughness_only": {
+      "head": "d8a1d950ed5f21e6ad356404f46407c99c160017",
+      "artifact_id": 10502588586,
+      "archive_sha256": "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e"
+    },
+    "roughness_plus_compact_east": {
+      "head": "4bd7eaf6970716dde4159448c92556785f47e954",
+      "artifact_id": 10509037278,
+      "archive_sha256": "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97"
+    }
+  },
+  "required_checks": {
+    "all_three_owner_reports_exact": true,
+    "all_68_frame_names_match": true,
+    "roughness_retained_visual_identity_exact": true,
+    "compact_east_sequential_visual_identity_exact": true,
+    "roughness_and_compact_changed_pixels_disjoint": true,
+    "combined_changed_pixels_equal_exact_sequential_union": true,
+    "no_emergent_pixels_outside_sequential_union": true,
+    "no_sequential_pixels_suppressed_in_combined": true
+  },
+  "decision": {
+    "environment_selected_roughness_adoption": false,
+    "environment_compact_east_adoption": false,
+    "art_qa_acceptance_required": true,
+    "runtime_acceptance_required": true
+  },
+  "truth_boundary": "A green result is exact retained-raster attribution for one pinned current-world sequence only. It does not establish continuous playback, arbitrary camera or lighting behavior, physical wind, target-device performance, final aesthetic acceptance, CANON, production readiness or Environment mastery."
+}
