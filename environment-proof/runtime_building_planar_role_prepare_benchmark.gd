@@ -132,7 +132,7 @@ func measure_once(proof:Dictionary,candidate:bool)->Dictionary:
 func median(values:Array[int])->float:
     var ordered:=values.duplicate()
     ordered.sort()
-    return float(ordered[ordered.size()/2])
+    return float(ordered[int(ordered.size()/2)])
 
 func percentile_nearest(values:Array[int],fraction:float)->int:
     var ordered:=values.duplicate()
