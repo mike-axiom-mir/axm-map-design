@@ -1,0 +1,229 @@
+name: Environment Object selected-surface segmentation receiver
+
+on:
+  push:
+    branches: [studio/environment-weather-variant-object-convergence-001]
+    paths:
+      - "contracts/environment_object_selected_surface_segmentation_receiver.json"
+      - "tools/environment_object_selected_surface_segmentation_receiver.py"
+      - "environment-proof/atmosphere_current_world_object_selected_surface_segmentation_observe.gd"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_SURFACE_SEGMENTATION_RECEIVER_001.md"
+      - ".github/workflows/environment-object-selected-surface-segmentation-receiver.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_object_selected_surface_segmentation_receiver.json"
+      - "tools/environment_object_selected_surface_segmentation_receiver.py"
+      - "environment-proof/atmosphere_current_world_object_selected_surface_segmentation_observe.gd"
+      - "docs/ENVIRONMENT_OBJECT_SELECTED_SURFACE_SEGMENTATION_RECEIVER_001.md"
+      - ".github/workflows/environment-object-selected-surface-segmentation-receiver.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-current-world-segmentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind lineage and compile verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e be4e0dbf245c4658c48b902024cf397cc6557b5f^{commit}
+          git merge-base --is-ancestor be4e0dbf245c4658c48b902024cf397cc6557b5f HEAD
+          python -m py_compile tools/environment_object_selected_surface_segmentation_receiver.py
+
+      - name: Download exact source-surface correspondence evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-object-selected-roughness-surface-correspondence-001-be4e0dbf245c4658c48b902024cf397cc6557b5f
+          path: evidence/environment_object_selected_surface_segmentation_receiver_001/correspondence
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35216808559
+
+      - name: Download exact five-surface receiver-readiness parent
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-object-selected-roughness-receiver-readiness-001-1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33
+          path: evidence/environment_object_selected_surface_segmentation_receiver_001/readiness-parent
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35211529232
+
+      - name: Download exact accepted real current-world payload
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-nature-leaf-flutter-current-world-001-7713cbe5863c3bc38dabb6236eb4b393401224b6
+          path: evidence/environment_object_selected_surface_segmentation_receiver_001/world-parent
+          github-token: ${{ github.token }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35174899697
+
+      - name: Verify donor identities and install world payload
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_surface_segmentation_receiver_001
+          test -f "$root/correspondence/correspondence-report.json"
+          test -f "$root/readiness-parent/readiness-report.json"
+          test -f "$root/readiness-parent/candidate/runtime.json"
+          test "$(find "$root/readiness-parent/candidate/rendered" -maxdepth 1 -type f -name 'atmosphere-width-*.png' | wc -l | tr -d ' ')" = 68
+          test "$(cat "$root/world-parent/exact-head.txt" | tr -d '\n\r')" = 7713cbe5863c3bc38dabb6236eb4b393401224b6
+          test -f "$root/world-parent/combined_current_world.json"
+          python - <<'PY'
+          import json
+          c=json.load(open('evidence/environment_object_selected_surface_segmentation_receiver_001/correspondence/correspondence-report.json'))
+          r=json.load(open('evidence/environment_object_selected_surface_segmentation_receiver_001/readiness-parent/readiness-report.json'))
+          assert c['environment_head']=='be4e0dbf245c4658c48b902024cf397cc6557b5f',c
+          assert c['source_surface_triangle_indices']['lid_inner_service_surface']==[12,13],c
+          assert c['source_surface_triangle_indices']['front_service_panel_outer_service_surface']==[28,29],c
+          assert r['environment_head']=='1fcc9727012d156f8d1c4658c8dca4f0e9dd3c33',r
+          assert r['real_scene_frame_continuity']['byte_identical_frames']==68,r
+          print('PASS_EXACT_SEGMENTATION_DONOR_IDENTITIES')
+          PY
+          mkdir -p environment-proof/generated
+          cp "$root/world-parent/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+
+      - name: Install exact inherited Weather-width observer
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Copy exact inherited Weather-width observer
+        run: |
+          set -euo pipefail
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_selected_surface_segmentation_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Render segmented receiver in exact current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_surface_segmentation_receiver_001
+          out="$root/candidate"
+          mkdir -p "$out/rendered"
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_object_selected_surface_segmentation_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          status=${PIPESTATUS[0]}; set -e
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json" 2>/dev/null || true
+          cp environment-proof/atmosphere-width-*.png "$out/rendered/" 2>/dev/null || true
+          exit "$status"
+
+      - name: Verify exact segmentation and real-scene continuity
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_surface_segmentation_receiver_001
+          python tools/environment_object_selected_surface_segmentation_receiver.py verify \
+            --contract contracts/environment_object_selected_surface_segmentation_receiver.json \
+            --correspondence-report "$root/correspondence/correspondence-report.json" \
+            --parent-report "$root/readiness-parent/readiness-report.json" \
+            --parent-rendered "$root/readiness-parent/candidate/rendered" \
+            --runtime "$root/candidate/runtime.json" \
+            --candidate-rendered "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/segmentation-report.json" \
+            | tee "$root/verify.log"
+          cp exact-head.txt "$root/exact-head.txt"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_object_selected_surface_segmentation_receiver_001/segmentation-report.json'))
+          assert p['state']=='PASS_CURRENT_WORLD_OBJECT_SELECTED_SERVICE_SURFACES_INDEPENDENTLY_ADDRESSABLE__UV0_AND_SELECTED_ROUGHNESS_ADOPTION_HELD',p
+          assert p['segmentation_observation']['post_split_surface_count']==7,p
+          assert p['segmentation_observation']['uv0_total_count']==0,p
+          assert p['real_scene_frame_continuity']['byte_identical_frames']==68,p
+          assert p['weather_width_continuity']['measurements']==1224,p
+          assert p['environment_adoption'] is False and p['selected_roughness_adopted'] is False,p
+          assert all(p['checks'].values()),p
+          print('PASS_EXACT_CURRENT_WORLD_OBJECT_SELECTED_SURFACE_SEGMENTATION')
+          PY
+
+      - name: Negative control rejects broadened selected face
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_surface_segmentation_receiver_001
+          cp "$root/candidate/runtime.json" "$root/negative-runtime.json"
+          python - <<'PY'
+          import json
+          p='evidence/environment_object_selected_surface_segmentation_receiver_001/negative-runtime.json'
+          d=json.load(open(p))
+          rows=[d['static_source_meshes']]+[s['static_source_meshes'] for s in d['samples']]
+          for group in rows:
+              for row in group:
+                  if row.get('asset_id')=='source:object:modular-equipment-case-001':
+                      row['environment_object_selected_surface_segmentation']['selected_surface_segments']['lid_inner_service_surface']['source_triangle_indices']=[12,13,14]
+          open(p,'w').write(json.dumps(d))
+          PY
+          set +e
+          python tools/environment_object_selected_surface_segmentation_receiver.py verify \
+            --contract contracts/environment_object_selected_surface_segmentation_receiver.json \
+            --correspondence-report "$root/correspondence/correspondence-report.json" \
+            --parent-report "$root/readiness-parent/readiness-report.json" \
+            --parent-rendered "$root/readiness-parent/candidate/rendered" \
+            --runtime "$root/negative-runtime.json" \
+            --candidate-rendered "$root/candidate/rendered" \
+            --environment-head "$(cat exact-head.txt)" \
+            --output "$root/negative-report.json" \
+            > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -q "lid selected receiver segment drift" "$root/negative.log"
+          echo "PASS_REJECTED_BROADENED_SELECTED_FACE"
+
+      - name: Retain bounded evidence only
+        if: always()
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_selected_surface_segmentation_receiver_001
+          mkdir -p "$root/donor-receipts"
+          cp "$root/correspondence/correspondence-report.json" "$root/donor-receipts/" 2>/dev/null || true
+          cp "$root/readiness-parent/readiness-report.json" "$root/donor-receipts/" 2>/dev/null || true
+          cp "$root/world-parent/report.json" "$root/donor-receipts/accepted-world-report.json" 2>/dev/null || true
+          rm -rf "$root/correspondence" "$root/readiness-parent" "$root/world-parent" "$root/negative-runtime.json" "$root/negative-report.json"
+
+      - name: Upload exact Environment selected-surface segmentation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-selected-surface-segmentation-receiver-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment_object_selected_surface_segmentation_receiver_001
+          if-no-files-found: error
+          retention-days: 30
