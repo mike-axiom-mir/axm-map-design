@@ -28,7 +28,7 @@ func _motion_find_node(root:Node,wanted:String)->Node3D:
             return found
     return null
 
-func _motion_world_mesh_center(node:Node3D)->Vector3:
+func _motion_receiver_local_mesh_center(container:Node3D,node:Node3D)->Vector3:
     if not (node is MeshInstance3D):
         fail("Technical Art Object motion expected MeshInstance3D: "+String(node.name))
         return Vector3.ZERO
@@ -36,7 +36,16 @@ func _motion_world_mesh_center(node:Node3D)->Vector3:
     if instance.mesh==null:
         fail("Technical Art Object motion mesh missing: "+String(node.name))
         return Vector3.ZERO
-    return instance.global_transform*instance.mesh.get_aabb().get_center()
+    var point:=instance.mesh.get_aabb().get_center()
+    var cursor:Node3D=node
+    while cursor!=container:
+        point=cursor.transform*point
+        var parent:=cursor.get_parent()
+        if not (parent is Node3D):
+            fail("Technical Art Object motion node escaped receiver hierarchy")
+            return Vector3.ZERO
+        cursor=parent as Node3D
+    return point
 
 func _motion_vec3(values:Array)->Vector3:
     if values.size()!=3:
@@ -53,11 +62,13 @@ func _motion_add_track(animation:Animation,root:Node3D,node:Node3D,samples:Array
         animation.track_insert_key(track,float(row["time_s"]),Vector3(float(row[key]),0.0,0.0))
     return track
 
-func _motion_seek(player:AnimationPlayer,plan:Dictionary,index:int,lid:Node3D,pivots:Dictionary)->Dictionary:
+func _motion_apply_sample(plan:Dictionary,index:int,lid:Node3D,pivots:Dictionary)->Dictionary:
     var samples=plan.get("samples",[]) as Array
     var row=samples[index] as Dictionary
-    player.seek(float(row["time_s"]),true)
-    player.advance(0.0)
+    lid.rotation_degrees=Vector3(float(row["lid_target_rotation_deg_x"]),0.0,0.0)
+    for sid in pivots.keys():
+        var pivot=pivots[sid] as Node3D
+        pivot.rotation_degrees=Vector3(float(row["latch_target_rotation_deg_x"]),0.0,0.0)
     var lid_error:=absf(lid.rotation_degrees.x-float(row["lid_target_rotation_deg_x"]))
     var latch_error:=0.0
     for sid in pivots.keys():
@@ -120,19 +131,21 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         if lever==null:
             fail("Technical Art Object motion lever missing: "+lever_name)
             return {}
-        neutral_lever_centers[lever_name]=_motion_world_mesh_center(lever)
+        neutral_lever_centers[lever_name]=_motion_receiver_local_mesh_center(container,lever)
+        var old_container_transform:=lever.transform
         var pivot:=Node3D.new()
         pivot.name="technical_art_motion_pivot_"+sid
         pivot.position=_motion_vec3(station.get("pivot_receiver_xyz_m",[]) as Array)
         container.add_child(pivot)
-        lever.reparent(pivot,true)
+        lever.reparent(pivot,false)
+        lever.transform=pivot.transform.affine_inverse()*old_container_transform
         pivots[sid]=pivot
         levers[sid]=lever
 
     var neutral_pivot_drift:=0.0
     for sid in pivots.keys():
         var lever=levers[sid] as Node3D
-        neutral_pivot_drift=maxf(neutral_pivot_drift,(neutral_lever_centers[String(lever.name)] as Vector3).distance_to(_motion_world_mesh_center(lever)))
+        neutral_pivot_drift=maxf(neutral_pivot_drift,(neutral_lever_centers[String(lever.name)] as Vector3).distance_to(_motion_receiver_local_mesh_center(container,lever)))
     if neutral_pivot_drift>EPS_M:
         fail("Technical Art Object motion pivot insertion changed neutral geometry")
         return {}
@@ -159,34 +172,32 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
     var library:=AnimationLibrary.new()
     library.add_animation("owner_samples",animation)
     player.add_animation_library("",library)
-    player.play("owner_samples")
-    player.pause()
 
-    var start_keeper0:=_motion_world_mesh_center(keeper0)
-    var start_keeper1:=_motion_world_mesh_center(keeper1)
+    var start_keeper0:=_motion_receiver_local_mesh_center(container,keeper0)
+    var start_keeper1:=_motion_receiver_local_mesh_center(container,keeper1)
     var start_levers:Dictionary={}
     for sid in levers.keys():
-        start_levers[sid]=_motion_world_mesh_center(levers[sid] as Node3D)
+        start_levers[sid]=_motion_receiver_local_mesh_center(container,levers[sid] as Node3D)
     var probes:Array=[]
-    probes.append(_motion_seek(player,plan,0,lid,pivots))
-    probes.append(_motion_seek(player,plan,10,lid,pivots))
-    var release_keeper_drift:=maxf(start_keeper0.distance_to(_motion_world_mesh_center(keeper0)),start_keeper1.distance_to(_motion_world_mesh_center(keeper1)))
+    probes.append(_motion_apply_sample(plan,0,lid,pivots))
+    probes.append(_motion_apply_sample(plan,10,lid,pivots))
+    var release_keeper_drift:=maxf(start_keeper0.distance_to(_motion_receiver_local_mesh_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_mesh_center(container,keeper1)))
     var release_min_lever_move:=999.0
     for sid in levers.keys():
-        release_min_lever_move=minf(release_min_lever_move,(start_levers[sid] as Vector3).distance_to(_motion_world_mesh_center(levers[sid] as Node3D)))
+        release_min_lever_move=minf(release_min_lever_move,(start_levers[sid] as Vector3).distance_to(_motion_receiver_local_mesh_center(container,levers[sid] as Node3D)))
     if release_keeper_drift>EPS_M or release_min_lever_move<0.001:
         fail("Technical Art Object motion release sample does not preserve closed lid / move levers")
         return {}
-    probes.append(_motion_seek(player,plan,50,lid,pivots))
-    var peak_min_keeper_move:=minf(start_keeper0.distance_to(_motion_world_mesh_center(keeper0)),start_keeper1.distance_to(_motion_world_mesh_center(keeper1)))
+    probes.append(_motion_apply_sample(plan,50,lid,pivots))
+    var peak_min_keeper_move:=minf(start_keeper0.distance_to(_motion_receiver_local_mesh_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_mesh_center(container,keeper1)))
     if peak_min_keeper_move<0.03:
         fail("Technical Art Object motion peak sample did not move lid-owned keepers")
         return {}
-    probes.append(_motion_seek(player,plan,100,lid,pivots))
-    var endpoint_keeper_drift:=maxf(start_keeper0.distance_to(_motion_world_mesh_center(keeper0)),start_keeper1.distance_to(_motion_world_mesh_center(keeper1)))
+    probes.append(_motion_apply_sample(plan,100,lid,pivots))
+    var endpoint_keeper_drift:=maxf(start_keeper0.distance_to(_motion_receiver_local_mesh_center(container,keeper0)),start_keeper1.distance_to(_motion_receiver_local_mesh_center(container,keeper1)))
     var endpoint_lever_drift:=0.0
     for sid in levers.keys():
-        endpoint_lever_drift=maxf(endpoint_lever_drift,(start_levers[sid] as Vector3).distance_to(_motion_world_mesh_center(levers[sid] as Node3D)))
+        endpoint_lever_drift=maxf(endpoint_lever_drift,(start_levers[sid] as Vector3).distance_to(_motion_receiver_local_mesh_center(container,levers[sid] as Node3D)))
     if endpoint_keeper_drift>EPS_M or endpoint_lever_drift>EPS_M:
         fail("Technical Art Object motion endpoint closure drift")
         return {}
@@ -198,7 +209,7 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
     if selected<0 or selected>=101:
         fail("Technical Art Object motion selected sample out of range")
         return {}
-    var selected_observation:=_motion_seek(player,plan,selected,lid,pivots)
+    var selected_observation:=_motion_apply_sample(plan,selected,lid,pivots)
     result["environment_object_motion_receiver"]={
         "schema":"axm.environment-object-motion-current-world-observation/v0.1",
         "state":MOTION_STATE,
@@ -215,12 +226,13 @@ func add_static_source(root3d:Node3D,source:Dictionary,cull_target_asset_id:Stri
         "endpoint_lever_drift_m":endpoint_lever_drift,
         "probe_samples":probes,
         "selected_sample":selected_observation,
+        "sample_application_mode":"exact_owner_sample_receiver_local_transform_before_scene_attach",
         "vfx_adoption":false,
         "runtime_acceptance":false,
         "environment_adoption":false,
         "art_qa_acceptance":false,
         "canon":false,
-        "truth_boundary":"Exact Object Animation owner samples are adapted onto the already-proven current-world rigid component receiver with the same target coordinate/sign convention as the pinned owner AnimationPlayer proof. Technical Art does not retime motion, infer mechanics, adopt VFX, claim Runtime/device performance, final visual acceptance, CANON or production readiness."
+        "truth_boundary":"Exact Object Animation owner samples are adapted onto the already-proven current-world rigid component receiver with the same target coordinate/sign convention as the pinned owner AnimationPlayer proof. The current-world proof applies selected discrete samples before scene attachment and retains a 3x101 AnimationPlayer representation, but does not claim wall-clock playback. Technical Art does not retime motion, infer mechanics, adopt VFX, claim Runtime/device performance, final visual acceptance, CANON or production readiness."
     }
     return result
 
@@ -233,5 +245,5 @@ func write_receipt()->void:
     receipt["technical_art_object_motion_runtime_acceptance"]=false
     receipt["technical_art_object_motion_environment_adoption"]=false
     receipt["technical_art_object_motion_art_qa_acceptance"]=false
-    receipt["technical_art_object_motion_truth_boundary"]="Receiver-only sampled-motion transport on the current-world Object rigid boundary. Animation owns timing/easing/order; Object/Rigging own hierarchy/pivots; Environment owns adoption; Runtime owns device/performance; Art/QA own appearance."
+    receipt["technical_art_object_motion_truth_boundary"]="Receiver-only discrete sampled-motion transport on the current-world Object rigid boundary. Animation owns timing/easing/order; Object/Rigging own hierarchy/pivots; Environment owns adoption; Runtime owns device/performance; Art/QA own appearance. Wall-clock playback is not claimed here."
     super.write_receipt()
