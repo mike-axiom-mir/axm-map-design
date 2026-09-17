@@ -8,11 +8,13 @@ import statistics
 from pathlib import Path
 from PIL import Image, ImageChops
 
-SCHEMA = "axm.runtime-building-planar-role-direct-indexed-import-budget/v0.2"
+SCHEMA = "axm.runtime-building-planar-role-direct-indexed-import-budget/v0.3"
+BENCHMARK_SCHEMA = "axm.runtime-building-planar-role-prepare-benchmark/v0.1"
 ENVIRONMENT_HEAD = "038925282240441c475651bdc3737d1749c31d06"
 REPRESENTATION_ID = "boundary-only-planar-role-rectangle-render-001"
 DIRECT_SCHEMA = "axm.runtime-building-planar-role-direct-indexed-receiver/v0.2"
 BUILDING_ID = "source:building:service-pavilion-001"
+FINAL_IDENTITY = {"surface_count": 5, "stored_vertices": 312, "indices": 1008, "primitives": 336}
 
 
 def load(path: Path) -> dict:
@@ -61,9 +63,7 @@ def image_delta(a_path: Path, b_path: Path) -> dict:
             raise ValueError("image size drift")
         diff = ImageChops.difference(a, b)
         bbox = diff.getbbox()
-        changed = 0
-        over_one = 0
-        max_channel = 0
+        changed = over_one = max_channel = 0
         if bbox is not None:
             for px in diff.getdata():
                 m = max(px)
@@ -83,15 +83,11 @@ def image_delta(a_path: Path, b_path: Path) -> dict:
         }
 
 
-def percentile_nearest(values: list[int], fraction: float) -> int:
-    ordered = sorted(values)
-    index = max(0, min(len(ordered) - 1, int(round((len(ordered) - 1) * fraction))))
-    return ordered[index]
-
-
-def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Path) -> None:
+def verify(control_root: Path, candidate_root: Path, benchmark_path: Path, exact_head: str, output: Path) -> None:
     control = load(control_root / "runtime.json")
     candidate = load(candidate_root / "runtime.json")
+    benchmark = load(benchmark_path)
+
     if len(control.get("samples", [])) != 17 or len(candidate.get("samples", [])) != 17:
         raise ValueError("expected exact 17-state current-world sequence")
     if control.get("environment_building_planar_role_representation_id") != REPRESENTATION_ID:
@@ -101,8 +97,10 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
     if candidate.get("runtime_building_direct_indexed_schema") != DIRECT_SCHEMA:
         raise ValueError("candidate direct-indexed top-level marker missing")
 
-    control_usec: list[int] = []
-    candidate_usec: list[int] = []
+    # The scene constructs the Building once, then copies its static receipt into all 17 state rows.
+    # Preserve that fact instead of treating the duplicated receipt value as 17 independent timings.
+    control_scene_usec: list[int] = []
+    candidate_scene_usec: list[int] = []
     for c_sample, d_sample in zip(control["samples"], candidate["samples"]):
         if int(c_sample["index"]) != int(d_sample["index"]):
             raise ValueError("sample index drift")
@@ -110,9 +108,9 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
         d_row = find_building(d_sample)
         if c_row.get("runtime_building_prepare_mode") != "POST_NORMAL_SURFACETOOL_INDEX_CONTROL":
             raise ValueError("control timing marker drift")
-        direct = d_row.get("runtime_building_direct_indexed", {})
         if d_row.get("runtime_building_prepare_mode") != "DIRECT_INDEXED_POSITION_DOMAIN_THEN_GENERATE_NORMALS":
             raise ValueError("candidate timing marker drift")
+        direct = d_row.get("runtime_building_direct_indexed", {})
         if direct.get("schema") != DIRECT_SCHEMA:
             raise ValueError("candidate direct receipt schema drift")
         if direct.get("surface_count") != 5 or direct.get("stored_vertices") != 312 or direct.get("indices") != 1008 or direct.get("triangles") != 336:
@@ -122,15 +120,43 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
         cu = int(c_row.get("runtime_building_prepare_usec", 0))
         du = int(d_row.get("runtime_building_prepare_usec", 0))
         if cu <= 0 or du <= 0:
-            raise ValueError("missing positive preparation timing")
-        control_usec.append(cu)
-        candidate_usec.append(du)
+            raise ValueError("missing positive scene construction timing")
+        control_scene_usec.append(cu)
+        candidate_scene_usec.append(du)
+    if len(set(control_scene_usec)) != 1 or len(set(candidate_scene_usec)) != 1:
+        raise ValueError("scene static receipt timing unexpectedly varies across copied state rows")
+    scene_single = {
+        "truth_boundary": "One Building construction occurs per scene process; the same static-source receipt is copied into all 17 state rows. These are one control and one candidate observation, not 17 independent timing samples.",
+        "control_usec": control_scene_usec[0],
+        "candidate_usec": candidate_scene_usec[0],
+        "delta_candidate_minus_control_usec": candidate_scene_usec[0] - control_scene_usec[0],
+    }
 
+    if benchmark.get("schema") != BENCHMARK_SCHEMA:
+        raise ValueError("benchmark schema drift")
+    if benchmark.get("representation_id") != REPRESENTATION_ID:
+        raise ValueError("benchmark representation drift")
+    if int(benchmark.get("trials", 0)) != 41 or int(benchmark.get("warmups", 0)) != 5:
+        raise ValueError("benchmark trial/warmup drift")
+    if benchmark.get("final_identity") != FINAL_IDENTITY:
+        raise ValueError(f"benchmark final identity drift: {benchmark.get('final_identity')}")
+    control_usec = [int(v) for v in benchmark.get("control_usec", [])]
+    candidate_usec = [int(v) for v in benchmark.get("candidate_usec", [])]
+    paired = [int(v) for v in benchmark.get("paired_delta_candidate_minus_control_usec", [])]
+    if len(control_usec) != 41 or len(candidate_usec) != 41 or len(paired) != 41:
+        raise ValueError("benchmark measured sample count drift")
+    if paired != [d - c for c, d in zip(control_usec, candidate_usec)]:
+        raise ValueError("benchmark paired deltas do not match raw timings")
     c_median = float(statistics.median(control_usec))
     d_median = float(statistics.median(candidate_usec))
+    paired_median = float(statistics.median(paired))
+    faster_pairs = sum(1 for delta in paired if delta < 0)
+    if c_median != float(benchmark.get("control_median_usec")) or d_median != float(benchmark.get("candidate_median_usec")):
+        raise ValueError("benchmark median receipt drift")
+    if paired_median != float(benchmark.get("paired_delta_median_usec")) or faster_pairs != int(benchmark.get("candidate_faster_pairs")):
+        raise ValueError("benchmark paired receipt drift")
     median_delta = d_median - c_median
-    median_reduction_pct = (100.0 * (c_median - d_median) / c_median) if c_median else 0.0
-    faster_samples = sum(1 for c, d in zip(control_usec, candidate_usec) if d < c)
+    median_change_pct = (100.0 * median_delta / c_median) if c_median else 0.0
 
     control_rows = runtime_rows(control)
     candidate_rows = runtime_rows(candidate)
@@ -139,9 +165,9 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
     counter_delta = delta_sets(candidate_rows, control_rows)
     for field in ("draw_calls_in_frame", "objects_in_frame", "primitives_in_frame", "texture_mem_bytes"):
         if counter_delta[field] != [0]:
-            raise ValueError(f"direct receiver changed {field}: {counter_delta[field]}")
+            raise ValueError(f"candidate changed {field}: {counter_delta[field]}")
     if max(counter_delta["buffer_mem_bytes"]) > 0:
-        raise ValueError(f"direct receiver increased observed buffer memory: {counter_delta['buffer_mem_bytes']}")
+        raise ValueError(f"candidate increased observed buffer memory: {counter_delta['buffer_mem_bytes']}")
 
     control_dir = control_root / "rendered"
     candidate_dir = candidate_root / "rendered"
@@ -154,13 +180,13 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
     max_over_one = max(row["pixels_over_1_lsb"] for row in visuals.values())
     max_lsb = max(row["max_channel_delta_lsb"] for row in visuals.values())
 
-    preparation_improved = d_median < c_median
+    preparation_improved = d_median < c_median and faster_pairs >= 21 and paired_median < 0
     if preparation_improved:
-        state = "PASS_BUILDING_INDEX_BEFORE_NORMAL_RECEIVER_REDUCES_PROOF_HOST_PREPARATION_COST__HOLD_ART_QA_AND_TARGET_DEVICE"
-        decision = "INDEX_FINAL_POSITION_DOMAIN_BEFORE_NORMAL_GENERATION_IS_A_REAL_PROOF_HOST_PREPARATION_WIN__RENDERER_AND_VISUAL_GATES_REMAIN_SEPARATE"
+        state = "PASS_BUILDING_INDEX_BEFORE_NORMAL_RECEIVER_REDUCES_PROOF_HOST_GEOMETRY_PREPARATION_COST__HOLD_ART_QA_AND_TARGET_DEVICE"
+        decision = "INDEX_POSITION_DOMAIN_BEFORE_NORMAL_GENERATION_IS_MEASURED_FASTER_ON_THIS_PROOF_HOST__KEEP_DOWNSTREAM_GATES_SEPARATE"
     else:
         state = "HOLD_BUILDING_INDEX_BEFORE_NORMAL_RECEIVER_PREPARATION_WIN_NOT_REPRODUCED"
-        decision = "KEEP_POST_NORMAL_INDEX_CONTROL__INDEX_BEFORE_NORMAL_DID_NOT_REDUCE_MEDIAN_PREPARATION_ON_THIS_HOST"
+        decision = "KEEP_POST_NORMAL_INDEX_CONTROL__INDEX_BEFORE_NORMAL_DID_NOT_SHOW_A_ROBUST_PREPARATION_WIN"
 
     tradeoff = (
         "NONE_OBSERVED__68_FRAMES_BYTE_IDENTICAL"
@@ -175,18 +201,24 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
         "exact_runtime_head": exact_head,
         "environment_parent_head": ENVIRONMENT_HEAD,
         "representation_id": REPRESENTATION_ID,
-        "preparation_timing": {
-            "measurement_boundary": "per-state proof-host wall-clock microseconds around Building receiver construction only; excludes PNG readback and whole-scene render",
-            "sample_count_per_representation": 17,
-            "control_usec": control_usec,
-            "candidate_usec": candidate_usec,
+        "scene_single_build_observation": scene_single,
+        "preparation_benchmark": {
+            "measurement_boundary": benchmark.get("timing_boundary"),
+            "ordering": benchmark.get("ordering"),
+            "warmups": 5,
+            "paired_trials": 41,
             "control_median_usec": c_median,
             "candidate_median_usec": d_median,
-            "median_delta_usec": median_delta,
-            "median_reduction_percent": round(median_reduction_pct, 6),
-            "candidate_faster_sample_pairs": faster_samples,
-            "control_p90_usec": percentile_nearest(control_usec, 0.90),
-            "candidate_p90_usec": percentile_nearest(candidate_usec, 0.90),
+            "median_delta_candidate_minus_control_usec": median_delta,
+            "median_change_percent": round(median_change_pct, 6),
+            "paired_delta_median_usec": paired_median,
+            "candidate_faster_pairs": faster_pairs,
+            "candidate_slower_or_equal_pairs": 41 - faster_pairs,
+            "control_p90_usec": int(benchmark.get("control_p90_usec")),
+            "candidate_p90_usec": int(benchmark.get("candidate_p90_usec")),
+            "control_usec": control_usec,
+            "candidate_usec": candidate_usec,
+            "paired_delta_candidate_minus_control_usec": paired,
         },
         "representation": {
             "surface_count": 5,
@@ -194,7 +226,7 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
             "stored_vertices": 312,
             "indices": 1008,
             "source_payload_vertices": 672,
-            "control_path": "build 1008 unindexed triangle-corner vertices -> generate normals -> create_from -> SurfaceTool.index -> commit",
+            "control_path": "build 1008 unindexed triangle-corner vertices -> generate normals -> create_from -> SurfaceTool.index -> 312 stored vertices / 1008 indices",
             "candidate_path": "deduplicate exact per-material position domain to 312 vertices -> add 1008 indices -> same SurfaceTool.generate_normals -> commit",
         },
         "proof_host_renderer_delta_sets_candidate_minus_control": counter_delta,
@@ -207,17 +239,14 @@ def verify(control_root: Path, candidate_root: Path, exact_head: str, output: Pa
             "tradeoff": tradeoff,
         },
         "truth_boundary": (
-            "This compares only two receiver-construction paths for the exact five-surface / 336-triangle planar-role Building on the pinned Godot proof host. "
-            "The candidate does not alter Building semantic source authority, material roles/scalars, current-world composition or triangle membership. "
-            "It creates the exact per-material unique-position index domain before the same Godot normal-generation step instead of after it. "
-            "Preparation microseconds are proof-host construction timing, not frame time, FPS, GPU cost, target-device CPU acceptance or import/export transport acceptance. "
-            "The candidate proves no UV/tangent/color/skin/morph/custom-channel safety."
+            "The repeated benchmark measures only exact planar-role Building geometry-receiver construction on the pinned Godot proof host. It excludes identical material creation, node insertion, PNG readback and whole-scene rendering. "
+            "The scene A/B separately proves final renderer counters and retained visual deltas. Neither measurement is target-device frame time, FPS, GPU time, VRAM/heap acceptance, transport/import equivalence, arbitrary attribute-domain safety, Art/QA approval or Environment adoption."
         ),
         "four_root_gate": {
-            "truth": "Preparation, renderer counters and visual deltas are reported separately; a faster constructor cannot silently become a visual or production PASS.",
+            "truth": "One scene construction observation is not relabeled as 17 samples; the independent 41-pair benchmark drives the preparation result.",
             "agency_non_domination": "Runtime owns this receiver-cost experiment only; Environment, Art/QA, Hard Surface, Materials and Technical Art retain adoption authority.",
             "continuity": "The post-normal indexed receiver remains the rollback control and exact parent identity is retained.",
-            "wisdom_before_speed": "Prefer index-before-normal construction only if the measured host benefits and downstream attribute/transport gates remain explicit."
+            "wisdom_before_speed": "Adopt no constructor merely because it sounds cheaper; require repeated measured benefit and preserve downstream gates."
         },
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -229,10 +258,11 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--control-root", type=Path, required=True)
     parser.add_argument("--candidate-root", type=Path, required=True)
+    parser.add_argument("--benchmark", type=Path, required=True)
     parser.add_argument("--exact-head", required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    verify(args.control_root, args.candidate_root, args.exact_head, args.output)
+    verify(args.control_root, args.candidate_root, args.benchmark, args.exact_head, args.output)
 
 
 if __name__ == "__main__":
