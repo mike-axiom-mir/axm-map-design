@@ -1,0 +1,141 @@
+name: Environment Building clearance-successor review convergence
+
+on:
+  push:
+    branches: [studio/environment-building-utility-panel-material-receiver-readiness-001]
+    paths:
+      - "contracts/environment_building_utility_panel_clearance_successor_review_convergence.json"
+      - "tools/environment_building_utility_panel_clearance_successor_review_convergence.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_REVIEW_CONVERGENCE_001.md"
+      - ".github/workflows/environment-building-utility-panel-clearance-successor-review-convergence.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_building_utility_panel_clearance_successor_review_convergence.json"
+      - "tools/environment_building_utility_panel_clearance_successor_review_convergence.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_REVIEW_CONVERGENCE_001.md"
+      - ".github/workflows/environment-building-utility-panel-clearance-successor-review-convergence.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  review-convergence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate lineage and verifier sources
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 73a15a5edff3e56c776fe0eb8559d925dc3c89b1^{commit}
+          git merge-base --is-ancestor 73a15a5edff3e56c776fe0eb8559d925dc3c89b1 HEAD
+          python -m py_compile tools/environment_building_utility_panel_clearance_successor_review_convergence.py
+          python -m json.tool contracts/environment_building_utility_panel_clearance_successor_review_convergence.json >/dev/null
+
+      - name: Download exact prior Environment and fresh Building owner evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_successor_review_convergence_001
+          mkdir -p "$root/prior-environment" "$root/fresh-owner"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10539004116/zip" \
+            -o "$root/prior-environment.zip"
+          echo "3600436f017e2fc4572c96f8bf9108cd3aaa6ce16200be214b82bc23f093e741  $root/prior-environment.zip" | sha256sum --check --strict
+          unzip -q "$root/prior-environment.zip" -d "$root/prior-environment"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-building-design/actions/artifacts/10538777520/zip" \
+            -o "$root/fresh-owner.zip"
+          echo "2ea191b56c46007122bc46b3a6e9ddc661318d41999e5b9f970445408fb84bb0  $root/fresh-owner.zip" | sha256sum --check --strict
+          unzip -q "$root/fresh-owner.zip" -d "$root/fresh-owner"
+
+      - name: Fetch exact independent QA review
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_successor_review_convergence_001
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-building-design/pulls/3/reviews/5246028775" \
+            -o "$root/qa-review.json"
+          python -m json.tool "$root/qa-review.json" >/dev/null
+
+      - name: Verify exact QA-to-world convergence
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_successor_review_convergence_001
+          python tools/environment_building_utility_panel_clearance_successor_review_convergence.py \
+            --contract contracts/environment_building_utility_panel_clearance_successor_review_convergence.json \
+            --prior-convergence-contract contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json \
+            --current-rebind-contract contracts/environment_building_utility_panel_production_successor_current_world_rebind.json \
+            --prior-convergence-root "$root/prior-environment" \
+            --fresh-owner-root "$root/fresh-owner" \
+            --qa-review "$root/qa-review.json" \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Prepare fail-closed review-head negative
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_successor_review_convergence_001
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("evidence/environment_building_utility_panel_clearance_successor_review_convergence_001")
+          data=json.loads((root/"qa-review.json").read_text())
+          data["commit_id"]="0"*40
+          (root/"qa-review-mutated.json").write_text(json.dumps(data))
+          PY
+
+      - name: Confirm false QA head fails closed
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_clearance_successor_review_convergence_001
+          set +e
+          python tools/environment_building_utility_panel_clearance_successor_review_convergence.py \
+            --contract contracts/environment_building_utility_panel_clearance_successor_review_convergence.json \
+            --prior-convergence-contract contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json \
+            --current-rebind-contract contracts/environment_building_utility_panel_production_successor_current_world_rebind.json \
+            --prior-convergence-root "$root/prior-environment" \
+            --fresh-owner-root "$root/fresh-owner" \
+            --qa-review "$root/qa-review-mutated.json" \
+            --output "$root/negative-report.json" > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -F "AssertionError" "$root/negative.log"
+          echo PASS_REJECTED_FALSE_QA_HEAD
+
+      - name: Retain exact review-convergence evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-clearance-review-convergence-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_building_utility_panel_clearance_successor_review_convergence.json
+            docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_REVIEW_CONVERGENCE_001.md
+            evidence/environment_building_utility_panel_clearance_successor_review_convergence_001/qa-review.json
+            evidence/environment_building_utility_panel_clearance_successor_review_convergence_001/report.json
+            evidence/environment_building_utility_panel_clearance_successor_review_convergence_001/verify.log
+            evidence/environment_building_utility_panel_clearance_successor_review_convergence_001/negative.log
+          if-no-files-found: warn
