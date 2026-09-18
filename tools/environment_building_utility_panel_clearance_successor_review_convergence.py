@@ -57,8 +57,6 @@ def validate(
     art = contract["prior_art_direction"]
     promotion = contract["promotion"]
 
-    # Reuse prior Environment real-world convergence only when its exact retained
-    # gate and semantic subject are still the ones this review targets.
     if prior_contract.get("expected_result") != PRIOR_CONVERGENCE_RESULT:
         raise AssertionError("prior Environment convergence result drift")
     if prior_contract["fresh_owner"]["materials_head"] != owner["head"]:
@@ -85,7 +83,6 @@ def validate(
     if prior_report.get("result") != PRIOR_CONVERGENCE_RESULT:
         raise AssertionError("retained Environment convergence artifact is not green")
 
-    # Recheck exact current Building owner artifact identity and two panel facts.
     owner_head = find_one(owner_artifact_root, "exact-head.txt").read_text(encoding="utf-8").strip()
     if owner_head != owner["head"]:
         raise AssertionError(f"fresh owner artifact head drift: {owner_head}")
@@ -97,10 +94,9 @@ def validate(
         raise AssertionError("fresh owner target-host clearance review is not green")
     if int(target.get("total_placement_shift_pixels_gt_1lsb", -1)) != int(owner["placement_shift_pixels_gt_1lsb"]):
         raise AssertionError("fresh owner placement observability drift")
-    if int(target.get("total_successor_lit_vs_unshaded_pixels_gt_1lsb", -1)) != int(owner["successor_lit_vs_unshaded_pixels_gt_1lsb"]):
+    if int(target.get("total_lit_vs_unshaded_pixels_gt_1lsb", -1)) != int(owner["successor_lit_vs_unshaded_pixels_gt_1lsb"]):
         raise AssertionError("fresh owner material-activity observability drift")
 
-    # Consume the independent GitHub review itself rather than copying a QA label.
     if int(qa_review.get("id", -1)) != int(qa["review_id"]):
         raise AssertionError("QA review identity drift")
     if qa_review.get("commit_id") != qa["review_commit_id"] or qa["review_commit_id"] != owner["head"]:
@@ -122,13 +118,10 @@ def validate(
         ("aggregate `555,878`", "material activity aggregate"),
         ("`0` support-XOR pixels in both", "front/east support localization"),
         ("`689` pixels", "three-quarter support localization"),
-        ("does not transfer Environment/Map adoption", "authority boundary"),
-        ("does not transfer Environment/Map adoption, create a new Art Direction acceptance event", "Art non-transfer boundary"),
+        ("does not transfer Environment/Map adoption, create a new Art Direction acceptance event", "authority non-transfer boundary"),
     ):
         require_body(body, needle, label)
 
-    # The Environment's current receiving choice remains the same semantic surface,
-    # but the prior Art event was anchored to an earlier evidence head. Do not promote it.
     if current_rebind["materials_owner"]["png_sha256"] != owner["png_sha256"]:
         raise AssertionError("current Environment receiving surface bytes drift")
     if current_rebind["promotion"]["environment_adoption"] is not False:
