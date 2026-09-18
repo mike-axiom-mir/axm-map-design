@@ -1,0 +1,138 @@
+name: Environment Nature north-low target receiver reservation fit
+
+on:
+  push:
+    branches: [studio/environment-nature-five-branch-reservation-fit-001]
+    paths:
+      - "tools/environment_nature_north_low_target_receiver_reservation_fit.py"
+      - "contracts/environment_nature_north_low_target_receiver_reservation_fit.json"
+      - "evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json"
+      - "docs/ENVIRONMENT_NATURE_NORTH_LOW_TARGET_RECEIVER_RESERVATION_FIT_003.md"
+      - ".github/workflows/environment-nature-north-low-target-receiver-reservation-fit.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_north_low_target_receiver_reservation_fit.py"
+      - "contracts/environment_nature_north_low_target_receiver_reservation_fit.json"
+      - "evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json"
+      - "docs/ENVIRONMENT_NATURE_NORTH_LOW_TARGET_RECEIVER_RESERVATION_FIT_003.md"
+      - ".github/workflows/environment-nature-north-low-target-receiver-reservation-fit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  target-receiver-reservation-fit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate bounded Environment target receiver gate
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 3d891d8b5a6eb3d1abbfc2a339dca757a3226698^{commit}
+          git merge-base --is-ancestor 3d891d8b5a6eb3d1abbfc2a339dca757a3226698 HEAD
+          python -m pip install --disable-pip-version-check --no-input numpy
+          python -m py_compile tools/environment_nature_north_low_target_receiver_reservation_fit.py
+          python -m json.tool contracts/environment_nature_north_low_target_receiver_reservation_fit.json >/dev/null
+          python -m json.tool evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json >/dev/null
+          echo "9803de5640069a9ad9f02ed387d81218ffd57a23cbfbce65d370d62f859a9557  evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json" | sha256sum --check --strict
+
+      - name: Download exact retained current-world and predecessor evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_north_low_target_receiver_reservation_fit_003
+          mkdir -p "$root/world" "$root/prior" "$root/current"
+
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" -o "$root/world.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world.zip" | sha256sum --check --strict
+          unzip -q "$root/world.zip" -d "$root/world"
+
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10536274221/zip" -o "$root/prior.zip"
+          echo "7260c5c1b14442112df02e3584ea51dd6c06b0a1f76dc96be7c0ba4113dbbea0  $root/prior.zip" | sha256sum --check --strict
+          unzip -q "$root/prior.zip" -d "$root/prior"
+          test "$(cat "$root/prior/exact-head.txt")" = "3d891d8b5a6eb3d1abbfc2a339dca757a3226698"
+
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10543446447/zip" -o "$root/current.zip"
+          echo "f8c0c390c2d4f58aacc29ad5a7fc3e86de91f07f24cb8c0f8e93e0890a0a67f8  $root/current.zip" | sha256sum --check --strict
+          unzip -q "$root/current.zip" -d "$root/current"
+          test "$(cat "$root/current/exact-head.txt")" = "7caf13afc1f97afd9966445b79a8ab47c5e44a52"
+
+      - name: Verify exact target receiver fits current Environment reservation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_north_low_target_receiver_reservation_fit_003
+          python tools/environment_nature_north_low_target_receiver_reservation_fit.py \
+            --contract contracts/environment_nature_north_low_target_receiver_reservation_fit.json \
+            --target-envelope evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json \
+            --combined-world "$root/world/combined_current_world.json" \
+            --prior-environment-report "$root/prior/evidence/environment_nature_shared_driver_reservation_fit_002/report.json" \
+            --current-world-report "$root/current/report.json" \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Fail closed when reservation is actually too small
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_north_low_target_receiver_reservation_fit_003
+          if python tools/environment_nature_north_low_target_receiver_reservation_fit.py \
+            --contract contracts/environment_nature_north_low_target_receiver_reservation_fit.json \
+            --target-envelope evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json \
+            --combined-world "$root/world/combined_current_world.json" \
+            --prior-environment-report "$root/prior/evidence/environment_nature_shared_driver_reservation_fit_002/report.json" \
+            --current-world-report "$root/current/report.json" \
+            --reservation-left-contraction-m 0.10 \
+            --output "$root/negative-small-reservation.json" >"$root/negative-small-reservation.log" 2>&1; then
+              echo "contracted-reservation negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "escapes existing non-ground Environment reservation" "$root/negative-small-reservation.log"
+
+      - name: Fail closed on visual authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_north_low_target_receiver_reservation_fit_003
+          if python tools/environment_nature_north_low_target_receiver_reservation_fit.py \
+            --contract contracts/environment_nature_north_low_target_receiver_reservation_fit.json \
+            --target-envelope evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json \
+            --combined-world "$root/world/combined_current_world.json" \
+            --prior-environment-report "$root/prior/evidence/environment_nature_shared_driver_reservation_fit_002/report.json" \
+            --current-world-report "$root/current/report.json" \
+            --claim-visual-acceptance \
+            --output "$root/negative-visual.json" >"$root/negative-visual.log" 2>&1; then
+              echo "visual-authority negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "cannot claim visual acceptance" "$root/negative-visual.log"
+
+      - name: Retain target receiver Environment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-north-low-target-receiver-fit-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_nature_north_low_target_receiver_reservation_fit.json
+            evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json
+            docs/ENVIRONMENT_NATURE_NORTH_LOW_TARGET_RECEIVER_RESERVATION_FIT_003.md
+            evidence/environment_nature_north_low_target_receiver_reservation_fit_003/report.json
+            evidence/environment_nature_north_low_target_receiver_reservation_fit_003/verify.log
+            evidence/environment_nature_north_low_target_receiver_reservation_fit_003/negative-small-reservation.log
+            evidence/environment_nature_north_low_target_receiver_reservation_fit_003/negative-visual.log
+          if-no-files-found: error
+          retention-days: 90
