@@ -1,0 +1,51 @@
+{
+  "schema": "axm.environment-building-utility-panel-material-current-world-ab/v0.1",
+  "study_id": "environment-building-utility-panel-material-current-world-ab-001",
+  "expected_result": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_MATERIAL_BOUND_RECEIVER__VISIBLE_DELTA_CHARACTERIZED__ADOPTION_HELD",
+  "reusable_rule": "OWNER_BOUND_UV_IMAGE_TRANSPORT_MAY_ENTER_THE_REAL_WORLD_ONLY_AS_AN_EXPLICIT_A_B_RECEIVER_SUCCESSOR_WITH_UNRELATED_WORLD_IDENTITIES_AND_ROLLBACK_HELD",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 51,
+    "readiness_head": "787ad51687da2df52c9f6191d1778a7f66cbd3db",
+    "review_parent_head": "07f04aa9b5d1620907240acb12c97759fd7c77f4",
+    "object_motion_sample_index": 40,
+    "current_building_variant": "header-segmented-23",
+    "current_building_vertices": 184,
+    "current_building_triangles": 276,
+    "current_building_surfaces": 5
+  },
+  "technical_art": {
+    "head": "1434bc4a64faa04db10f47723c37ab7925aaa163",
+    "artifact_id": 10527699865,
+    "artifact_sha256": "5c19c82f8e216a1e5032784751819447215b21ab2ef6e4f52e03a9da2a855c06",
+    "result": "PASS_CURRENT_184V_RECEIVER_SERVICE_FACE_UV_IMAGE_BINDING_TO_CURRENT_UC_AND_REAL_GODOT__HOLD_ENVIRONMENT_VISUAL_RUNTIME_ADOPTION",
+    "service_face_carrier_sha256": "2d7990c5e699af23e03afeffbebdfc36bc5516b33886702c3b1d7fa3df4a26ef"
+  },
+  "materials": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pull_request": 3,
+    "head": "0ae911792929eaa38b2c2f32239ebfdce8967251",
+    "artifact_id": 10528878803,
+    "artifact_sha256": "48921552847b2833e410daff45fe1c376acbf9381ecc9cbab48ff4e76e6ea818",
+    "retained_png_sha256": "e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198",
+    "retained_rgba8_sha256": "02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b",
+    "metallic": 0.18,
+    "roughness": 0.62
+  },
+  "comparison": {
+    "control": "CURRENT_SCALAR_UTILITY_PANEL_OCHRE_ON_EXACT_PR49_WORLD",
+    "candidate": "EXACT_TA_UV0_PLUS_EXACT_MATERIALS_SERIALIZED_REVIEW_TEXTURE_ON_SAME_CURRENT_RECEIVER",
+    "rendered_frames_per_variant": 68,
+    "pixel_threshold_lsb": 1,
+    "aesthetic_minimum_delta": null
+  },
+  "promotion": {
+    "environment_adoption": false,
+    "art_direction_acceptance": false,
+    "visual_qa_acceptance": false,
+    "runtime_acceptance": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "truth_boundary": "This A/B consumes the exact Technical Art current-receiver UV/image binding and exact Materials serialized review texture in the inherited real Map/Godot world. It may characterize visible panel-material deltas and structural continuity only. It does not promote the receiver-local non-service UV fill to source authority, select production UV/texture policy, grant Art/QA or Runtime/device acceptance, CANON, or production readiness."
+}

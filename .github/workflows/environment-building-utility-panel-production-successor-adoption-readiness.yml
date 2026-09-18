@@ -1,0 +1,67 @@
+name: Environment Building production successor adoption readiness
+
+on:
+  push:
+    branches:
+      - studio/environment-building-utility-panel-material-receiver-readiness-001
+    paths:
+      - contracts/environment_building_utility_panel_production_successor_adoption_readiness.json
+      - tools/environment_building_utility_panel_production_successor_adoption_readiness.py
+      - docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_SUCCESSOR_ADOPTION_READINESS_001.md
+      - .github/workflows/environment-building-utility-panel-production-successor-adoption-readiness.yml
+  pull_request:
+    paths:
+      - contracts/environment_building_utility_panel_production_successor_adoption_readiness.json
+      - tools/environment_building_utility_panel_production_successor_adoption_readiness.py
+      - docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_SUCCESSOR_ADOPTION_READINESS_001.md
+      - .github/workflows/environment-building-utility-panel-production-successor-adoption-readiness.yml
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Python ${{ matrix.python-version }} exact convergence gate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run exact Environment readiness verifier
+        run: |
+          mkdir -p evidence/environment-building-production-successor-readiness
+          python tools/environment_building_utility_panel_production_successor_adoption_readiness.py \
+            --contract contracts/environment_building_utility_panel_production_successor_adoption_readiness.json \
+            --output evidence/environment-building-production-successor-readiness/report.json
+      - name: Fail closed on fake QA acceptance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          src = Path('contracts/environment_building_utility_panel_production_successor_adoption_readiness.json')
+          data = json.loads(src.read_text())
+          data['visual_qa']['status'] = 'PASS'
+          data['visual_qa']['accepted'] = True
+          bad = Path('evidence/environment-building-production-successor-readiness/fake-qa.json')
+          bad.write_text(json.dumps(data, indent=2) + '\n')
+          PY
+          if python tools/environment_building_utility_panel_production_successor_adoption_readiness.py \
+            --contract evidence/environment-building-production-successor-readiness/fake-qa.json \
+            --output evidence/environment-building-production-successor-readiness/should-not-exist.json; then
+            echo 'fake QA acceptance unexpectedly passed' >&2
+            exit 1
+          fi
+      - name: Bind exact branch head
+        if: matrix.python-version == '3.11'
+        run: |
+          echo "${{ github.event.pull_request.head.sha || github.sha }}" > evidence/environment-building-production-successor-readiness/exact-head.txt
+      - uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.11'
+        with:
+          name: environment-building-production-successor-readiness-${{ github.event.pull_request.head.sha || github.sha }}
+          path: evidence/environment-building-production-successor-readiness/
+          if-no-files-found: error

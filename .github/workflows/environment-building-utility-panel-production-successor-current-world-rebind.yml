@@ -1,0 +1,136 @@
+name: Environment Building production successor current-world rebind
+
+on:
+  push:
+    branches: [studio/environment-building-utility-panel-material-receiver-readiness-001]
+    paths:
+      - "contracts/environment_building_utility_panel_production_successor_current_world_rebind.json"
+      - "tools/environment_building_utility_panel_production_successor_current_world_rebind.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_SUCCESSOR_CURRENT_WORLD_REBIND_001.md"
+      - ".github/workflows/environment-building-utility-panel-production-successor-current-world-rebind.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_building_utility_panel_production_successor_current_world_rebind.json"
+      - "tools/environment_building_utility_panel_production_successor_current_world_rebind.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_SUCCESSOR_CURRENT_WORLD_REBIND_001.md"
+      - ".github/workflows/environment-building-utility-panel-production-successor-current-world-rebind.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  exact-current-world-rebind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Environment lineage and verifier sources
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 595df99daf866b5e3dcaa4be87eeb650af637919^{commit}
+          git merge-base --is-ancestor 595df99daf866b5e3dcaa4be87eeb650af637919 HEAD
+          git cat-file -e 07f04aa9b5d1620907240acb12c97759fd7c77f4^{commit}
+          git merge-base --is-ancestor 07f04aa9b5d1620907240acb12c97759fd7c77f4 HEAD
+          python -m py_compile tools/environment_building_utility_panel_production_successor_current_world_rebind.py
+          python -m json.tool contracts/environment_building_utility_panel_production_successor_current_world_rebind.json >/dev/null
+
+      - name: Download and bind exact Materials owner current-world artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_successor_current_world_rebind_001
+          mkdir -p "$root/owner"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-building-design/actions/artifacts/10531260523/zip" -o "$root/materials-owner.zip"
+          echo "75369c8d71ce5491eec2e058ecacc56948ca94662cc0b34d123b82273f2b4b8b  $root/materials-owner.zip" | sha256sum --check --strict
+          unzip -q "$root/materials-owner.zip" -d "$root/owner"
+          texture="$(find "$root/owner" -type f -name 'utility-panel-production-surface-001.png' -print -quit)"
+          test -n "$texture"
+          echo "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c  $texture" | sha256sum --check --strict
+          grep -R -F -q "PASS_BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_SUCCESSOR_CURRENT_WORLD_THREE_WAY_REVIEW_READY__HOLD_ART_QA_ENV_RUNTIME_ADOPTION" "$root/owner"
+
+      - name: Fetch exact independent QA review and Runtime run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_successor_current_world_rebind_001
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-building-design/pulls/3/reviews/5244398076" -o "$root/qa-review.json"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/runs/35304987658" -o "$root/runtime-run.json"
+
+      - name: Checkout exact Art Direction packet
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-create-me
+          ref: fe39317b1e32f38a52994bb7ae40a8a8a0c42c67
+          path: .create-me
+          fetch-depth: 1
+
+      - name: Verify exact cross-owner convergence and create Environment rebind receipt
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_successor_current_world_rebind_001
+          python tools/environment_building_utility_panel_production_successor_current_world_rebind.py \
+            --contract contracts/environment_building_utility_panel_production_successor_current_world_rebind.json \
+            --qa-review "$root/qa-review.json" \
+            --art-packet .create-me/studio/direction/BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_DIRECTION_043.md \
+            --runtime-run "$root/runtime-run.json" \
+            --output "$root/rebind-report.json" | tee "$root/verify.log"
+
+      - name: Negative control rejects fabricated QA identity
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_successor_current_world_rebind_001
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_building_utility_panel_production_successor_current_world_rebind_001')
+          data=json.loads((root/'qa-review.json').read_text())
+          data['commit_id']='0000000000000000000000000000000000000000'
+          (root/'qa-review-mutated.json').write_text(json.dumps(data))
+          PY
+          set +e
+          python tools/environment_building_utility_panel_production_successor_current_world_rebind.py \
+            --contract contracts/environment_building_utility_panel_production_successor_current_world_rebind.json \
+            --qa-review "$root/qa-review-mutated.json" \
+            --art-packet .create-me/studio/direction/BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_DIRECTION_043.md \
+            --runtime-run "$root/runtime-run.json" \
+            --output "$root/negative-report.json" > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -F "AssertionError" "$root/negative.log"
+          echo PASS_REJECTED_FABRICATED_QA_IDENTITY
+
+      - name: Retain exact Environment rebind evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-production-successor-current-world-rebind-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_building_utility_panel_production_successor_current_world_rebind.json
+            docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_SUCCESSOR_CURRENT_WORLD_REBIND_001.md
+            evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/rebind-report.json
+            evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/verify.log
+            evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/negative.log
+            evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/qa-review.json
+            evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/runtime-run.json
+          if-no-files-found: warn

@@ -1,0 +1,35 @@
+{
+  "schema": "axm.environment-building-utility-panel-material-receiver-readiness/v0.1",
+  "study_id": "environment-building-utility-panel-material-receiver-readiness-001",
+  "expected_result": "HOLD_CURRENT_WORLD_BUILDING_UTILITY_PANEL_MATERIAL_RECEIVER__CURRENT_184V_RECEIVER_HAS_NO_EXACT_UV0_IMAGE_TRANSPORT_BINDING",
+  "reusable_rule": "EXACT_MATERIAL_ROLE_AND_PANEL_PLACEMENT_DO_NOT_AUTHORIZE_WORLD_TEXTURE_ADOPTION_WITHOUT_AN_EXACT_RECEIVER_UV0_IMAGE_TRANSPORT_BOUNDARY",
+  "parent": {
+    "review_head": "07f04aa9b5d1620907240acb12c97759fd7c77f4",
+    "render_head": "7cceec9f3e55a71f51ec227301a92e1896ea2d74",
+    "render_artifact_id": 10524764391,
+    "render_artifact_sha256": "a6699ed54f7486640d468b995ca68320ae384dc406ef02ac880cdfa0fa131155",
+    "building_variant": "header-segmented-23",
+    "building_vertices": 184,
+    "building_triangles": 276,
+    "building_surfaces": 5,
+    "utility_panel_clearance_state": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_REBIND_RECEIVER__VISUAL_OBSERVABILITY_CHARACTERIZED__ADOPTION_HELD"
+  },
+  "technical_art": {
+    "head": "457c086d27f3a9c010b365fe75d54b8f812b01ef",
+    "artifact_id": 10527162239,
+    "artifact_sha256": "d760a61cd95f756de7e0143096bb7923a0dfbaff0d480ccff9a17dfd19f0c70c",
+    "hard_surface_head": "fbfa3b47048755b45dac91451171d5511c8d4f47",
+    "geometry_head": "02944a9f10528a051603df3a6fd7b3183730773f",
+    "materials_head": "5f096369eee2ef44275ea8f1c7dc1b6e564e71c8",
+    "glb_sha256": "dc65fec67aa6aba4e4a14895b38122ae89b6eafba7f256b07c1a7c9e344bbd68",
+    "materials_png_sha256": "e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198",
+    "materials_rgba8_sha256": "02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b"
+  },
+  "decision": {
+    "environment_adoption": false,
+    "automatic_uv_generation": false,
+    "automatic_planar_mapping": false,
+    "proof_carrier_mesh_substitution": false,
+    "scene_mutation": false
+  }
+}

@@ -1,0 +1,134 @@
+name: Environment Building production-clearance provenance convergence
+
+on:
+  push:
+    branches: [studio/environment-building-utility-panel-material-receiver-readiness-001]
+    paths:
+      - "contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json"
+      - "tools/environment_building_utility_panel_production_clearance_provenance_convergence.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_CLEARANCE_PROVENANCE_CONVERGENCE_001.md"
+      - ".github/workflows/environment-building-utility-panel-production-clearance-provenance-convergence.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json"
+      - "tools/environment_building_utility_panel_production_clearance_provenance_convergence.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_CLEARANCE_PROVENANCE_CONVERGENCE_001.md"
+      - ".github/workflows/environment-building-utility-panel-production-clearance-provenance-convergence.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+jobs:
+  provenance-convergence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Environment lineage and verifier sources
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 4826db5d3a595bbeefdfd58d5541b2d78247e290^{commit}
+          git merge-base --is-ancestor 4826db5d3a595bbeefdfd58d5541b2d78247e290 HEAD
+          python -m py_compile tools/environment_building_utility_panel_production_clearance_provenance_convergence.py
+          python -m json.tool contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json >/dev/null
+
+      - name: Download exact retained owner and current-world evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001
+          mkdir -p "$root/current-world" "$root/reviewed-production-world" "$root/fresh-owner"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10533098763/zip" \
+            -o "$root/current-world.zip"
+          echo "3ddb618651555b541925a4f3f153395243644d8e36979a322b0cdb8a8f7d495d  $root/current-world.zip" | sha256sum --check --strict
+          unzip -q "$root/current-world.zip" -d "$root/current-world"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-building-design/actions/artifacts/10531260523/zip" \
+            -o "$root/reviewed-production-world.zip"
+          echo "75369c8d71ce5491eec2e058ecacc56948ca94662cc0b34d123b82273f2b4b8b  $root/reviewed-production-world.zip" | sha256sum --check --strict
+          unzip -q "$root/reviewed-production-world.zip" -d "$root/reviewed-production-world"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-building-design/actions/artifacts/10538777520/zip" \
+            -o "$root/fresh-owner.zip"
+          echo "2ea191b56c46007122bc46b3a6e9ddc661318d41999e5b9f970445408fb84bb0  $root/fresh-owner.zip" | sha256sum --check --strict
+          unzip -q "$root/fresh-owner.zip" -d "$root/fresh-owner"
+
+      - name: Verify exact world/content convergence
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001
+          python tools/environment_building_utility_panel_production_clearance_provenance_convergence.py \
+            --contract contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json \
+            --current-world-root "$root/current-world" \
+            --reviewed-production-world-root "$root/reviewed-production-world" \
+            --fresh-owner-root "$root/fresh-owner" \
+            --current-environment-rebind-contract contracts/environment_building_utility_panel_production_successor_current_world_rebind.json \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Negative control rejects false content identity
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001")
+          src=Path("contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json")
+          data=json.loads(src.read_text())
+          data["semantic_subject"]["png_sha256"]="0"*64
+          (root/"mutated-contract.json").write_text(json.dumps(data))
+          PY
+
+      - name: Confirm negative fails closed
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001
+          set +e
+          python tools/environment_building_utility_panel_production_clearance_provenance_convergence.py \
+            --contract "$root/mutated-contract.json" \
+            --current-world-root "$root/current-world" \
+            --reviewed-production-world-root "$root/reviewed-production-world" \
+            --fresh-owner-root "$root/fresh-owner" \
+            --current-environment-rebind-contract contracts/environment_building_utility_panel_production_successor_current_world_rebind.json \
+            --output "$root/negative-report.json" > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -F "AssertionError" "$root/negative.log"
+          echo PASS_REJECTED_FALSE_CONTENT_IDENTITY
+
+      - name: Retain exact convergence evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-production-clearance-provenance-convergence-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_building_utility_panel_production_clearance_provenance_convergence.json
+            docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_PRODUCTION_CLEARANCE_PROVENANCE_CONVERGENCE_001.md
+            evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001/report.json
+            evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001/verify.log
+            evidence/environment_building_utility_panel_production_clearance_provenance_convergence_001/negative.log
+          if-no-files-found: warn
