@@ -5,17 +5,17 @@ on:
     branches: [studio/technical-art-building-planar-role-uc-index-bridge-001]
     paths:
       - 'tools/technical_art_building_utility_panel_material_glb_bridge.py'
+      - 'tools/technical_art_rebuild_materials_review_png.py'
       - 'environment-proof/technical_art_building_utility_panel_material_glb_observe.gd'
       - 'evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json'
-      - 'evidence-fixtures/utility-panel-review-checker-512.png.b64'
       - 'docs/TECHNICAL_ART_BUILDING_UTILITY_PANEL_MATERIAL_GLB_BRIDGE_001.md'
       - '.github/workflows/technical-art-building-utility-panel-material-glb-bridge.yml'
   pull_request:
     paths:
       - 'tools/technical_art_building_utility_panel_material_glb_bridge.py'
+      - 'tools/technical_art_rebuild_materials_review_png.py'
       - 'environment-proof/technical_art_building_utility_panel_material_glb_observe.gd'
       - 'evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json'
-      - 'evidence-fixtures/utility-panel-review-checker-512.png.b64'
       - 'docs/TECHNICAL_ART_BUILDING_UTILITY_PANEL_MATERIAL_GLB_BRIDGE_001.md'
       - '.github/workflows/technical-art-building-utility-panel-material-glb-bridge.yml'
   workflow_dispatch:
@@ -25,13 +25,34 @@ permissions:
   actions: read
 
 jobs:
-  exact-material-glb-bridge:
+  python-contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile Technical Art bridge tooling and run repository regressions
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          python -m py_compile \
+            tools/technical_art_building_utility_panel_material_glb_bridge.py \
+            tools/technical_art_rebuild_materials_review_png.py
+          if [ -d tests ]; then python -m unittest discover -s tests -v; fi
+
+  exact-owner-to-target-path:
+    needs: python-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       HARD_SURFACE_HEAD: fbfa3b47048755b45dac91451171d5511c8d4f47
       HARD_SURFACE_DOMAIN_PATH: assets/utility_access_panel_001_service_surface_domain.json
@@ -56,6 +77,8 @@ jobs:
       UC_HEAD: 13a823349a568db266099564d6f5d8d7bac48b2b
       UC_MODULE_PATH: src/axm_uc/material_uv_evidence.py
       UC_MODULE_BLOB: bc7aa2ffc2c598d75a78739c70fd349138f511e2
+      GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+      GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
     steps:
       - name: Checkout exact Technical Art head
         uses: actions/checkout@v4
@@ -63,17 +86,15 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.11'
 
-      - name: Bind exact Technical Art head and compile bridge
+      - name: Bind exact Technical Art head
         run: |
           set -euo pipefail
           git rev-parse HEAD > exact-head.txt
           test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
-          python -m py_compile tools/technical_art_building_utility_panel_material_glb_bridge.py
 
       - name: Checkout exact Hard-Surface owner
         uses: actions/checkout@v4
@@ -107,7 +128,7 @@ jobs:
           path: .uc
           fetch-depth: 1
 
-      - name: Fail-close exact owner and generic-observer identities
+      - name: Fail-close owner, artifact-provenance, and UC identities
         run: |
           set -euo pipefail
           test "$(git -C .owner-hard-surface rev-parse HEAD)" = "$HARD_SURFACE_HEAD"
@@ -121,22 +142,6 @@ jobs:
           test "$(git -C .owner-materials rev-parse "HEAD:$MATERIALS_OBSERVER_PATH")" = "$MATERIALS_OBSERVER_BLOB"
           test "$(git -C .uc rev-parse HEAD)" = "$UC_HEAD"
           test "$(git -C .uc rev-parse "HEAD:$UC_MODULE_PATH")" = "$UC_MODULE_BLOB"
-
-      - name: Restore exact retained Materials PNG transport fixture
-        run: |
-          set -euo pipefail
-          root=evidence/technical_art_building_utility_panel_material_glb
-          mkdir -p "$root/owner" environment-proof/generated
-          base64 --decode evidence-fixtures/utility-panel-review-checker-512.png.b64 > "$root/owner/utility-panel-review-checker-512.png"
-          test "$(stat -c %s "$root/owner/utility-panel-review-checker-512.png")" = "2531"
-          echo "$MATERIALS_PNG_SHA256  $root/owner/utility-panel-review-checker-512.png" | sha256sum --check --strict
-          cp evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json "$root/owner/materials-retained-image-provenance.json"
-          cp ".owner-hard-surface/$HARD_SURFACE_DOMAIN_PATH" "$root/owner/service-surface-domain.json"
-          cp ".owner-geometry/$GEOMETRY_CHART_PATH" "$root/owner/geometry-chart.json"
-          cp ".owner-geometry/$GEOMETRY_SAMPLING_PATH" "$root/owner/geometry-sampling.json"
-          cp ".owner-materials/$MATERIALS_CONTRACT_PATH" "$root/owner/materials-serialized-review-contract.json"
-          cp ".owner-materials/$MATERIALS_PROFILE_PATH" "$root/owner/materials-profile.json"
-          cp ".uc/$UC_MODULE_PATH" "$root/owner/uc-material-uv-evidence.py"
           HARD_SURFACE_HEAD="$HARD_SURFACE_HEAD" GEOMETRY_HEAD="$GEOMETRY_HEAD" MATERIALS_HEAD="$MATERIALS_HEAD" UC_HEAD="$UC_HEAD" python - <<'PY'
           import json, os, pathlib
           p=json.loads(pathlib.Path('evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json').read_text())
@@ -149,15 +154,33 @@ jobs:
           assert p['materials_artifact_sha256']=='542e21cca23a47d377f61c11daa4e919339f6be8ca4e7c6ab5aac1e13526ba44',p
           assert p['materials_png_sha256']=='e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198',p
           assert p['base_rgba8_sha256']=='02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b',p
-          print('PASS_EXACT_RETAINED_MATERIALS_IMAGE_PROVENANCE')
+          print('PASS_EXACT_OWNER_AND_RETAINED_ARTIFACT_PROVENANCE')
           PY
+
+      - name: Rebuild exact retained Materials PNG from owner-provenanced values
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_utility_panel_material_glb
+          mkdir -p "$root/owner" "$root/final" environment-proof/generated
+          python tools/technical_art_rebuild_materials_review_png.py \
+            --provenance evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json \
+            --output "$root/owner/utility-panel-review-checker-512.png"
+          test "$(stat -c %s "$root/owner/utility-panel-review-checker-512.png")" = "2531"
+          echo "$MATERIALS_PNG_SHA256  $root/owner/utility-panel-review-checker-512.png" | sha256sum --check --strict
+          cp evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json "$root/owner/materials-retained-image-provenance.json"
+          cp ".owner-hard-surface/$HARD_SURFACE_DOMAIN_PATH" "$root/owner/service-surface-domain.json"
+          cp ".owner-geometry/$GEOMETRY_CHART_PATH" "$root/owner/geometry-chart.json"
+          cp ".owner-geometry/$GEOMETRY_SAMPLING_PATH" "$root/owner/geometry-sampling.json"
+          cp ".owner-materials/$MATERIALS_CONTRACT_PATH" "$root/owner/materials-serialized-review-contract.json"
+          cp ".owner-materials/$MATERIALS_PROFILE_PATH" "$root/owner/materials-profile.json"
+          cp ".owner-materials/$MATERIALS_OBSERVER_PATH" "$root/owner/materials-serialized-observer.gd"
+          cp ".uc/$UC_MODULE_PATH" "$root/owner/uc-material-uv-evidence.py"
 
       - name: Build bounded material-bearing GLB from exact owner inputs
         run: |
           set -euo pipefail
           root=evidence/technical_art_building_utility_panel_material_glb
           out="$root/final"
-          rm -rf "$out" && mkdir -p "$out"
           python tools/technical_art_building_utility_panel_material_glb_bridge.py \
             --surface-domain ".owner-hard-surface/$HARD_SURFACE_DOMAIN_PATH" \
             --geometry-chart ".owner-geometry/$GEOMETRY_CHART_PATH" \
@@ -180,7 +203,7 @@ jobs:
           printf '%s\n' "$MATERIALS_HEAD" > "$out/materials-head.txt"
           printf '%s\n' "$UC_HEAD" > "$out/uc-head.txt"
 
-      - name: Consume exact material-bearing GLBs with current generic UC observer
+      - name: Consume exact carrier and negative with current generic UC observer
         env:
           PYTHONPATH: .uc/src
         run: |
@@ -243,31 +266,18 @@ jobs:
           print(transfer['result'])
           PY
 
-      - name: Fail-close owner-image and active-region drift
+      - name: Fail-close owner pixel drift and Materials active-region drift
         run: |
           set -euo pipefail
-          root=evidence/technical_art_building_utility_panel_material_glb
-          cp "$root/owner/utility-panel-review-checker-512.png" /tmp/mutated-owner.png
+          cp evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json /tmp/mutated-provenance.json
           python - <<'PY'
-          from pathlib import Path
-          p=Path('/tmp/mutated-owner.png')
-          data=bytearray(p.read_bytes())
-          data[-20] ^= 1
-          p.write_bytes(data)
+          import json
+          p='/tmp/mutated-provenance.json'
+          d=json.load(open(p)); d['checker_dark_rgba8'][0]+=1
+          open(p,'w').write(json.dumps(d))
           PY
-          if python tools/technical_art_building_utility_panel_material_glb_bridge.py \
-            --surface-domain ".owner-hard-surface/$HARD_SURFACE_DOMAIN_PATH" \
-            --geometry-chart ".owner-geometry/$GEOMETRY_CHART_PATH" \
-            --geometry-sampling ".owner-geometry/$GEOMETRY_SAMPLING_PATH" \
-            --materials-contract ".owner-materials/$MATERIALS_CONTRACT_PATH" \
-            --materials-profile ".owner-materials/$MATERIALS_PROFILE_PATH" \
-            --materials-provenance evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json \
-            --materials-png /tmp/mutated-owner.png \
-            --output-dir /tmp/should-not-exist \
-            --technical-art-head "$(cat exact-head.txt)" \
-            --hard-surface-head "$HARD_SURFACE_HEAD" --geometry-head "$GEOMETRY_HEAD" --materials-head "$MATERIALS_HEAD" \
-            --uc-head "$UC_HEAD" --uc-module-blob "$UC_MODULE_BLOB"; then
-            echo 'ERROR: owner image drift unexpectedly passed' >&2; exit 1
+          if python tools/technical_art_rebuild_materials_review_png.py --provenance /tmp/mutated-provenance.json --output /tmp/should-not-exist.png; then
+            echo 'ERROR: owner pixel drift unexpectedly passed' >&2; exit 1
           fi
           cp ".owner-materials/$MATERIALS_CONTRACT_PATH" /tmp/mutated-materials.json
           python - <<'PY'
@@ -276,6 +286,7 @@ jobs:
           d=json.load(open(p)); d['review_texture']['active_region_px'][0]=351
           open(p,'w').write(json.dumps(d))
           PY
+          root=evidence/technical_art_building_utility_panel_material_glb
           if python tools/technical_art_building_utility_panel_material_glb_bridge.py \
             --surface-domain ".owner-hard-surface/$HARD_SURFACE_DOMAIN_PATH" \
             --geometry-chart ".owner-geometry/$GEOMETRY_CHART_PATH" \
@@ -290,18 +301,9 @@ jobs:
             --uc-head "$UC_HEAD" --uc-module-blob "$UC_MODULE_BLOB"; then
             echo 'ERROR: active-region drift unexpectedly passed' >&2; exit 1
           fi
-          echo PASS_FAIL_CLOSED_OWNER_IMAGE_AND_ACTIVE_REGION_DRIFT
-
-      - name: Run repository Python regressions
-        run: |
-          set -euo pipefail
-          if [ -d tests ]; then python -m unittest discover -s tests -v; fi
+          echo PASS_FAIL_CLOSED_OWNER_PIXEL_AND_ACTIVE_REGION_DRIFT
 
       - name: Download pinned Godot 4.7.2
-        if: matrix.python-version == '3.11'
-        env:
-          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
-          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
         run: |
           set -euo pipefail
           mkdir -p .godot-bin
@@ -312,12 +314,10 @@ jobs:
           .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
 
       - name: Install virtual display
-        if: matrix.python-version == '3.11'
         run: |
           if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
 
       - name: Import exact material-bearing carrier through real Godot
-        if: matrix.python-version == '3.11'
         run: |
           set -euo pipefail
           rm -f environment-proof/generated/technical-art-material-glb-target-host-receipt.json
@@ -335,7 +335,6 @@ jobs:
              evidence/technical_art_building_utility_panel_material_glb/final/godot-target-host-receipt.json
 
       - name: Verify exact target-host UV/material/image transport
-        if: matrix.python-version == '3.11'
         run: |
           python - <<'PY'
           import json, pathlib
@@ -352,6 +351,8 @@ jobs:
           assert g['image']['rgba8_sha256']=='02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b',g
           assert abs(float(g['material']['metallic'])-0.18) <= 1e-6,g
           assert abs(float(g['material']['roughness'])-0.62) <= 1e-6,g
+          bridge=json.loads((root/'technical-art-material-glb-bridge-receipt.json').read_text())
+          uc=json.loads((root/'uc-consumption-receipt.json').read_text())
           final={
               'schema':'axm.technical-art-building-utility-panel-material-glb-exact-path/v0.1',
               'result':'PASS_EXACT_OWNER_UV_MATERIAL_IMAGE_TO_CURRENT_UC_AND_REAL_GODOT__HOLD_VISUAL_RUNTIME_ADOPTION',
@@ -360,9 +361,11 @@ jobs:
               'geometry_head':'02944a9f10528a051603df3a6fd7b3183730773f',
               'materials_head':'5f096369eee2ef44275ea8f1c7dc1b6e564e71c8',
               'uc_head':'13a823349a568db266099564d6f5d8d7bac48b2b',
+              'glb_sha256':bridge['artifact']['sha256'],
               'materials_png_sha256':'e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198',
               'godot_imported_rgba8_sha256':g['image']['rgba8_sha256'],
-              'directional_texels_per_m':[320.0,320.0],
+              'directional_texels_per_m':[uc['directional_texels_per_m']['min'],uc['directional_texels_per_m']['max']],
+              'negative_directional_texels_per_m':[uc['negative_directional_texels_per_m']['min'],uc['negative_directional_texels_per_m']['max']],
               'uc_policy_selected':False,
               'godot_receiver_policy_promoted':False,
               'visual_acceptance_claimed':False,
@@ -374,16 +377,16 @@ jobs:
           PY
 
       - name: Retain exact Technical Art material GLB bridge evidence
-        if: matrix.python-version == '3.11' && always()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: technical-art-building-utility-panel-material-glb-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             exact-head.txt
             tools/technical_art_building_utility_panel_material_glb_bridge.py
+            tools/technical_art_rebuild_materials_review_png.py
             environment-proof/technical_art_building_utility_panel_material_glb_observe.gd
             evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json
-            evidence-fixtures/utility-panel-review-checker-512.png.b64
             evidence/technical_art_building_utility_panel_material_glb
           if-no-files-found: warn
           retention-days: 30
