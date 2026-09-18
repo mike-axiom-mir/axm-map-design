@@ -1,0 +1,266 @@
+name: Runtime Object current-world static component batching
+
+on:
+  push:
+    branches: [studio/runtime-object-current-world-static-component-batching-001]
+    paths:
+      - "contracts/runtime_object_current_world_static_batching.json"
+      - "environment-proof/runtime_object_current_world_static_batching_observe.gd"
+      - "tools/verify_runtime_object_current_world_static_batching.py"
+      - ".github/workflows/runtime-object-current-world-static-batching.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  runtime-object-static-batching:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact green Animation parent and Runtime syntax
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/verify_runtime_object_current_world_static_batching.py
+          python -m json.tool contracts/runtime_object_current_world_static_batching.json >/dev/null
+          git merge-base --is-ancestor c2695f654f9dd44312ca5d205eceb27f7c2680ee HEAD
+          git diff --exit-code c2695f654f9dd44312ca5d205eceb27f7c2680ee -- \
+            environment-proof/animation_object_current_world_wallclock_observe.gd \
+            environment-proof/atmosphere_current_world_object_motion_observe.gd \
+            environment-proof/atmosphere_current_world_object_rigid_component_observe.gd \
+            tools/technical_art_object_motion_current_world_bridge.py \
+            contracts/technical_art_object_motion_current_world_bridge.json
+          git rev-parse HEAD > runtime-exact-head.txt
+          echo PASS_EXACT_ANIMATION_PARENT_UNMODIFIED
+
+      - name: Bind exact green Animation evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          mkdir -p "$root/animation-parent"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10521646521/zip" -o "$root/animation-parent.zip"
+          echo "87b83510d9b521d754c8c4eeced9ef7eba164d4c4d54bf6c6e2baaee449a0f3b  $root/animation-parent.zip" | sha256sum --check --strict
+          unzip -q "$root/animation-parent.zip" -d "$root/animation-parent"
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('evidence/runtime_object_static_batching/animation-parent')
+          summaries=list(root.rglob('SUMMARY.json'))
+          assert len(summaries)==1, summaries
+          d=json.load(open(summaries[0]))
+          assert d['exact_head']=='c2695f654f9dd44312ca5d205eceb27f7c2680ee', d
+          assert d['result']=='PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_AND_SHADED_REVIEW_SEQUENCE', d
+          assert d['technical_art_parent_head']=='d2974dec5043ed9afad346574b23ef8bd4438a76', d
+          assert d['timed_natural_stop'] is True, d
+          assert d['runtime_controller_accepted'] is False, d
+          assert d['target_device_performance_accepted'] is False, d
+          print('PASS_EXACT_GREEN_ANIMATION_PARENT')
+          PY
+
+      - name: Download exact Technical Art current-world motion parent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          mkdir -p "$root/ta-parent" environment-proof/generated
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10520039600/zip" -o "$root/ta-parent.zip"
+          echo "ed7acb94e1b10d7b8abe50a7b5ee0c79393cfa1e91e33b18dddd91c96eb3cc0b  $root/ta-parent.zip" | sha256sum --check --strict
+          unzip -q "$root/ta-parent.zip" -d "$root/ta-parent"
+          python - <<'PY'
+          import json
+          p='evidence/runtime_object_static_batching/ta-parent/final-receipt.json'
+          d=json.load(open(p))
+          assert d['exact_head']=='d2974dec5043ed9afad346574b23ef8bd4438a76', d
+          assert d['result']=='PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLES_THROUGH_RIGID_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD', d
+          assert d['animation_head']=='c688936a84f80f292e43587c9d3386bd717f8178', d
+          print('PASS_EXACT_TECHNICAL_ART_PARENT')
+          PY
+          cp "$root/ta-parent/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
+          cp "$root/ta-parent/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
+          python tools/technical_art_object_motion_current_world_bridge.py validate-plan \
+            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --plan environment-proof/generated/object-motion-receiver-plan.json
+
+      - name: Download exact current-world payload and selected roughness inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          mkdir -p "$root/world-input" "$root/roughness" "$root/receipts"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" -o "$root/world-input.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world-input.zip" | sha256sum --check --strict
+          unzip -q "$root/world-input.zip" -d "$root/world-input"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" -o "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          cp "$root/world-input/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+
+      - name: Checkout exact retained receiver dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Compose exact current-world observer dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/receipts/observer-composition.json"
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Measure exact control and static-batched receiver
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+          AXM_OBJECT_MOTION_SAMPLE_INDEX: "0"
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          rm -f environment-proof/runtime-object-static-batching-*.png environment-proof/runtime-object-current-world-static-batching.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script runtime_object_current_world_static_batching_observe.gd 2>&1 | tee "$root/godot.log"
+          test -f environment-proof/runtime-object-current-world-static-batching.json
+          cp environment-proof/runtime-object-current-world-static-batching.json "$root/runtime.json"
+          mkdir -p "$root/rendered"
+          cp environment-proof/runtime-object-static-batching-*.png "$root/rendered/"
+          test "$(find "$root/rendered" -type f -name '*.png' | wc -l | tr -d ' ')" -eq 8
+          python tools/verify_runtime_object_current_world_static_batching.py --receipt "$root/runtime.json"
+
+      - name: Fail closed on removed draw-call win
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          python - <<'PY'
+          import json
+          src='evidence/runtime_object_static_batching/runtime.json'
+          out='evidence/runtime_object_static_batching/negative-draw-win.json'
+          d=json.load(open(src))
+          row=d['measurements'][0]
+          row['candidate_runtime']['draw_calls_in_frame']=row['control_runtime']['draw_calls_in_frame']
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_current_world_static_batching.py --receipt "$root/negative-draw-win.json" > "$root/negative-draw-win.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_REMOVED_DRAW_CALL_WIN
+
+      - name: Fail closed on future-articulation authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          python - <<'PY'
+          import json
+          src='evidence/runtime_object_static_batching/runtime.json'
+          out='evidence/runtime_object_static_batching/negative-authority.json'
+          d=json.load(open(src))
+          d['future_arbitrary_articulation_accepted']=True
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_current_world_static_batching.py --receipt "$root/negative-authority.json" > "$root/negative-authority.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_FUTURE_ARTICULATION_AUTHORITY_INFLATION
+
+      - name: Build exact-head summary
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('evidence/runtime_object_static_batching')
+          d=json.load(open(root/'runtime.json'))
+          head=subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
+          summary={
+            'schema':'axm.runtime-object-current-world-static-batching-summary/v0.1',
+            'result':d['state'],
+            'exact_head':head,
+            'animation_parent_head':d['animation_parent_head'],
+            'technical_art_parent_head':d['technical_art_parent_head'],
+            'component_count':d['component_count'],
+            'moving_component_count':d['moving_component_count'],
+            'static_component_count':d['static_component_count'],
+            'control_component_surface_instances':d['control_component_surface_instances'],
+            'static_batch_surface_count':d['static_batch_surface_count'],
+            'candidate_render_surface_count':d['candidate_render_surface_count'],
+            'summary':d['summary'],
+            'visual_tradeoff':d['visual_tradeoff'],
+            'future_arbitrary_articulation_accepted':False,
+            'target_device_performance_accepted':False,
+            'art_qa_accepted':False,
+            'canon':False,
+          }
+          (root/'SUMMARY.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload retained Runtime evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-object-static-component-batching-${{ github.sha }}
+          path: |
+            evidence/runtime_object_static_batching/SUMMARY.json
+            evidence/runtime_object_static_batching/runtime.json
+            evidence/runtime_object_static_batching/godot.log
+            evidence/runtime_object_static_batching/animation-parent/
+            evidence/runtime_object_static_batching/ta-parent/final-receipt.json
+            evidence/runtime_object_static_batching/ta-parent/motion-plan-receipt.json
+            evidence/runtime_object_static_batching/ta-parent/object-motion-receiver-plan.json
+            evidence/runtime_object_static_batching/ta-parent/object-rigid-component-map.json
+            evidence/runtime_object_static_batching/receipts/observer-composition.json
+            evidence/runtime_object_static_batching/negative-draw-win.json
+            evidence/runtime_object_static_batching/negative-draw-win.log
+            evidence/runtime_object_static_batching/negative-authority.json
+            evidence/runtime_object_static_batching/negative-authority.log
+            evidence/runtime_object_static_batching/rendered/*.png
+            runtime-exact-head.txt
+          retention-days: 30

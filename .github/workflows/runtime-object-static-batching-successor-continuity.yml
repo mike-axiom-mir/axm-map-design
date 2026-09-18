@@ -1,0 +1,182 @@
+name: Runtime Object static batching successor continuity
+
+on:
+  push:
+    branches: [studio/runtime-object-current-world-static-component-batching-001]
+    paths:
+      - "contracts/runtime_object_static_batching_successor_continuity.json"
+      - "tools/verify_runtime_object_static_batching_successor_continuity.py"
+      - ".github/workflows/runtime-object-static-batching-successor-continuity.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  runtime-object-static-batching-successor-continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact prior Runtime lineage and syntax
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/verify_runtime_object_static_batching_successor_continuity.py
+          python -m json.tool contracts/runtime_object_static_batching_successor_continuity.json >/dev/null
+          git merge-base --is-ancestor 08c5514835acc942858820b27874498c1c84c2ae HEAD
+          git rev-parse HEAD > runtime-successor-continuity-exact-head.txt
+          echo PASS_RUNTIME_SUCCESSOR_CONTINUITY_LINEAGE_BOUND
+
+      - name: Download exact prior Runtime evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_continuity
+          mkdir -p "$root/prior"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10522290719/zip" -o "$root/prior.zip"
+          echo "a93a66ebc035c7d11ec00389b9c9f3b70c163dd83138f32a418e45f103963ee3  $root/prior.zip" | sha256sum --check --strict
+          unzip -q "$root/prior.zip" -d "$root/prior"
+          test -f "$root/prior/evidence/runtime_object_static_batching/SUMMARY.json"
+          test -f "$root/prior/evidence/runtime_object_static_batching/ta-parent/object-rigid-component-map.json"
+          test -f "$root/prior/evidence/runtime_object_static_batching/ta-parent/object-motion-receiver-plan.json"
+          echo PASS_EXACT_PRIOR_RUNTIME_ARTIFACT
+
+      - name: Download exact successor Animation evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_continuity
+          mkdir -p "$root/successor"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10523121895/zip" -o "$root/successor.zip"
+          echo "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707  $root/successor.zip" | sha256sum --check --strict
+          unzip -q "$root/successor.zip" -d "$root/successor"
+          test -f "$root/successor/evidence/animation_object_current_world_wallclock/SUMMARY.json"
+          test -f "$root/successor/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json"
+          test -f "$root/successor/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json"
+          echo PASS_EXACT_SUCCESSOR_ANIMATION_ARTIFACT
+
+      - name: Verify exact successor static-batch eligibility continuity
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_continuity
+          python tools/verify_runtime_object_static_batching_successor_continuity.py \
+            --contract contracts/runtime_object_static_batching_successor_continuity.json \
+            --prior-runtime-root "$root/prior/evidence/runtime_object_static_batching" \
+            --successor-animation-root "$root/successor/evidence/animation_object_current_world_wallclock" \
+            --output "$root/receipt.json"
+
+      - name: Fail closed on successor component-map mutation
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_continuity
+          cp -a "$root/successor" "$root/negative-component-successor"
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('evidence/runtime_object_static_batching_successor_continuity/negative-component-successor/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json')
+          d=json.loads(p.read_text())
+          comps=d['components']
+          for row in comps:
+              if row.get('name') not in set(d.get('required_moving_components', [])) and row.get('parent') is None:
+                  row['name']=str(row['name'])+'__MUTATED'
+                  break
+          p.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_static_batching_successor_continuity.py \
+            --contract contracts/runtime_object_static_batching_successor_continuity.json \
+            --prior-runtime-root "$root/prior/evidence/runtime_object_static_batching" \
+            --successor-animation-root "$root/negative-component-successor/evidence/animation_object_current_world_wallclock" \
+            --output "$root/negative-component-receipt.json" > "$root/negative-component.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_SUCCESSOR_COMPONENT_MAP_MUTATION
+
+      - name: Fail closed on successor owner-motion mutation
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_continuity
+          cp -a "$root/successor" "$root/negative-motion-successor"
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('evidence/runtime_object_static_batching_successor_continuity/negative-motion-successor/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json')
+          d=json.loads(p.read_text())
+          d['samples'][50]['lid_target_rotation_deg_x']=float(d['samples'][50]['lid_target_rotation_deg_x'])+0.25
+          p.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_static_batching_successor_continuity.py \
+            --contract contracts/runtime_object_static_batching_successor_continuity.json \
+            --prior-runtime-root "$root/prior/evidence/runtime_object_static_batching" \
+            --successor-animation-root "$root/negative-motion-successor/evidence/animation_object_current_world_wallclock" \
+            --output "$root/negative-motion-receipt.json" > "$root/negative-motion.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_SUCCESSOR_OWNER_MOTION_MUTATION
+
+      - name: Build exact-head summary
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_continuity
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('evidence/runtime_object_static_batching_successor_continuity')
+          receipt=json.loads((root/'receipt.json').read_text())
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          summary={
+            'schema':'axm.runtime-object-static-batching-successor-continuity-summary/v0.1',
+            'result':receipt['state'],
+            'exact_runtime_head':head,
+            'prior_runtime_head':receipt['prior_runtime_head'],
+            'successor_animation_head':receipt['successor_animation_head'],
+            'successor_technical_art_head':receipt['successor_technical_art_head'],
+            'owner_animation_head':receipt['owner_animation_head'],
+            'component_map_sha256':receipt['component_map_sha256'],
+            'stable_motion_subset_sha256':receipt['stable_motion_subset_sha256'],
+            'component_count':receipt['component_count'],
+            'moving_component_count':receipt['moving_component_count'],
+            'static_component_count':receipt['static_component_count'],
+            'classification_reuse_authorized':receipt['classification_reuse_authorized'],
+            'prior_runtime_counter_transfer_authorized':False,
+            'prior_visual_acceptance_transfer_authorized':False,
+            'target_device_performance_accepted':False,
+            'art_qa_accepted':False,
+            'canon':False,
+          }
+          (root/'SUMMARY.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload retained Runtime successor-continuity evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-object-static-batching-successor-continuity-${{ github.sha }}
+          path: |
+            evidence/runtime_object_static_batching_successor_continuity/SUMMARY.json
+            evidence/runtime_object_static_batching_successor_continuity/receipt.json
+            evidence/runtime_object_static_batching_successor_continuity/negative-component.log
+            evidence/runtime_object_static_batching_successor_continuity/negative-motion.log
+            evidence/runtime_object_static_batching_successor_continuity/prior/evidence/runtime_object_static_batching/SUMMARY.json
+            evidence/runtime_object_static_batching_successor_continuity/prior/evidence/runtime_object_static_batching/ta-parent/object-rigid-component-map.json
+            evidence/runtime_object_static_batching_successor_continuity/prior/evidence/runtime_object_static_batching/ta-parent/object-motion-receiver-plan.json
+            evidence/runtime_object_static_batching_successor_continuity/successor/evidence/animation_object_current_world_wallclock/SUMMARY.json
+            evidence/runtime_object_static_batching_successor_continuity/successor/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json
+            evidence/runtime_object_static_batching_successor_continuity/successor/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json
+            runtime-successor-continuity-exact-head.txt
+          retention-days: 30
