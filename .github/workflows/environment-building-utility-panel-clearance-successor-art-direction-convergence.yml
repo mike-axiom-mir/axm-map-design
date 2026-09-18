@@ -1,0 +1,104 @@
+name: Environment Building clearance-successor Art convergence
+
+on:
+  push:
+    branches:
+      - studio/environment-building-utility-panel-material-receiver-readiness-001
+    paths:
+      - 'contracts/environment_building_utility_panel_clearance_successor_art_direction_convergence.json'
+      - 'contracts/environment_building_utility_panel_clearance_successor_review_convergence.json'
+      - 'tools/environment_building_utility_panel_clearance_successor_art_direction_convergence.py'
+      - 'docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_ART_DIRECTION_CONVERGENCE_001.md'
+      - '.github/workflows/environment-building-utility-panel-clearance-successor-art-direction-convergence.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  converge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact Environment branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Record exact Environment head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p evidence/environment-building-clearance-successor-art-direction-convergence
+          printf '%s\n' "$GITHUB_SHA" > evidence/environment-building-clearance-successor-art-direction-convergence/exact-head.txt
+
+      - name: Checkout exact Art Direction 049 coordination commit
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-create-me
+          ref: 58cc1aaa04a597927185f5c61ebdf57f73ef6534
+          path: _art-direction
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Record exact Art Direction head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C _art-direction rev-parse HEAD)" = "58cc1aaa04a597927185f5c61ebdf57f73ef6534"
+          git -C _art-direction rev-parse HEAD > evidence/environment-building-clearance-successor-art-direction-convergence/art-direction-head.txt
+
+      - name: Verify exact fresh Art Direction convergence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/environment_building_utility_panel_clearance_successor_art_direction_convergence.py \
+            --contract contracts/environment_building_utility_panel_clearance_successor_art_direction_convergence.json \
+            --prior-review-contract contracts/environment_building_utility_panel_clearance_successor_review_convergence.json \
+            --art-direction-packet _art-direction/studio/direction/BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_DIRECTION_049.md \
+            --art-direction-head evidence/environment-building-clearance-successor-art-direction-convergence/art-direction-head.txt \
+            --output evidence/environment-building-clearance-successor-art-direction-convergence/report.json
+
+      - name: Fail closed on fabricated Art result
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp _art-direction/studio/direction/BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_DIRECTION_049.md /tmp/direction049-negative.md
+          sed -i 's/PASS_ART_DIRECTION_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_049/FAIL_FABRICATED_ART_DIRECTION_RESULT/g' /tmp/direction049-negative.md
+          if python tools/environment_building_utility_panel_clearance_successor_art_direction_convergence.py \
+            --contract contracts/environment_building_utility_panel_clearance_successor_art_direction_convergence.json \
+            --prior-review-contract contracts/environment_building_utility_panel_clearance_successor_review_convergence.json \
+            --art-direction-packet /tmp/direction049-negative.md \
+            --art-direction-head evidence/environment-building-clearance-successor-art-direction-convergence/art-direction-head.txt \
+            --output /tmp/negative-report.json; then
+            echo 'negative control unexpectedly passed' >&2
+            exit 1
+          fi
+
+      - name: Retain exact evidence packet
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp contracts/environment_building_utility_panel_clearance_successor_art_direction_convergence.json evidence/environment-building-clearance-successor-art-direction-convergence/contract.json
+          cp contracts/environment_building_utility_panel_clearance_successor_review_convergence.json evidence/environment-building-clearance-successor-art-direction-convergence/prior-review-convergence-contract.json
+          cp _art-direction/studio/direction/BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_DIRECTION_049.md evidence/environment-building-clearance-successor-art-direction-convergence/BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_DIRECTION_049.md
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('evidence/environment-building-clearance-successor-art-direction-convergence')
+          entries = {}
+          for path in sorted(p for p in root.iterdir() if p.is_file()):
+              entries[path.name] = {
+                  'bytes': path.stat().st_size,
+                  'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+              }
+          (root / 'manifest.json').write_text(json.dumps({'files': entries}, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+          PY
+
+      - name: Upload retained Environment evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-clearance-successor-art-direction-convergence-${{ github.sha }}
+          path: evidence/environment-building-clearance-successor-art-direction-convergence
+          if-no-files-found: error
+          retention-days: 90
