@@ -1,0 +1,222 @@
+name: VFX Weather normalized exposure source-cadence review
+
+on:
+  push:
+    branches: [studio/vfx-weather-source-width-current-world-001]
+    paths:
+      - "tools/environment_weather_width_temporal_exposure_playback_review.py"
+      - "environment-proof/atmosphere_current_world_weather_width_temporal_exposure_playback_review_observe.gd"
+      - "docs/ENVIRONMENT_WEATHER_SOURCE_WIDTH_TEMPORAL_EXPOSURE_SOURCE_CADENCE_REVIEW_001.md"
+      - ".github/workflows/vfx-weather-source-width-temporal-exposure-source-cadence-review.yml"
+  pull_request:
+    paths:
+      - "tools/environment_weather_width_temporal_exposure_playback_review.py"
+      - "environment-proof/atmosphere_current_world_weather_width_temporal_exposure_playback_review_observe.gd"
+      - "docs/ENVIRONMENT_WEATHER_SOURCE_WIDTH_TEMPORAL_EXPOSURE_SOURCE_CADENCE_REVIEW_001.md"
+      - ".github/workflows/vfx-weather-source-width-temporal-exposure-source-cadence-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source-cadence-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout exact VFX review head with ancestry
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact unchanged normalized visual candidate
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          candidate=dd4a85223ba70f7086db2fdc292e4cb57ac38e47
+          git cat-file -e "$candidate^{commit}"
+          git merge-base --is-ancestor "$candidate" HEAD
+          test "$(git rev-parse "$candidate:tools/environment_weather_width_temporal_exposure_normalized.py")" = "6c48fbfb2ed10e78aa6b81a30b0cdc7ef10df873"
+          test "$(git rev-parse "HEAD:tools/environment_weather_width_temporal_exposure_normalized.py")" = "6c48fbfb2ed10e78aa6b81a30b0cdc7ef10df873"
+          test "$(git rev-parse "$candidate:environment-proof/atmosphere_current_world_weather_width_temporal_exposure_normalized_observe.gd")" = "500b766ef9b5c93d1305e116bdbb027ae1957d1e"
+          test "$(git rev-parse "HEAD:environment-proof/atmosphere_current_world_weather_width_temporal_exposure_normalized_observe.gd")" = "500b766ef9b5c93d1305e116bdbb027ae1957d1e"
+          test "$(git rev-parse "$candidate:docs/ENVIRONMENT_WEATHER_SOURCE_WIDTH_TEMPORAL_EXPOSURE_NORMALIZED_001.md")" = "d1dcb6f713c8b6abc41acd572a28720431a07e3a"
+          test "$(git rev-parse "HEAD:docs/ENVIRONMENT_WEATHER_SOURCE_WIDTH_TEMPORAL_EXPOSURE_NORMALIZED_001.md")" = "d1dcb6f713c8b6abc41acd572a28720431a07e3a"
+          printf '%s\n' "$candidate" > visual-candidate-head.txt
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile exact receiving and review tooling
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/environment_weather_width_current_world.py \
+            tools/environment_weather_width_interpolated.py \
+            tools/environment_weather_width_temporal_exposure.py \
+            tools/environment_weather_width_temporal_exposure_normalized.py \
+            tools/environment_weather_width_temporal_exposure_playback_review.py
+
+      - name: Download exact retained PR22 Weather-variant evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-variant-current-world-001-e482d003853e52fc835f1797ddfb6506a50083ef
+          path: .parent-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35086299949
+
+      - name: Verify retained parent identity
+        run: |
+          set -euo pipefail
+          test "$(cat .parent-evidence/exact-head.txt | tr -d '\n\r')" = "e482d003853e52fc835f1797ddfb6506a50083ef"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('.parent-evidence')
+          parent=json.loads((root/'current_world_weather_variant.json').read_text())
+          target=json.loads((root/'target_host.json').read_text())
+          assert parent['status']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_REBIND_STRUCTURE', parent
+          assert all(parent['checks'].values()), parent
+          assert target['state']=='PASS_CURRENT_WORLD_WEATHER_VARIANT_LIVE_TARGET_HOST', target
+          assert all(target['checks'].values()), target
+          PY
+
+      - name: Checkout exact Weather variation family
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-weather-design
+          ref: 05b26c4e82bbe0a4de0ee7bee34179efc58b9719
+          path: .weather-variant
+          fetch-depth: 1
+
+      - name: Build exact source-width payload for this review head
+        env:
+          AXM_RECEIVING_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          out=evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001
+          rm -rf "$out" environment-proof/temporal-exposure-frames environment-proof/temporal-exposure-raw
+          mkdir -p "$out" environment-proof/generated environment-proof/temporal-exposure-frames environment-proof/temporal-exposure-raw
+          cp .parent-evidence/current_world_weather_variant.json "$out/parent_variant.json"
+          python tools/environment_weather_width_current_world.py build \
+            --parent "$out/parent_variant.json" \
+            --weather-variant-root .weather-variant \
+            --output "$out/current_world_weather_width.json"
+          cp exact-head.txt "$out/exact-head.txt"
+          cp visual-candidate-head.txt "$out/visual-candidate-head.txt"
+          cp "$out/current_world_weather_width.json" environment-proof/generated/current_world_weather_width.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001')
+          data=json.loads((root/'current_world_weather_width.json').read_text())
+          assert data['status']=='PASS_CURRENT_WORLD_WEATHER_SOURCE_WIDTH_STRUCTURE', data
+          assert all(data['checks'].values()), data
+          assert data['receiving_head']==(root/'exact-head.txt').read_text().strip(), data
+          assert [row['time_s'] for row in data['states']]==[i*0.03125 for i in range(17)], data
+          assert (root/'visual-candidate-head.txt').read_text().strip()=='dd4a85223ba70f7086db2fdc292e4cb57ac38e47'
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display when needed
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Observe exact source-cadence control and normalized candidate
+        run: |
+          set -euo pipefail
+          out=evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 \
+            --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script atmosphere_current_world_weather_width_temporal_exposure_playback_review_observe.gd \
+            2>&1 | tee "$out/godot.log"
+          cp environment-proof/atmosphere-current-world-weather-width-temporal-exposure-source-cadence-runtime.json "$out/runtime.json"
+          cp -R environment-proof/temporal-exposure-frames "$out/frames"
+          cp -R environment-proof/temporal-exposure-raw "$out/raw"
+
+      - name: Verify and build offline one-shot A-B review
+        run: |
+          set -euo pipefail
+          out=evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001
+          python tools/environment_weather_width_temporal_exposure_playback_review.py \
+            --payload "$out/current_world_weather_width.json" \
+            --receipt "$out/runtime.json" \
+            --image-root environment-proof \
+            --output "$out/target_host.json" \
+            --html-output "$out/playback_review.html"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/target_host.json').read_text())
+          assert report['state']=='PASS_OPACITY_NORMALIZED_TEMPORAL_EXPOSURE_SOURCE_CADENCE_REVIEW_SURFACE', report
+          assert all(report['checks'].values()), report
+          assert report['source_cadence_hz']==32.0, report
+          assert report['review_phases_us']==[i*31250 for i in range(17)], report
+          print(json.dumps({
+              'state':report['state'],
+              'decision':report['decision'],
+              'context_metrics':report['context_metrics'],
+              'maximum_projected_width_residual_px':report['maximum_projected_width_residual_px'],
+              'measured_width_count':report['measured_width_count'],
+          },indent=2))
+          PY
+
+      - name: Exercise deliberate retained-frame identity mutation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import tools.environment_weather_width_temporal_exposure_playback_review as review
+          root=Path('evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001')
+          payload=json.loads((root/'current_world_weather_width.json').read_text())
+          receipt=json.loads((root/'runtime.json').read_text())
+          report=review.exercise_frame_identity_negative_control(payload,receipt,'environment-proof')
+          assert report['state']=='FAIL', report
+          assert report['checks']['direct_png_and_raw_rgba_evidence_is_hash_bound'] is False, report
+          print('PASS_FAIL_CLOSED_SOURCE_CADENCE_FRAME_IDENTITY_DRIFT')
+          PY
+
+      - name: Upload exact source-cadence review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-weather-source-width-temporal-exposure-source-cadence-review-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/exact-head.txt
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/visual-candidate-head.txt
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/parent_variant.json
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/current_world_weather_width.json
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/godot.log
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/runtime.json
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/target_host.json
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/playback_review.html
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/frames/*.png
+            evidence/environment_weather_source_width_temporal_exposure_source_cadence_review_001/raw/*.rgba
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
