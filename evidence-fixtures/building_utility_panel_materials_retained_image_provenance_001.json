@@ -12,6 +12,11 @@
   "materials_png_bytes": 2531,
   "materials_png_sha256": "e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198",
   "image_size_px": [512, 512],
+  "checker_period_px": 16,
+  "checker_dark_rgba": [0.31341176470588233, 0.25411764705882356, 0.16376470588235292, 1.0],
+  "checker_light_rgba": [0.5571764705882353, 0.45176470588235296, 0.2911372549019608, 1.0],
+  "checker_dark_rgba8": [79, 64, 41, 255],
+  "checker_light_rgba8": [142, 115, 74, 255],
   "base_rgba8_bytes": 1048576,
   "base_rgba8_sha256": "02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b",
   "materials_contract_blob_sha": "620bc298256d21ee008b6fe870135f09212f8db9",
@@ -24,6 +29,6 @@
   "hard_surface_surface_domain_blob_sha": "8b4484d4ccbd500e58910a2835d8780112489919",
   "uc_head": "13a823349a568db266099564d6f5d8d7bac48b2b",
   "uc_material_uv_module_blob_sha": "bc7aa2ffc2c598d75a78739c70fd349138f511e2",
-  "fixture_policy": "EXACT_RETAINED_OWNER_ARTIFACT_BYTES_COPIED_AS_TECHNICAL_ART_TRANSPORT_FIXTURE__NOT_SOURCE_AUTHORITY",
-  "truth_boundary": "The adjacent base64 fixture is an exact byte copy of the Materials-owned serialized review PNG retained by workflow 35270493702 / artifact 10518114336. Technical Art may transport those bytes but does not own their visual design, density target, material meaning, production adoption or future replacement policy."
+  "fixture_policy": "OWNER_RETAINED_PIXEL_AND_SERIALIZATION_PARAMETERS_REPRODUCED_ONLY_UNDER_EXACT_RETAINED_RGBA8_AND_PNG_DIGESTS__NOT_SOURCE_AUTHORITY",
+  "truth_boundary": "The checker values are copied from the exact Materials retained runtime payload and receipt so Technical Art can reproduce the owner image without inventing visual values. Reproduction is accepted only if both the raw RGBA8 digest and retained serialized PNG digest match the Materials artifact exactly. Technical Art does not own the visual design, density target, material meaning, future replacement policy or production adoption."
 }
