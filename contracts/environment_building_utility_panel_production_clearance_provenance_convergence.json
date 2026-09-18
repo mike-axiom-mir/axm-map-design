@@ -1,0 +1,68 @@
+{
+  "schema": "axm.environment-building-utility-panel-production-clearance-provenance-convergence/v0.1",
+  "study_id": "environment-building-utility-panel-production-clearance-provenance-convergence-001",
+  "expected_result": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_PRODUCTION_CLEARANCE_PROVENANCE_CONVERGENCE__NO_WORLD_RERENDER_REQUIRED__REVIEW_AUTHORITY_HELD",
+  "reusable_rule": "EVIDENCE_HEAD_ADVANCE_MAY_REBIND_ENVIRONMENT_PROVENANCE_WITHOUT_RERENDER_ONLY_WHEN_EXACT_WORLD_PLACEMENT_MATERIAL_BYTES_AND_UNRELATED_SCENE_IDENTITIES_ARE_ALREADY_PROVEN_EQUAL__REVIEW_AUTHORITY_DOES_NOT_TRANSFER_BY_HEAD",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 51,
+    "prior_head": "4826db5d3a595bbeefdfd58d5541b2d78247e290",
+    "branch": "studio/environment-building-utility-panel-material-receiver-readiness-001",
+    "current_world_artifact_id": 10533098763,
+    "current_world_artifact_sha256": "3ddb618651555b541925a4f3f153395243644d8e36979a322b0cdb8a8f7d495d",
+    "reviewed_production_world_environment_head": "595df99daf866b5e3dcaa4be87eeb650af637919",
+    "reviewed_production_world_artifact_id": 10531260523,
+    "reviewed_production_world_artifact_sha256": "75369c8d71ce5491eec2e058ecacc56948ca94662cc0b34d123b82273f2b4b8b",
+    "environment_adoption": false
+  },
+  "fresh_owner": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "materials_pr": 3,
+    "materials_head": "eb31efc1639f58f2797bac44ce7f1bad774841ef",
+    "workflow_run": 35324926942,
+    "artifact_id": 10538777520,
+    "artifact_sha256": "2ea191b56c46007122bc46b3a6e9ddc661318d41999e5b9f970445408fb84bb0",
+    "hard_surface_pr": 17,
+    "hard_surface_head": "fbfa3b47048755b45dac91451171d5511c8d4f47",
+    "source_content_head": "32bbdd54f00aaac87ba8139bf932d8aff6109a66",
+    "geometry_pr": 18,
+    "geometry_head": "02944a9f10528a051603df3a6fd7b3183730773f",
+    "procedural_pr": 4,
+    "procedural_head": "588350afba56dd1aa0417148f03e12c6cfc81610"
+  },
+  "semantic_subject": {
+    "surface_id": "utility_panel_ochre_production_surface_001",
+    "png_sha256": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "rgba8_sha256": "408a6eaecf99fa328487785f85d089c93da2b84c3ae9ead0bf6e1f8d2a0bdcad",
+    "metallic": 0.18,
+    "roughness": 0.62,
+    "front_successor_center_source_xyz_m": [-2.45, -1.1, 1.65],
+    "east_successor_center_source_xyz_m": [3.9, 0.1, 1.65],
+    "front_translation_source_xyz_m": [0.0, -0.02, 0.0],
+    "east_translation_source_xyz_m": [0.02, 0.0, 0.0],
+    "building_variant": "header-segmented-23",
+    "building_vertices": 184,
+    "building_triangles": 276,
+    "building_surfaces": 5
+  },
+  "preserve_exact": [
+    "current Building receiver geometry outside the two already-proven utility-panel successor placements",
+    "articulated Object current-world receiver and +20 mm Environment service dressing",
+    "compact-east and east-rear Nature current-world receivers",
+    "Weather source-width 17-state presentation",
+    "path, cameras and lighting",
+    "production surface bytes and scalar metallic/roughness"
+  ],
+  "authority": {
+    "fresh_owner_provenance_rebound": true,
+    "current_world_content_changed": false,
+    "new_world_render_required_for_content_change": false,
+    "art_direction_head_transfer": false,
+    "visual_qa_head_transfer": false,
+    "runtime_target_device_transfer": false,
+    "environment_adoption": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "truth_boundary": "This convergence gate may update Environment provenance to the latest Building Materials evidence head only if the fresh owner proves the exact same production texture bytes and exact same source-owned utility-panel successor centers already present in retained real current-world evidence, and if unrelated Building/Object/Nature/Weather world identities remain exact. It does not create a new visual candidate, does not transfer Art/QA/Runtime acceptance to a changed head, and does not grant Environment adoption, CANON or production readiness."
+}
