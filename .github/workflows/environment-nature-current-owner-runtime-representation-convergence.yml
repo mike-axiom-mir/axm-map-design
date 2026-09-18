@@ -1,0 +1,122 @@
+name: Environment Nature current-owner Runtime representation convergence
+
+on:
+  push:
+    branches: [studio/environment-nature-five-branch-reservation-fit-001]
+    paths:
+      - "tools/environment_nature_current_owner_runtime_representation_convergence.py"
+      - "contracts/environment_nature_current_owner_runtime_representation_convergence.json"
+      - "evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json"
+      - "docs/ENVIRONMENT_NATURE_CURRENT_OWNER_RUNTIME_REPRESENTATION_CONVERGENCE_004.md"
+      - ".github/workflows/environment-nature-current-owner-runtime-representation-convergence.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_current_owner_runtime_representation_convergence.py"
+      - "contracts/environment_nature_current_owner_runtime_representation_convergence.json"
+      - "evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json"
+      - "docs/ENVIRONMENT_NATURE_CURRENT_OWNER_RUNTIME_REPRESENTATION_CONVERGENCE_004.md"
+      - ".github/workflows/environment-nature-current-owner-runtime-representation-convergence.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  current-owner-runtime-representation-convergence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate bounded convergence gate identities
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e b7419d3f70ddfc45d7c2f59890329dfb843b1c64^{commit}
+          git merge-base --is-ancestor b7419d3f70ddfc45d7c2f59890329dfb843b1c64 HEAD
+          python -m py_compile tools/environment_nature_current_owner_runtime_representation_convergence.py
+          python -m json.tool contracts/environment_nature_current_owner_runtime_representation_convergence.json >/dev/null
+          python -m json.tool evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json >/dev/null
+          test "$(git rev-parse HEAD:evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json)" = "29eeec1c601b4747f1a5f98e454f94d364f98388"
+
+      - name: Download exact retained Environment target-receiver evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_runtime_representation_convergence_004
+          mkdir -p "$root/prior"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10545461660/zip" \
+            -o "$root/prior.zip"
+          echo "5ecc1ddd92fc876b028cfede6965f57373705b569aa64a89b165ab48563d5e62  $root/prior.zip" | sha256sum --check --strict
+          unzip -q "$root/prior.zip" -d "$root/prior"
+          test "$(cat "$root/prior/exact-head.txt")" = "b7419d3f70ddfc45d7c2f59890329dfb843b1c64"
+          test -f "$root/prior/evidence/environment_nature_north_low_target_receiver_reservation_fit_003/report.json"
+
+      - name: Verify exact current-owner Runtime representation convergence
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_runtime_representation_convergence_004
+          python tools/environment_nature_current_owner_runtime_representation_convergence.py \
+            --contract contracts/environment_nature_current_owner_runtime_representation_convergence.json \
+            --target-envelope evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json \
+            --prior-environment-report "$root/prior/evidence/environment_nature_north_low_target_receiver_reservation_fit_003/report.json" \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Fail closed on shader-transfer authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_runtime_representation_convergence_004
+          if python tools/environment_nature_current_owner_runtime_representation_convergence.py \
+            --contract contracts/environment_nature_current_owner_runtime_representation_convergence.json \
+            --target-envelope evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json \
+            --prior-environment-report "$root/prior/evidence/environment_nature_north_low_target_receiver_reservation_fit_003/report.json" \
+            --claim-shader-transfer \
+            --output "$root/negative-shader-transfer.json" >"$root/negative-shader-transfer.log" 2>&1; then
+              echo "shader-transfer authority negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "cannot authorize predecessor shader transfer" "$root/negative-shader-transfer.log"
+
+      - name: Fail closed on visual-review authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_runtime_representation_convergence_004
+          if python tools/environment_nature_current_owner_runtime_representation_convergence.py \
+            --contract contracts/environment_nature_current_owner_runtime_representation_convergence.json \
+            --target-envelope evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json \
+            --prior-environment-report "$root/prior/evidence/environment_nature_north_low_target_receiver_reservation_fit_003/report.json" \
+            --claim-visual-acceptance \
+            --output "$root/negative-visual.json" >"$root/negative-visual.log" 2>&1; then
+              echo "visual-review authority negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "cannot claim Art Direction or Visual QA acceptance" "$root/negative-visual.log"
+
+      - name: Retain Environment Runtime-convergence evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-current-owner-runtime-convergence-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_nature_current_owner_runtime_representation_convergence.json
+            docs/ENVIRONMENT_NATURE_CURRENT_OWNER_RUNTIME_REPRESENTATION_CONVERGENCE_004.md
+            evidence/environment_nature_current_owner_runtime_representation_convergence_004/report.json
+            evidence/environment_nature_current_owner_runtime_representation_convergence_004/verify.log
+            evidence/environment_nature_current_owner_runtime_representation_convergence_004/negative-shader-transfer.log
+            evidence/environment_nature_current_owner_runtime_representation_convergence_004/negative-visual.log
+          if-no-files-found: error
+          retention-days: 90

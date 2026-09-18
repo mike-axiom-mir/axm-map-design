@@ -1,0 +1,40 @@
+{
+  "schema": "axm.environment-nature-north-low-target-receiver-reservation-fit/v0.3",
+  "study_id": "environment-nature-north-low-current-target-receiver-reservation-fit-003",
+  "expected_result": "PASS_CURRENT_WORLD_NATURE_NORTH_LOW_CURRENT_OWNER_TARGET_RECEIVER_ENVELOPE_FITS_EXISTING_EAST_REAR_RESERVATION__ART_RUNTIME_FINAL_ADOPTION_HELD",
+  "reusable_rule": "TARGET_HOST_MOTION_MAY_BE_SPATIALLY_RECEIVED_ONLY_AFTER_EXACT_TARGET_RECEIVER_GEOMETRY_OWNER_SAMPLES_AND_TRANSPORT_TOLERANCE_ARE_COMPOSED_WITH_CURRENT_MULTI_ASSET_GUARDS__SPATIAL_FIT_DOES_NOT_TRANSFER_VISUAL_RUNTIME_OR_CANON_AUTHORITY",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 53,
+    "branch": "studio/environment-nature-five-branch-reservation-fit-001",
+    "predecessor_head": "3d891d8b5a6eb3d1abbfc2a339dca757a3226698",
+    "predecessor_run": 35320276780,
+    "predecessor_artifact_id": 10536274221,
+    "predecessor_artifact_sha256": "7260c5c1b14442112df02e3584ea51dd6c06b0a1f76dc96be7c0ba4113dbbea0",
+    "current_world_pr51_head": "7caf13afc1f97afd9966445b79a8ab47c5e44a52",
+    "current_world_artifact_id": 10543446447,
+    "current_world_artifact_sha256": "f8c0c390c2d4f58aacc29ad5a7fc3e86de91f07f24cb8c0f8e93e0890a0a67f8",
+    "world_scene_artifact_id": 10509037278,
+    "world_scene_artifact_sha256": "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97",
+    "allow_scene_mutation": false,
+    "allow_environment_adoption": false
+  },
+  "target_envelope_fixture": {
+    "path": "evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json",
+    "git_blob_sha1": "29eeec1c601b4747f1a5f98e454f94d364f98388",
+    "source_repository": "mike-axiom-mir/axm-nature-design",
+    "technical_art_head": "02c5223dd9288c12607f0553e2f1103be38ae71f",
+    "workflow_run": 35336912571,
+    "artifact_id": 10542513318,
+    "artifact_sha256": "7b991dfd749ac758ece3c2c6ea320d10cfed5ff38c822c7ed88342461226a932"
+  },
+  "acceptance": {
+    "evaluate_all_exact_target_samples": true,
+    "require_exact_12_node_620_triangle_receiver": true,
+    "apply_target_transport_position_tolerance_to_envelope": true,
+    "require_current_world_multi_asset_guards": true,
+    "allow_visual_acceptance_transfer": false,
+    "allow_runtime_device_acceptance_transfer": false,
+    "allow_canon": false
+  }
+}

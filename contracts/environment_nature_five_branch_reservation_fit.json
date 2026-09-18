@@ -1,0 +1,43 @@
+{
+  "schema": "axm.environment-nature-five-branch-reservation-fit/v0.1",
+  "study_id": "environment-nature-five-branch-reservation-fit-001",
+  "expected_result": "PASS_CURRENT_WORLD_NATURE_FIVE_PRIMARY_BRANCH_DIAGNOSTIC_SWEEP_FITS_EXISTING_EAST_REAR_RESERVATION__VISUAL_WIND_RUNTIME_ADOPTION_HELD",
+  "reusable_rule": "DYNAMIC_NATURE_RECEIVERS_MUST_PROVE_THE_FULL_OWNER_SAMPLE_SWEEP_FITS_THE_EXISTING_WORLD_RESERVATION_BEFORE_ENVIRONMENT_REBIND__FITTING_THE_RESERVATION_DOES_NOT_GRANT_VISUAL_WIND_RUNTIME_OR_CANON_AUTHORITY",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "parent_pr": 51,
+    "parent_head": "4826db5d3a595bbeefdfd58d5541b2d78247e290",
+    "target_asset": "source:nature:east-rear-tree-neutral-001",
+    "reservation_owner": "Environment / World Art",
+    "scene_mutation": false,
+    "environment_adoption": false
+  },
+  "technical_art": {
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "pull_request": 3,
+    "head": "b83c7d71759213d96c57874282e60705402540f5",
+    "artifact_id": 10534795193,
+    "artifact_sha256": "1206a7d92cacab1eb77de14728e09785010069898bcb01766f64faac0fae21cc",
+    "animation_head": "b0771b3319b783103c8e4677d062c00419df7559",
+    "rigging_head": "898529f602893c8f6be179bd3e9b6821fc099904",
+    "uc_head": "5c772b65eeba75abd0eb7a6c9c471b2d9975019d",
+    "execution_boundary": "INDEPENDENT_ONE_BRANCH_AT_A_TIME_ONLY"
+  },
+  "current_world": {
+    "artifact_id": 10509037278,
+    "artifact_sha256": "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97",
+    "retained_weather_states": 17,
+    "parent_rebind_artifact_id": 10532604901,
+    "parent_rebind_artifact_sha256": "18d80b8783e71a9588cf86bb383eaf8ec8e803f35002a363557c2fda8fb427f3",
+    "held_assets": ["Building", "Object", "Nature", "Weather", "Environment dressing"]
+  },
+  "truth_boundary": {
+    "art_or_visual_qa_acceptance": false,
+    "wind_or_vfx_behavior": false,
+    "runtime_target_device": false,
+    "simultaneous_multi_branch_motion": false,
+    "collision_or_navigation": false,
+    "canon": false,
+    "production_ready": false
+  }
+}

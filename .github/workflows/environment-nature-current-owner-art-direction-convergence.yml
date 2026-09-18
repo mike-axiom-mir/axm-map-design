@@ -1,0 +1,141 @@
+name: Environment Nature current-owner Art Direction convergence
+
+on:
+  push:
+    branches: [studio/environment-nature-five-branch-reservation-fit-001]
+    paths:
+      - "tools/environment_nature_current_owner_art_direction_convergence.py"
+      - "contracts/environment_nature_current_owner_art_direction_convergence.json"
+      - "docs/ENVIRONMENT_NATURE_CURRENT_OWNER_ART_DIRECTION_CONVERGENCE_005.md"
+      - ".github/workflows/environment-nature-current-owner-art-direction-convergence.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_current_owner_art_direction_convergence.py"
+      - "contracts/environment_nature_current_owner_art_direction_convergence.json"
+      - "docs/ENVIRONMENT_NATURE_CURRENT_OWNER_ART_DIRECTION_CONVERGENCE_005.md"
+      - ".github/workflows/environment-nature-current-owner-art-direction-convergence.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  current-owner-art-direction-convergence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate bounded Art convergence identities
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 24e6f7c966a4bd2df9eb714013139d6303eae42f^{commit}
+          git merge-base --is-ancestor 24e6f7c966a4bd2df9eb714013139d6303eae42f HEAD
+          python -m py_compile tools/environment_nature_current_owner_art_direction_convergence.py
+          python -m json.tool contracts/environment_nature_current_owner_art_direction_convergence.json >/dev/null
+
+      - name: Download exact retained Environment Runtime-convergence evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_art_direction_convergence_005
+          mkdir -p "$root/prior"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10547430147/zip" \
+            -o "$root/prior.zip"
+          echo "5ad71182960bbd6502f954cadf43c69623d41c4413edf09eba8a35b7e5f8bc9b  $root/prior.zip" | sha256sum --check --strict
+          unzip -q "$root/prior.zip" -d "$root/prior"
+          test "$(cat "$root/prior/exact-head.txt")" = "24e6f7c966a4bd2df9eb714013139d6303eae42f"
+          test -f "$root/prior/evidence/environment_nature_current_owner_runtime_representation_convergence_004/report.json"
+
+      - name: Download exact Direction 052 handoff comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_art_direction_convergence_005
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/issues/comments/5730429977" \
+            -o "$root/art-direction-comment.json"
+          python - "$root/art-direction-comment.json" <<'PY'
+          import json, sys
+          p=sys.argv[1]
+          d=json.load(open(p, encoding='utf-8'))
+          assert d['id'] == 5730429977
+          assert d['user']['login'] == 'mike-axiom-mir'
+          assert d['issue_url'].endswith('/repos/mike-axiom-mir/axm-map-design/issues/53')
+          PY
+
+      - name: Verify exact current-owner Art Direction convergence
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_art_direction_convergence_005
+          python tools/environment_nature_current_owner_art_direction_convergence.py \
+            --contract contracts/environment_nature_current_owner_art_direction_convergence.json \
+            --prior-environment-report "$root/prior/evidence/environment_nature_current_owner_runtime_representation_convergence_004/report.json" \
+            --art-comment "$root/art-direction-comment.json" \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Fail closed on independent Visual QA authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_art_direction_convergence_005
+          if python tools/environment_nature_current_owner_art_direction_convergence.py \
+            --contract contracts/environment_nature_current_owner_art_direction_convergence.json \
+            --prior-environment-report "$root/prior/evidence/environment_nature_current_owner_runtime_representation_convergence_004/report.json" \
+            --art-comment "$root/art-direction-comment.json" \
+            --claim-visual-qa-acceptance \
+            --output "$root/negative-qa.json" >"$root/negative-qa.log" 2>&1; then
+              echo "independent Visual QA authority negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "cannot claim independent Visual QA acceptance" "$root/negative-qa.log"
+
+      - name: Fail closed on final Environment-adoption authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_current_owner_art_direction_convergence_005
+          if python tools/environment_nature_current_owner_art_direction_convergence.py \
+            --contract contracts/environment_nature_current_owner_art_direction_convergence.json \
+            --prior-environment-report "$root/prior/evidence/environment_nature_current_owner_runtime_representation_convergence_004/report.json" \
+            --art-comment "$root/art-direction-comment.json" \
+            --claim-environment-adoption \
+            --output "$root/negative-adoption.json" >"$root/negative-adoption.log" 2>&1; then
+              echo "Environment adoption authority negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "cannot authorize final Environment adoption" "$root/negative-adoption.log"
+
+      - name: Retain Environment Art-convergence evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-current-owner-art-convergence-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_nature_current_owner_art_direction_convergence.json
+            docs/ENVIRONMENT_NATURE_CURRENT_OWNER_ART_DIRECTION_CONVERGENCE_005.md
+            evidence/environment_nature_current_owner_art_direction_convergence_005/art-direction-comment.json
+            evidence/environment_nature_current_owner_art_direction_convergence_005/report.json
+            evidence/environment_nature_current_owner_art_direction_convergence_005/verify.log
+            evidence/environment_nature_current_owner_art_direction_convergence_005/negative-qa.log
+            evidence/environment_nature_current_owner_art_direction_convergence_005/negative-adoption.log
+          if-no-files-found: error
+          retention-days: 90

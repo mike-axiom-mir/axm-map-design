@@ -1,0 +1,137 @@
+name: Environment Nature shared-driver reservation fit
+
+on:
+  push:
+    branches: [studio/environment-nature-five-branch-reservation-fit-001]
+    paths:
+      - "tools/environment_nature_shared_driver_reservation_fit.py"
+      - "contracts/environment_nature_shared_driver_reservation_fit.json"
+      - "docs/ENVIRONMENT_NATURE_SHARED_DRIVER_RESERVATION_FIT_002.md"
+      - ".github/workflows/environment-nature-shared-driver-reservation-fit.yml"
+  pull_request:
+    paths:
+      - "tools/environment_nature_shared_driver_reservation_fit.py"
+      - "contracts/environment_nature_shared_driver_reservation_fit.json"
+      - "docs/ENVIRONMENT_NATURE_SHARED_DRIVER_RESERVATION_FIT_002.md"
+      - ".github/workflows/environment-nature-shared-driver-reservation-fit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  simultaneous-reservation-fit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate bounded Environment successor
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 23decca57561ed8b77b3fa2e4d32faf854876d06^{commit}
+          git merge-base --is-ancestor 23decca57561ed8b77b3fa2e4d32faf854876d06 HEAD
+          python -m pip install --disable-pip-version-check --no-input numpy
+          python -m py_compile tools/environment_nature_shared_driver_reservation_fit.py
+          python -m json.tool contracts/environment_nature_shared_driver_reservation_fit.json >/dev/null
+
+      - name: Download exact current-world parent evidence and Nature owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NATURE_HEAD: bfb66da82bc358b14e52711bbdef7b58e4c943af
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_shared_driver_reservation_fit_002
+          mkdir -p "$root/world" "$root/parent" "$root/nature"
+
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" -o "$root/world.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world.zip" | sha256sum --check --strict
+          unzip -q "$root/world.zip" -d "$root/world"
+
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10532604901/zip" -o "$root/parent.zip"
+          echo "18d80b8783e71a9588cf86bb383eaf8ec8e803f35002a363557c2fda8fb427f3  $root/parent.zip" | sha256sum --check --strict
+          unzip -q "$root/parent.zip" -d "$root/parent"
+          test "$(cat "$root/parent/exact-head.txt")" = "4826db5d3a595bbeefdfd58d5541b2d78247e290"
+
+          observed_head="$(curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-nature-design/commits/$NATURE_HEAD" | python -c 'import json,sys; print(json.load(sys.stdin)["sha"])')"
+          test "$observed_head" = "$NATURE_HEAD"
+
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-nature-design/tarball/$NATURE_HEAD" -o "$root/nature.tar.gz"
+          tar -xzf "$root/nature.tar.gz" --strip-components=1 -C "$root/nature"
+          test -f "$root/nature/src/axm_nature_design/rear_tree_animation_shared_driver.py"
+          test -f "$root/nature/examples/east_rear_tree_neutral_001.json"
+          printf '%s\n' "$NATURE_HEAD" > "$root/exact-animation-head.txt"
+
+      - name: Verify exact simultaneous owner sweep fits current Environment reservation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_shared_driver_reservation_fit_002
+          python tools/environment_nature_shared_driver_reservation_fit.py \
+            --contract contracts/environment_nature_shared_driver_reservation_fit.json \
+            --combined-world "$root/world/combined_current_world.json" \
+            --parent-rebind-report "$root/parent/evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/rebind-report.json" \
+            --nature-root "$root/nature" \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Fail closed when reservation is actually too small
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_shared_driver_reservation_fit_002
+          if python tools/environment_nature_shared_driver_reservation_fit.py \
+            --contract contracts/environment_nature_shared_driver_reservation_fit.json \
+            --combined-world "$root/world/combined_current_world.json" \
+            --parent-rebind-report "$root/parent/evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/rebind-report.json" \
+            --nature-root "$root/nature" \
+            --reservation-rear-contraction-m 0.20 \
+            --output "$root/negative-small-reservation.json" >"$root/negative-small-reservation.log" 2>&1; then
+              echo "contracted-reservation negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "escapes current east-rear Environment reservation" "$root/negative-small-reservation.log"
+
+      - name: Fail closed on target-host authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/environment_nature_shared_driver_reservation_fit_002
+          if python tools/environment_nature_shared_driver_reservation_fit.py \
+            --contract contracts/environment_nature_shared_driver_reservation_fit.json \
+            --combined-world "$root/world/combined_current_world.json" \
+            --parent-rebind-report "$root/parent/evidence/environment_building_utility_panel_production_successor_current_world_rebind_001/rebind-report.json" \
+            --nature-root "$root/nature" \
+            --claim-target-host \
+            --output "$root/negative-target-host.json" >"$root/negative-target-host.log" 2>&1; then
+              echo "target-host authority-inflation negative unexpectedly passed" >&2
+              exit 1
+          fi
+          grep -q "cannot claim target-host acceptance" "$root/negative-target-host.log"
+
+      - name: Retain simultaneous Environment reservation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-nature-shared-driver-reservation-fit-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_nature_shared_driver_reservation_fit.json
+            docs/ENVIRONMENT_NATURE_SHARED_DRIVER_RESERVATION_FIT_002.md
+            evidence/environment_nature_shared_driver_reservation_fit_002/exact-animation-head.txt
+            evidence/environment_nature_shared_driver_reservation_fit_002/report.json
+            evidence/environment_nature_shared_driver_reservation_fit_002/verify.log
+            evidence/environment_nature_shared_driver_reservation_fit_002/negative-small-reservation.log
+            evidence/environment_nature_shared_driver_reservation_fit_002/negative-target-host.log
+          if-no-files-found: error
+          retention-days: 90
