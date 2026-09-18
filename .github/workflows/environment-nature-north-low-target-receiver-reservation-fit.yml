@@ -48,7 +48,7 @@ jobs:
           python -m py_compile tools/environment_nature_north_low_target_receiver_reservation_fit.py
           python -m json.tool contracts/environment_nature_north_low_target_receiver_reservation_fit.json >/dev/null
           python -m json.tool evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json >/dev/null
-          echo "9803de5640069a9ad9f02ed387d81218ffd57a23cbfbce65d370d62f859a9557  evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json" | sha256sum --check --strict
+          test "$(git rev-parse HEAD:evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json)" = "29eeec1c601b4747f1a5f98e454f94d364f98388"
 
       - name: Download exact retained current-world and predecessor evidence
         env:
