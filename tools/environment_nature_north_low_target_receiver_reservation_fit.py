@@ -19,7 +19,8 @@ EXPECTED_CURRENT_WORLD='PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_SUCC
 TOL=1e-6
 
 def read_json(p: Path)->dict[str,Any]: return json.loads(p.read_text(encoding='utf-8'))
-def sha256(p: Path)->str: return hashlib.sha256(p.read_bytes()).hexdigest()
+def git_blob_sha1(p: Path)->str:
+    b=p.read_bytes(); return hashlib.sha1(f'blob {len(b)}\0'.encode()+b).hexdigest()
 def bounds(v):
     a=np.asarray(v,float); return a.min(axis=0),a.max(axis=0)
 
@@ -118,7 +119,7 @@ def build_report(contract, env, world, prior, art, *, left_contraction_m=0.0, cl
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--contract',type=Path,required=True); ap.add_argument('--target-envelope',type=Path,required=True); ap.add_argument('--combined-world',type=Path,required=True); ap.add_argument('--prior-environment-report',type=Path,required=True); ap.add_argument('--current-world-report',type=Path,required=True); ap.add_argument('--output',type=Path,required=True); ap.add_argument('--reservation-left-contraction-m',type=float,default=0.0); ap.add_argument('--claim-visual-acceptance',action='store_true'); args=ap.parse_args()
     c=read_json(args.contract)
-    if sha256(args.target_envelope)!=c.get('target_envelope_fixture',{}).get('sha256'): raise AssertionError('target-envelope fixture digest drift')
+    if git_blob_sha1(args.target_envelope)!=c.get('target_envelope_fixture',{}).get('git_blob_sha1'): raise AssertionError('target-envelope fixture Git blob identity drift')
     r=build_report(c,read_json(args.target_envelope),read_json(args.combined_world),read_json(args.prior_environment_report),read_json(args.current_world_report),left_contraction_m=args.reservation_left_contraction_m,claim_visual=args.claim_visual_acceptance)
     args.output.parent.mkdir(parents=True,exist_ok=True); args.output.write_text(json.dumps(r,indent=2,sort_keys=True)+'\n',encoding='utf-8'); print(json.dumps({'result':r['result'],'minimum_non_ground_margin_m':r['target_receiver_sweep']['minimum_transport_adjusted_non_ground_margin_m'],'guards':r['current_world_separation_guards']},indent=2))
 if __name__=='__main__': main()
