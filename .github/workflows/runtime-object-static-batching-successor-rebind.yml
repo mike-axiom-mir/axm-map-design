@@ -1,0 +1,328 @@
+name: Runtime Object static batching successor rebind
+
+on:
+  push:
+    branches: [studio/runtime-object-current-world-static-component-batching-001]
+    paths:
+      - "contracts/runtime_object_static_batching_successor_rebind.json"
+      - "tools/verify_runtime_object_static_batching_successor_rebind.py"
+      - ".github/workflows/runtime-object-static-batching-successor-rebind.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  runtime-object-static-batching-successor-rebind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bind pass-48 Runtime lineage and freeze historical observer
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/verify_runtime_object_static_batching_successor_rebind.py
+          python -m json.tool contracts/runtime_object_static_batching_successor_rebind.json >/dev/null
+          git merge-base --is-ancestor f42edfccfd77202d17c1e94487930af07fd1d755 HEAD
+          git rev-parse HEAD > runtime-exact-head.txt
+          cp environment-proof/runtime_object_current_world_static_batching_observe.gd /tmp/runtime_object_current_world_static_batching_observe.gd
+          echo PASS_RUNTIME_PASS48_LINEAGE_BOUND
+
+      - name: Checkout exact successor Animation source
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 343668b80acd52367e3427f3ef97d1662625c18f
+          path: .successor-map
+          fetch-depth: 1
+
+      - name: Overlay exact successor receiver source without changing Runtime git identity
+        run: |
+          set -euo pipefail
+          test "$(git -C .successor-map rev-parse HEAD)" = "343668b80acd52367e3427f3ef97d1662625c18f"
+          rsync -a --exclude='.git' .successor-map/ ./
+          test "$(git rev-parse HEAD)" = "$(cat runtime-exact-head.txt)"
+          test -f environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd
+          test -f environment-proof/animation_object_current_world_wallclock_rebind_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_motion_observe.gd
+          {
+            echo "successor_animation_head=343668b80acd52367e3427f3ef97d1662625c18f"
+            sha256sum environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd
+            sha256sum environment-proof/animation_object_current_world_wallclock_rebind_observe.gd
+            sha256sum environment-proof/atmosphere_current_world_object_motion_observe.gd
+            sha256sum tools/technical_art_object_motion_current_world_bridge.py
+          } > successor-source-bind.txt
+          echo PASS_EXACT_SUCCESSOR_SOURCE_OVERLAY
+
+      - name: Download exact green successor Animation evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          mkdir -p "$root/successor-animation" environment-proof/generated
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10523121895/zip" -o "$root/successor-animation.zip"
+          echo "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707  $root/successor-animation.zip" | sha256sum --check --strict
+          unzip -q "$root/successor-animation.zip" -d "$root/successor-animation"
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('evidence/runtime_object_static_batching_successor_rebind/successor-animation/evidence/animation_object_current_world_wallclock')
+          d=json.loads((root/'SUMMARY.json').read_text())
+          assert d['exact_head']=='343668b80acd52367e3427f3ef97d1662625c18f', d
+          assert d['technical_art_parent_head']=='e085437f6cc958bbf7c5c6464578923d542962b0', d
+          assert d['animation_head']=='c688936a84f80f292e43587c9d3386bd717f8178', d
+          assert d['result']=='PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_E085_RECEIVER', d
+          assert d['timed_natural_stop'] is True, d
+          assert d['target_device_performance_accepted'] is False, d
+          assert d['art_qa_accepted'] is False, d
+          print('PASS_EXACT_GREEN_SUCCESSOR_ANIMATION_ARTIFACT')
+          PY
+          src="$root/successor-animation/evidence/animation_object_current_world_wallclock/ta-parent"
+          cp "$src/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
+          cp "$src/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
+          python tools/technical_art_object_motion_current_world_bridge.py validate-plan \
+            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --plan environment-proof/generated/object-motion-receiver-plan.json
+
+      - name: Download exact current-world payload and selected roughness inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          mkdir -p "$root/world-input" "$root/roughness" "$root/receipts"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" -o "$root/world-input.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world-input.zip" | sha256sum --check --strict
+          unzip -q "$root/world-input.zip" -d "$root/world-input"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" -o "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          cp "$root/world-input/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+
+      - name: Checkout exact retained world receiver dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Compose exact current-world observer dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/receipts/observer-composition.json"
+
+      - name: Adapt historical batching observer only to exact successor receiver API
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('/tmp/runtime_object_current_world_static_batching_observe.gd').read_text()
+          replacements=[
+            ('extends "res://animation_object_current_world_wallclock_observe.gd"', 'extends "res://animation_object_current_world_wallclock_quaternion_observe.gd"'),
+            ('axm.runtime-object-current-world-static-batching-observation/v0.1', 'axm.runtime-object-static-batching-successor-rebind-observation/v0.1'),
+            ('PASS_OBJECT_CURRENT_WORLD_STATIC_COMPONENT_BATCHING__HOLD_ART_QA_TARGET_DEVICE_FUTURE_ARTICULATION', 'PASS_OBJECT_STATIC_BATCHING_SUCCESSOR_REBIND__HOLD_ART_QA_TARGET_DEVICE_FUTURE_ARTICULATION'),
+            ('c2695f654f9dd44312ca5d205eceb27f7c2680ee', '343668b80acd52367e3427f3ef97d1662625c18f'),
+            ('d2974dec5043ed9afad346574b23ef8bd4438a76', 'e085437f6cc958bbf7c5c6464578923d542962b0'),
+            ('_build_current_world()', '_anim_build_world()'),
+            ('_latch_angles(', '_anim_latch_angles('),
+            ('OWNER_RATE_HZ', 'ANIM_RATE_HZ'),
+            ('_motion_receiver_local_mesh_center', '_motion_receiver_local_component_center'),
+            ('lid.rotation_degrees.x', '_anim_adapted_receiver_angle(lid)'),
+          ]
+          for old,new in replacements:
+              if old not in p:
+                  raise SystemExit(f'missing expected historical observer token: {old}')
+              p=p.replace(old,new)
+          out=Path('environment-proof/runtime_object_static_batching_successor_rebind_observe.gd')
+          out.write_text(p)
+          print('PASS_BOUNDED_SUCCESSOR_API_ADAPTER')
+          PY
+          grep -F 'extends "res://animation_object_current_world_wallclock_quaternion_observe.gd"' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
+          grep -F '343668b80acd52367e3427f3ef97d1662625c18f' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
+          grep -F 'e085437f6cc958bbf7c5c6464578923d542962b0' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Measure exact successor control and static-batched receiver
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+          AXM_OBJECT_MOTION_SAMPLE_INDEX: "0"
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          rm -f environment-proof/runtime-object-static-batching-*.png environment-proof/runtime-object-current-world-static-batching.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script runtime_object_static_batching_successor_rebind_observe.gd 2>&1 | tee "$root/godot.log"
+          test -f environment-proof/runtime-object-current-world-static-batching.json
+          cp environment-proof/runtime-object-current-world-static-batching.json "$root/runtime.json"
+          mkdir -p "$root/rendered"
+          cp environment-proof/runtime-object-static-batching-*.png "$root/rendered/"
+          test "$(find "$root/rendered" -type f -name '*.png' | wc -l | tr -d ' ')" -eq 8
+          python tools/verify_runtime_object_static_batching_successor_rebind.py --receipt "$root/runtime.json" | tee "$root/verify.log"
+
+      - name: Fail closed on removed draw-call win
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          python - <<'PY'
+          import json
+          src='evidence/runtime_object_static_batching_successor_rebind/runtime.json'
+          out='evidence/runtime_object_static_batching_successor_rebind/negative-draw-win.json'
+          d=json.load(open(src)); row=d['measurements'][0]
+          row['candidate_runtime']['draw_calls_in_frame']=row['control_runtime']['draw_calls_in_frame']
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_static_batching_successor_rebind.py --receipt "$root/negative-draw-win.json" > "$root/negative-draw-win.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_REMOVED_DRAW_CALL_WIN
+
+      - name: Fail closed on shaded visual regression
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          python - <<'PY'
+          import json
+          src='evidence/runtime_object_static_batching_successor_rebind/runtime.json'
+          out='evidence/runtime_object_static_batching_successor_rebind/negative-visual.json'
+          d=json.load(open(src)); v=d['measurements'][0]['visual']
+          v['pixels_over_1_lsb']=1; v['max_channel_delta_lsb']=2
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_static_batching_successor_rebind.py --receipt "$root/negative-visual.json" > "$root/negative-visual.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_SHADED_VISUAL_REGRESSION
+
+      - name: Fail closed on future-articulation authority inflation
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          python - <<'PY'
+          import json
+          src='evidence/runtime_object_static_batching_successor_rebind/runtime.json'
+          out='evidence/runtime_object_static_batching_successor_rebind/negative-authority.json'
+          d=json.load(open(src)); d['future_arbitrary_articulation_accepted']=True
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/verify_runtime_object_static_batching_successor_rebind.py --receipt "$root/negative-authority.json" > "$root/negative-authority.log" 2>&1
+          code=$?; set -e
+          test "$code" -ne 0
+          echo PASS_REJECTED_FUTURE_ARTICULATION_AUTHORITY_INFLATION
+
+      - name: Build exact-head summary
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_object_static_batching_successor_rebind
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('evidence/runtime_object_static_batching_successor_rebind')
+          d=json.loads((root/'runtime.json').read_text())
+          head=subprocess.check_output(['git','rev-parse','HEAD'], text=True).strip()
+          rows=d['measurements']
+          draws=[int(r['control_runtime']['draw_calls_in_frame'])-int(r['candidate_runtime']['draw_calls_in_frame']) for r in rows]
+          objects=[int(r['control_runtime']['objects_in_frame'])-int(r['candidate_runtime']['objects_in_frame']) for r in rows]
+          buffers=[int(r['candidate_runtime']['buffer_mem_bytes'])-int(r['control_runtime']['buffer_mem_bytes']) for r in rows]
+          visuals=[r['visual'] for r in rows]
+          summary={
+            'schema':'axm.runtime-object-static-batching-successor-rebind-summary/v0.1',
+            'result':d['state'],
+            'exact_runtime_head':head,
+            'successor_animation_head':d['animation_parent_head'],
+            'successor_technical_art_head':d['technical_art_parent_head'],
+            'owner_animation_head':'c688936a84f80f292e43587c9d3386bd717f8178',
+            'component_count':d['component_count'],
+            'moving_component_count':d['moving_component_count'],
+            'static_component_count':d['static_component_count'],
+            'control_component_surface_instances':d['control_component_surface_instances'],
+            'static_batch_surface_count':d['static_batch_surface_count'],
+            'candidate_render_surface_count':d['candidate_render_surface_count'],
+            'draw_calls_saved_by_sample':draws,
+            'objects_saved_by_sample':objects,
+            'buffer_delta_bytes_by_sample':buffers,
+            'visual_changed_pixels_by_sample':[int(v['changed_pixels']) for v in visuals],
+            'visual_pixels_over_1_lsb_by_sample':[int(v['pixels_over_1_lsb']) for v in visuals],
+            'visual_max_channel_delta_lsb':max(int(v['max_channel_delta_lsb']) for v in visuals),
+            'max_owner_pose_delta_deg':max(float(r['max_owner_pose_delta_deg']) for r in rows),
+            'max_owner_position_delta_m':max(float(r['max_owner_position_delta_m']) for r in rows),
+            'visual_tradeoff':'NONE_OBSERVED_IF_ALL_ZERO_ELSE_WITHIN_ONE_LSB_FIXED_VIEW_ONLY',
+            'historical_pass44_counter_transfer_used':False,
+            'fresh_successor_godot_measurement':True,
+            'future_arbitrary_articulation_accepted':False,
+            'target_device_performance_accepted':False,
+            'art_qa_accepted':False,
+            'canon':False,
+          }
+          (root/'SUMMARY.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(summary,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload retained Runtime successor-rebind evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-object-static-batching-successor-rebind-${{ github.sha }}
+          path: |
+            evidence/runtime_object_static_batching_successor_rebind/SUMMARY.json
+            evidence/runtime_object_static_batching_successor_rebind/runtime.json
+            evidence/runtime_object_static_batching_successor_rebind/godot.log
+            evidence/runtime_object_static_batching_successor_rebind/verify.log
+            evidence/runtime_object_static_batching_successor_rebind/successor-animation/evidence/animation_object_current_world_wallclock/SUMMARY.json
+            evidence/runtime_object_static_batching_successor_rebind/successor-animation/evidence/animation_object_current_world_wallclock/ta-parent/final-receipt.json
+            evidence/runtime_object_static_batching_successor_rebind/successor-animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json
+            evidence/runtime_object_static_batching_successor_rebind/successor-animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json
+            evidence/runtime_object_static_batching_successor_rebind/receipts/observer-composition.json
+            evidence/runtime_object_static_batching_successor_rebind/negative-draw-win.json
+            evidence/runtime_object_static_batching_successor_rebind/negative-draw-win.log
+            evidence/runtime_object_static_batching_successor_rebind/negative-visual.json
+            evidence/runtime_object_static_batching_successor_rebind/negative-visual.log
+            evidence/runtime_object_static_batching_successor_rebind/negative-authority.json
+            evidence/runtime_object_static_batching_successor_rebind/negative-authority.log
+            evidence/runtime_object_static_batching_successor_rebind/rendered/*.png
+            environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
+            runtime-exact-head.txt
+            successor-source-bind.txt
+          retention-days: 30
