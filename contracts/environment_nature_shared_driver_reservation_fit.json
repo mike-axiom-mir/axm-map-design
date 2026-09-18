@@ -1,0 +1,54 @@
+{
+  "acceptance": {
+    "allow_art_or_qa_acceptance_transfer": false,
+    "allow_canon": false,
+    "allow_environment_adoption": false,
+    "allow_environment_scene_mutation": false,
+    "allow_runtime_acceptance_transfer": false,
+    "allow_target_host_acceptance_transfer": false,
+    "allow_visual_wind_acceptance_transfer": false,
+    "evaluate_all_exact_animation_samples": true,
+    "require_current_world_multi_asset_guards": true,
+    "require_existing_environment_reservation": true
+  },
+  "animation": {
+    "duration_s": 1.0,
+    "endpoint_inclusive_samples": 41,
+    "head": "bfb66da82bc358b14e52711bbdef7b58e4c943af",
+    "pr": 22,
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "result": "PASS_FIVE_SOCKET_SHARED_DRIVER_SIMULTANEOUS_DIAGNOSTIC_LOOP_SAMPLED_MOTION",
+    "sample_rate_hz": 40
+  },
+  "environment": {
+    "owner": "mike-axiom-mir/axm-map-design",
+    "parent_head": "4826db5d3a595bbeefdfd58d5541b2d78247e290",
+    "predecessor_head": "23decca57561ed8b77b3fa2e4d32faf854876d06",
+    "reservation": "existing east-rear Environment reservation; no world mutation"
+  },
+  "reusable_rule": "SOURCE_MOTION_SUCCESSORS_MAY_REUSE_AN_EXISTING_WORLD_RESERVATION_ONLY_AFTER_THE_EXACT_NEW_SIMULTANEOUS_OWNER_SWEEP_IS_RETESTED__SPATIAL_FIT_DOES_NOT_TRANSFER_TARGET_HOST_WIND_VISUAL_OR_RUNTIME_ACCEPTANCE",
+  "rigging": {
+    "command_multipliers": {
+      "east-mid": 1,
+      "north-low": -1,
+      "north-top": 1,
+      "south-low": 1,
+      "west-high": -1
+    },
+    "head": "b4b480b415047fea90b4740f7702ced0dba9142d",
+    "pr": 14,
+    "repository": "mike-axiom-mir/axm-nature-design",
+    "result": "PASS_FIVE_SOCKET_SHARED_DRIVER_RIG_COMPOSITION_CONTINUOUS_PARAMETER_MINUS5_TO_PLUS5",
+    "shared_driver_interval_deg": [
+      -5.0,
+      5.0
+    ]
+  },
+  "schema": "axm.environment-nature-shared-driver-reservation-fit/v0.2",
+  "source": {
+    "digest": "178cd8cfb1a859bff411f60e13154109528062cf0ad2384b343d406cc0cc9d61",
+    "mesh_digest": "aa9d450a78fef722672ea9af0f9aca98b4c1a0ca3705661784f5f61f3e9b6a31",
+    "triangles": 570,
+    "vertices": 390
+  }
+}
