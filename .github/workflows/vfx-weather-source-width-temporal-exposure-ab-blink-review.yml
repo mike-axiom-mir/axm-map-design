@@ -1,0 +1,136 @@
+name: VFX Weather normalized exposure A-B blink review
+
+on:
+  push:
+    branches: [studio/vfx-weather-source-width-current-world-001]
+    paths:
+      - "tools/environment_weather_width_temporal_exposure_ab_blink_review.py"
+      - ".github/workflows/vfx-weather-source-width-temporal-exposure-ab-blink-review.yml"
+  pull_request:
+    paths:
+      - "tools/environment_weather_width_temporal_exposure_ab_blink_review.py"
+      - ".github/workflows/vfx-weather-source-width-temporal-exposure_ab_blink_review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  ab-blink-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact review head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact candidate and prior readability lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > review-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e dd4a85223ba70f7086db2fdc292e4cb57ac38e47^{commit}
+          git cat-file -e 4e65ea8f167ea884c1dee8718c66ff28d806cfc2^{commit}
+          git merge-base --is-ancestor dd4a85223ba70f7086db2fdc292e4cb57ac38e47 HEAD
+          git merge-base --is-ancestor 4e65ea8f167ea884c1dee8718c66ff28d806cfc2 HEAD
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile exact review tooling
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/environment_weather_width_current_world.py \
+            tools/environment_weather_width_interpolated.py \
+            tools/environment_weather_width_temporal_exposure.py \
+            tools/environment_weather_width_temporal_exposure_normalized.py \
+            tools/environment_weather_width_temporal_exposure_readability.py \
+            tools/environment_weather_width_temporal_exposure_ab_blink_review.py
+
+      - name: Download exact retained real-Godot normalized candidate evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-source-width-temporal-exposure-normalized-001-dd4a85223ba70f7086db2fdc292e4cb57ac38e47
+          path: .normalized-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35147580525
+
+      - name: Rebind exact retained evidence layout
+        run: |
+          set -euo pipefail
+          target="$(find .normalized-evidence -name target_host.json -print -quit)"
+          test -n "$target"
+          root="$(dirname "$target")"
+          printf '%s\n' "$root" > .normalized-root.txt
+          test "$(tr -d '\n\r' < "$root/exact-head.txt")" = "dd4a85223ba70f7086db2fdc292e4cb57ac38e47"
+          mkdir -p .review-image-root/temporal-exposure-frames .review-image-root/temporal-exposure-raw
+          cp "$root"/frames/*.png .review-image-root/temporal-exposure-frames/
+          cp "$root"/raw/*.rgba .review-image-root/temporal-exposure-raw/
+
+      - name: Build exact retained A-B blink review surface
+        run: |
+          set -euo pipefail
+          root="$(cat .normalized-root.txt)"
+          out=evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001
+          mkdir -p "$out"
+          cp review-head.txt "$out/review-head.txt"
+          cp "$root/exact-head.txt" "$out/candidate-head.txt"
+          python tools/environment_weather_width_temporal_exposure_ab_blink_review.py \
+            --payload "$root/current_world_weather_width.json" \
+            --receipt "$root/runtime.json" \
+            --normalized-report "$root/target_host.json" \
+            --image-root .review-image-root \
+            --output-dir "$out"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path('evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001/ab_blink_review.json')
+          report=json.loads(path.read_text())
+          assert report['state']=='PASS_OPACITY_NORMALIZED_TEMPORAL_EXPOSURE_AB_BLINK_REVIEW_SURFACE', report
+          assert report['decision']=='REVIEW_SURFACE_ONLY_NO_ART_OR_QA_PREFERENCE', report
+          assert report['candidate_head']=='dd4a85223ba70f7086db2fdc292e4cb57ac38e47', report
+          assert all(report['checks'].values()), report
+          print(json.dumps({'state': report['state'], 'checks': report['checks'], 'selected_phases_us': report['selected_phases_us']}, indent=2))
+          PY
+
+      - name: Exercise deliberate selected-frame identity negative control
+        run: |
+          set -euo pipefail
+          root="$(cat .normalized-root.txt)"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import tools.environment_weather_width_temporal_exposure_ab_blink_review as review
+          root=Path('.normalized-root.txt').read_text().strip()
+          payload=json.loads((Path(root)/'current_world_weather_width.json').read_text())
+          receipt=json.loads((Path(root)/'runtime.json').read_text())
+          normalized=json.loads((Path(root)/'target_host.json').read_text())
+          report=review.exercise_selected_frame_negative_control(
+              payload,receipt,normalized,'.review-image-root','.negative-review-output'
+          )
+          assert report['state']=='FAIL', report
+          assert report['checks']['all_selected_pngs_reverify_exact_retained_hashes_after_copy'] is False, report
+          print('PASS_FAIL_CLOSED_SELECTED_FRAME_IDENTITY_DRIFT')
+          PY
+
+      - name: Upload A-B blink review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-weather-source-width-temporal-exposure-ab-blink-review-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001/review-head.txt
+            evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001/candidate-head.txt
+            evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001/ab_blink_review.json
+            evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001/ab_blink_review.html
+            evidence/environment_weather_source_width_temporal_exposure_ab_blink_review_001/images/*.png
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
