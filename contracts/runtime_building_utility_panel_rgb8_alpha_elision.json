@@ -1,0 +1,54 @@
+{
+  "schema": "axm.runtime-building-utility-panel-rgb8-alpha-elision/v0.1",
+  "scope": "EXACT_CURRENT_WORLD_BUILDING_UTILITY_PANEL_REVIEW_TEXTURE_ONLY",
+  "environment_parent": {
+    "pr": 51,
+    "head": "595df99daf866b5e3dcaa4be87eeb650af637919",
+    "workflow": 35300420073,
+    "artifact_id": 10529154954,
+    "artifact_sha256": "3e102488b5e85766ddae4b6b83e44a6347171cbd8d8f6961486c8c3774a608c7",
+    "result": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_MATERIAL_BOUND_RECEIVER__VISIBLE_DELTA_CHARACTERIZED__ADOPTION_HELD"
+  },
+  "owner_texture": {
+    "serialized_png_sha256": "e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198",
+    "decoded_rgba8_sha256": "02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b",
+    "decoded_rgb8_sha256": "f515fe2a52a5356e1e8e1dfe560e20b53c3dff184047a05059d189ae6cd60192",
+    "width": 512,
+    "height": 512,
+    "all_alpha_samples_255_required": true,
+    "rgba8_base_level_bytes": 1048576,
+    "rgb8_base_level_bytes": 786432,
+    "rgba8_full_mip_chain_bytes": 1398100,
+    "rgb8_full_mip_chain_bytes": 1048575
+  },
+  "candidate": {
+    "representation": "RGB8_WITH_IDENTICAL_RGB_SAMPLES_AND_FULL_MIP_CHAIN",
+    "source_reauthored": false,
+    "uv_changed": false,
+    "material_scalars_changed": false,
+    "alpha_semantics_changed": false,
+    "allowed_only_if_alpha_is_fully_opaque": true
+  },
+  "acceptance": {
+    "rendered_frame_pairs": 68,
+    "max_pixels_over_1_lsb": 0,
+    "max_channel_delta_lsb": 1,
+    "require_texture_memory_reduction": true,
+    "require_identical_draw_calls": true,
+    "require_identical_objects_in_frame": true,
+    "require_identical_primitives_in_frame": true,
+    "require_exact_owner_png_identity": true,
+    "require_exact_environment_parent_identity": true
+  },
+  "promotion": {
+    "environment_adoption": false,
+    "materials_adoption": false,
+    "technical_art_adoption": false,
+    "target_device_acceptance": false,
+    "art_qa_acceptance": false,
+    "generic_rgb8_policy": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "truth_boundary": "This contract tests alpha-channel elision only for the exact current Building utility-panel review texture after proving every decoded alpha sample is 255. It does not authorize RGB8 conversion for textures with meaningful alpha, does not change source image identity or material meaning, and does not establish target-device performance, Art/QA acceptance, generic import policy, CANON or production readiness."
+}

@@ -1,0 +1,67 @@
+{
+  "schema": "axm.runtime-building-utility-panel-production-surface-rgb8-alpha-elision/v0.1",
+  "scope": "EXACT_BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_001_CURRENT_WORLD_ONLY",
+  "runtime_parent": {
+    "pr": 52,
+    "head": "1afa51cb89b536db0d2434328722a1521febe0ad",
+    "result": "PASS_BUILDING_UTILITY_PANEL_RGB8_TEXTURE_MEMORY_REDUCTION__RASTER_EQUIVALENT_RETAINED_68__HOLD_ART_QA_TARGET_DEVICE_GENERIC_POLICY"
+  },
+  "materials_owner": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pr": 3,
+    "head": "75bf511be8a89778ab40868707a68e80a210608a",
+    "workflow": 35303626025,
+    "artifact_id": 10531260523,
+    "artifact_sha256": "75369c8d71ce5491eec2e058ecacc56948ca94662cc0b34d123b82273f2b4b8b",
+    "surface_id": "utility_panel_ochre_production_surface_001",
+    "environment_parent_head": "595df99daf866b5e3dcaa4be87eeb650af637919",
+    "result": "PASS_BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_SUCCESSOR_CURRENT_WORLD_THREE_WAY_REVIEW_READY__HOLD_ART_QA_ENV_RUNTIME_ADOPTION"
+  },
+  "owner_texture": {
+    "serialized_png_sha256": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "decoded_rgba8_sha256": "408a6eaecf99fa328487785f85d089c93da2b84c3ae9ead0bf6e1f8d2a0bdcad",
+    "decoded_rgb8_sha256": "222f72229db1f79e8222f536d4124655c14f9fe96fc316cddfe13c8decc294ae",
+    "width": 512,
+    "height": 512,
+    "all_alpha_samples_255_required": true,
+    "rgba8_base_level_bytes": 1048576,
+    "rgb8_base_level_bytes": 786432,
+    "rgba8_full_mip_chain_bytes": 1398100,
+    "rgb8_full_mip_chain_bytes": 1048575,
+    "expected_full_mip_saving_bytes": 349525
+  },
+  "candidate": {
+    "representation": "RGB8_WITH_IDENTICAL_RGB_SAMPLES_AND_FULL_MIP_CHAIN",
+    "source_reauthored": false,
+    "uv_changed": false,
+    "material_scalars_changed": false,
+    "surface_recipe_changed": false,
+    "alpha_semantics_changed": false,
+    "allowed_only_if_alpha_is_fully_opaque": true
+  },
+  "acceptance": {
+    "rendered_frame_pairs": 68,
+    "max_pixels_over_1_lsb": 0,
+    "max_channel_delta_lsb": 0,
+    "require_exact_texture_memory_saving_bytes": 349525,
+    "require_zero_buffer_memory_delta": true,
+    "require_identical_draw_calls": true,
+    "require_identical_objects_in_frame": true,
+    "require_identical_primitives_in_frame": true,
+    "require_exact_owner_png_identity": true,
+    "require_exact_materials_owner_identity": true
+  },
+  "promotion": {
+    "environment_adoption": false,
+    "materials_adoption": false,
+    "technical_art_adoption": false,
+    "target_device_acceptance": false,
+    "art_qa_acceptance": false,
+    "generic_rgb8_policy": false,
+    "fleet_import_rule": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "repeated_evidence_boundary": "This is the second exact Building utility-panel owner texture observed to be fully opaque after the diagnostic checker, but two same-surface examples do not authorize a fleet-wide RGB8 import rule.",
+  "truth_boundary": "This contract rebinds the already-measured opaque-alpha RGB8 receiving representation to one exact Materials-owned production-surface successor. It preserves source PNG/RGB samples, UV transport, scalar material values and current-world composition, rejects any non-opaque alpha sample, and requires a fresh real-Godot before/after comparison against the exact Materials retained current-world successor. It does not authorize arbitrary texture conversion, Environment adoption, Art/QA acceptance, target-device performance, CANON or production readiness."
+}

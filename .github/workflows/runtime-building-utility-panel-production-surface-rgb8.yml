@@ -1,0 +1,257 @@
+name: Runtime Building production-surface RGB8 alpha elision
+
+on:
+  push:
+    branches: [studio/runtime-building-utility-panel-rgb8-001]
+    paths:
+      - "environment-proof/runtime_building_utility_panel_production_surface_rgb8_observe.gd"
+      - "tools/verify_runtime_building_utility_panel_production_surface_rgb8.py"
+      - "contracts/runtime_building_utility_panel_production_surface_rgb8_alpha_elision.json"
+      - ".github/workflows/runtime-building-utility-panel-production-surface-rgb8.yml"
+  pull_request:
+    paths:
+      - "environment-proof/runtime_building_utility_panel_production_surface_rgb8_observe.gd"
+      - "tools/verify_runtime_building_utility_panel_production_surface_rgb8.py"
+      - "contracts/runtime_building_utility_panel_production_surface_rgb8_alpha_elision.json"
+      - ".github/workflows/runtime-building-utility-panel-production-surface-rgb8.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  runtime-production-surface-rgb8-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact Runtime head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Runtime lineage and bounded sources
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 1afa51cb89b536db0d2434328722a1521febe0ad^{commit}
+          git merge-base --is-ancestor 1afa51cb89b536db0d2434328722a1521febe0ad HEAD
+          python -m pip install --disable-pip-version-check --no-input pillow
+          python -m py_compile tools/verify_runtime_building_utility_panel_production_surface_rgb8.py
+          python -m json.tool contracts/runtime_building_utility_panel_production_surface_rgb8_alpha_elision.json >/dev/null
+
+      - name: Checkout exact Materials owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: 75bf511be8a89778ab40868707a68e80a210608a
+          path: .materials-owner
+          fetch-depth: 1
+
+      - name: Validate exact Materials recipe and owner identity
+        run: |
+          set -euo pipefail
+          test "$(git -C .materials-owner rev-parse HEAD)" = "75bf511be8a89778ab40868707a68e80a210608a"
+          test "$(git -C .materials-owner rev-parse HEAD:lookdev/utility_panel_production_surface_001.json)" = "48e530af8174b3aa119a4b03f41ac72cc4d0a6cd"
+          test "$(git -C .materials-owner rev-parse HEAD:tools/build_utility_panel_production_surface_001.py)" = "c5b24ab4adcbf1704029a91bdc042d63315466ce"
+          python -m json.tool .materials-owner/lookdev/utility_panel_production_surface_001.json >/dev/null
+          python -m py_compile .materials-owner/tools/build_utility_panel_production_surface_001.py
+
+      - name: Download exact Materials baseline and current-world inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_utility_panel_production_surface_rgb8_001
+          baseline="$root/baseline"
+          inputs="$root/inputs"
+          mkdir -p "$baseline" "$inputs/spatial" "$inputs/world" "$inputs/roughness" "$inputs/technical-art" "$root/candidate/rendered" environment-proof/generated
+
+          download_artifact () {
+            repo="$1"; artifact="$2"; sha="$3"; out="$4"
+            curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/mike-axiom-mir/$repo/actions/artifacts/$artifact/zip" -o "$out"
+            echo "$sha  $out" | sha256sum --check --strict
+          }
+
+          download_artifact axm-building-design 10531260523 75369c8d71ce5491eec2e058ecacc56948ca94662cc0b34d123b82273f2b4b8b "$root/materials-baseline.zip"
+          unzip -q "$root/materials-baseline.zip" -d "$baseline"
+          test "$(cat "$baseline/exact-head.txt")" = "75bf511be8a89778ab40868707a68e80a210608a"
+
+          download_artifact axm-map-design 10523556615 937e7382b59fef5360eb4fbe6409a2f887b67293c7333f2c1f0d6c3f30bdc930 "$inputs/spatial.zip"
+          unzip -q "$inputs/spatial.zip" -d "$inputs/spatial"
+          download_artifact axm-map-design 10509037278 8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97 "$inputs/world.zip"
+          unzip -q "$inputs/world.zip" -d "$inputs/world"
+          download_artifact axm-map-design 10502588586 60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e "$inputs/roughness.zip"
+          unzip -q "$inputs/roughness.zip" -d "$inputs/roughness"
+          download_artifact axm-map-design 10527699865 5c19c82f8e216a1e5032784751819447215b21ab2ef6e4f52e03a9da2a855c06 "$inputs/technical-art.zip"
+          unzip -q "$inputs/technical-art.zip" -d "$inputs/technical-art"
+          test "$(cat "$inputs/technical-art/exact-head.txt")" = "1434bc4a64faa04db10f47723c37ab7925aaa163"
+
+          cp "$inputs/spatial/evidence/environment_object_articulated_service_clearance/ta/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
+          cp "$inputs/spatial/evidence/environment_object_articulated_service_clearance/ta/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
+          cp "$inputs/world/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$inputs/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$inputs/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+          cp contracts/environment_object_articulated_service_clearance.json environment-proof/generated/environment-object-articulated-service-clearance.json
+          cp "$inputs/technical-art/evidence/technical_art_building_current_receiver_uv_image/final/current-receiver-utility-panel-uv-image-binding-receipt.json" environment-proof/generated/current-receiver-utility-panel-uv-image-binding-receipt.json
+          cp "$baseline/evidence/building_utility_panel_production_surface_001/generated/utility-panel-production-surface-001.png" environment-proof/generated/utility-panel-production-surface-001.png
+          echo "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c  environment-proof/generated/utility-panel-production-surface-001.png" | sha256sum --check --strict
+
+      - name: Compose exact Materials production-surface current-world observer
+        run: |
+          set -euo pipefail
+          python .materials-owner/tools/build_utility_panel_production_surface_001.py compose-observer \
+            --recipe .materials-owner/lookdev/utility_panel_production_surface_001.json \
+            --donor-observer environment-proof/atmosphere_current_world_building_utility_panel_material_bound_observe.gd \
+            --output-observer environment-proof/materials_current_world_building_utility_panel_production_surface_observe.gd \
+            --output-contract environment-proof/generated/environment-building-utility-panel-material-current-world-ab.json \
+            --materials-head 75bf511be8a89778ab40868707a68e80a210608a
+          grep -F "75bf511be8a89778ab40868707a68e80a210608a" environment-proof/materials_current_world_building_utility_panel_production_surface_observe.gd
+          grep -F "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c" environment-proof/materials_current_world_building_utility_panel_production_surface_observe.gd
+
+      - name: Checkout exact retained current-world observer dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Compose exact inherited current-world observer dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_utility_panel_production_surface_rgb8_001
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/observer-composition.json"
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Render exact production-surface RGB8 candidate in current world
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+          AXM_OBJECT_MOTION_SAMPLE_INDEX: "40"
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_utility_panel_production_surface_rgb8_001
+          rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script runtime_building_utility_panel_production_surface_rgb8_observe.gd \
+            2>&1 | tee "$root/candidate/godot.log"
+          cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$root/candidate/runtime.json"
+          cp environment-proof/atmosphere-width-*.png "$root/candidate/rendered/"
+          test "$(find "$root/candidate/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' -type f | wc -l | tr -d ' ')" = 68
+
+      - name: Verify exact texture-memory reduction and retained raster equivalence
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_utility_panel_production_surface_rgb8_001
+          baseline="$root/baseline/evidence/building_utility_panel_production_surface_001/successor"
+          python tools/verify_runtime_building_utility_panel_production_surface_rgb8.py \
+            --contract contracts/runtime_building_utility_panel_production_surface_rgb8_alpha_elision.json \
+            --baseline-runtime "$baseline/runtime.json" \
+            --candidate-runtime "$root/candidate/runtime.json" \
+            --baseline-rendered "$baseline/rendered" \
+            --candidate-rendered "$root/candidate/rendered" \
+            --owner-png environment-proof/generated/utility-panel-production-surface-001.png \
+            --output "$root/report.json" | tee "$root/verify.log"
+
+      - name: Negative control rejects non-opaque production-surface alpha
+        run: |
+          set -euo pipefail
+          root=evidence/runtime_building_utility_panel_production_surface_rgb8_001
+          baseline="$root/baseline/evidence/building_utility_panel_production_surface_001/successor"
+          set +e
+          python tools/verify_runtime_building_utility_panel_production_surface_rgb8.py \
+            --contract contracts/runtime_building_utility_panel_production_surface_rgb8_alpha_elision.json \
+            --baseline-runtime "$baseline/runtime.json" \
+            --candidate-runtime "$root/candidate/runtime.json" \
+            --baseline-rendered "$baseline/rendered" \
+            --candidate-rendered "$root/candidate/rendered" \
+            --owner-png environment-proof/generated/utility-panel-production-surface-001.png \
+            --mutate-alpha > "$root/negative-alpha.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -F "RGB8_ALPHA_PRECONDITION_REJECTED_NON_OPAQUE_TEXTURE" "$root/negative-alpha.log"
+          echo PASS_REJECTED_NON_OPAQUE_PRODUCTION_SURFACE
+
+      - name: Publish measured summary
+        if: success()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path('evidence/runtime_building_utility_panel_production_surface_rgb8_001/report.json').read_text())
+          lines = [
+              '# Runtime production-surface RGB8 evidence',
+              '',
+              f"- State: `{report['state']}`",
+              f"- Observations: {report['observations']}",
+              f"- Scene texture memory before: `{report['scene_texture_memory_before_values']}` bytes",
+              f"- Scene texture memory after: `{report['scene_texture_memory_after_values']}` bytes",
+              f"- Exact texture-memory saving: `{report['texture_memory_bytes_saved_values']}` bytes",
+              f"- Buffer-memory delta: `{report['buffer_memory_delta_values']}` bytes",
+              f"- Draw-call delta: `{report['draw_call_delta_values']}`",
+              f"- Object delta: `{report['objects_in_frame_delta_values']}`",
+              f"- Primitive delta: `{report['primitives_in_frame_delta_values']}`",
+              f"- Byte-identical rendered pairs: `{report['byte_identical_pair_count']}/{report['rendered_pairs']}`",
+              f"- Changed pixels: `{report['total_changed_pixels']}`; max channel delta: `{report['max_channel_delta_lsb']} LSB`",
+              f"- Visual tradeoff: `{report['visual_tradeoff']}`",
+              f"- Representation boundary: `{report['representation_tradeoff']}`",
+          ]
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
+              f.write('\n'.join(lines) + '\n')
+          PY
+
+      - name: Retain exact Runtime production-surface RGB8 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-building-utility-panel-production-surface-rgb8-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/runtime_building_utility_panel_production_surface_rgb8_alpha_elision.json
+            environment-proof/runtime_building_utility_panel_production_surface_rgb8_observe.gd
+            tools/verify_runtime_building_utility_panel_production_surface_rgb8.py
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/report.json
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/verify.log
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/negative-alpha.log
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/observer-composition.json
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/candidate/runtime.json
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/candidate/godot.log
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/candidate/rendered/*.png
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/baseline/exact-head.txt
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/baseline/evidence/building_utility_panel_production_surface_001/generated/utility-panel-production-surface-001.png
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/baseline/evidence/building_utility_panel_production_surface_001/successor/runtime.json
+            evidence/runtime_building_utility_panel_production_surface_rgb8_001/baseline/evidence/building_utility_panel_production_surface_001/successor/rendered/*.png
+          if-no-files-found: warn
