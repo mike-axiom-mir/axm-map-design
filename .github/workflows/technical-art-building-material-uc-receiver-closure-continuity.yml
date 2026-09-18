@@ -1,0 +1,247 @@
+name: Technical Art Building material UC receiver closure continuity
+
+on:
+  push:
+    branches: [studio/technical-art-building-planar-role-uc-index-bridge-001]
+    paths:
+      - 'tools/technical_art_python_dependency_closure.py'
+      - '.github/workflows/technical-art-building-material-uc-receiver-closure-continuity.yml'
+  pull_request:
+    paths:
+      - 'tools/technical_art_python_dependency_closure.py'
+      - '.github/workflows/technical-art-building-material-uc-receiver-closure-continuity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  current-uc-receiver-closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TESTED_UC_HEAD: 13a823349a568db266099564d6f5d8d7bac48b2b
+      CURRENT_UC_HEAD: 3e6e51402fdb681b4bbed1bc7e816939b06a83b5
+      UC_ENTRY: src/axm_uc/material_uv_evidence.py
+      UC_ENTRY_BLOB: bc7aa2ffc2c598d75a78739c70fd349138f511e2
+      UC_DEPENDENCY: src/axm_uc/asset_geometry.py
+      UC_DEPENDENCY_BLOB: 628c862a46b46f814a67521e9558e343dfe000a1
+      PRIOR_RUN_ID: '35290342135'
+      PRIOR_ARTIFACT_ID: '10525973134'
+      PRIOR_ARTIFACT_SHA256: ac798346537af3ba9b7f999571232a054ca12fdaba1904a4127a074fd1976f46
+      CARRIER_SHA256: dc65fec67aa6aba4e4a14895b38122ae89b6eafba7f256b07c1a7c9e344bbd68
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout exact Technical Art head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Bind exact Technical Art head
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > technical-art-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          python -m py_compile tools/technical_art_python_dependency_closure.py
+
+      - name: Checkout tested UC receiver
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: ${{ env.TESTED_UC_HEAD }}
+          path: .uc-tested
+          fetch-depth: 1
+
+      - name: Checkout current UC receiver with history
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: ${{ env.CURRENT_UC_HEAD }}
+          path: .uc-current
+          fetch-depth: 0
+
+      - name: Bind complete local Python receiver closure at both UC heads
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_material_uc_receiver_closure
+          mkdir -p "$root"
+          test "$(git -C .uc-tested rev-parse HEAD)" = "$TESTED_UC_HEAD"
+          test "$(git -C .uc-current rev-parse HEAD)" = "$CURRENT_UC_HEAD"
+          git -C .uc-current merge-base --is-ancestor "$TESTED_UC_HEAD" "$CURRENT_UC_HEAD"
+          git -C .uc-current diff --name-only "$TESTED_UC_HEAD" "$CURRENT_UC_HEAD" > "$root/uc-intervening-paths.txt"
+
+          python tools/technical_art_python_dependency_closure.py \
+            --repo-root .uc-tested --entry "$UC_ENTRY" --package-root src/axm_uc \
+            --output "$root/tested-uc-receiver-closure.json"
+          python tools/technical_art_python_dependency_closure.py \
+            --repo-root .uc-current --entry "$UC_ENTRY" --package-root src/axm_uc \
+            --output "$root/current-uc-receiver-closure.json"
+
+          python - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path('evidence/technical_art_building_material_uc_receiver_closure')
+          tested=json.loads((root/'tested-uc-receiver-closure.json').read_text())
+          current=json.loads((root/'current-uc-receiver-closure.json').read_text())
+          expected={
+              os.environ['UC_DEPENDENCY']: os.environ['UC_DEPENDENCY_BLOB'],
+              os.environ['UC_ENTRY']: os.environ['UC_ENTRY_BLOB'],
+          }
+          assert tested['repository_head']==os.environ['TESTED_UC_HEAD'],tested
+          assert current['repository_head']==os.environ['CURRENT_UC_HEAD'],current
+          assert tested['local_dependency_closure']==expected,tested
+          assert current['local_dependency_closure']==expected,current
+          assert tested['local_file_count']==2 and current['local_file_count']==2,(tested,current)
+          paths=set((root/'uc-intervening-paths.txt').read_text().splitlines())
+          assert os.environ['UC_ENTRY'] not in paths,paths
+          assert os.environ['UC_DEPENDENCY'] not in paths,paths
+          print('PASS_CURRENT_UC_MATERIAL_OBSERVER_LOCAL_DEPENDENCY_CLOSURE_IDENTICAL')
+          PY
+
+      - name: Prove dependency drift is rejected even when entry blob stays unchanged
+        run: |
+          set -euo pipefail
+          cp ".uc-current/$UC_DEPENDENCY" /tmp/asset_geometry.py
+          printf '\n# deliberate Technical Art closure negative\n' >> ".uc-current/$UC_DEPENDENCY"
+          if python tools/technical_art_python_dependency_closure.py \
+              --repo-root .uc-current --entry "$UC_ENTRY" --package-root src/axm_uc \
+              --output /tmp/should-not-pass.json; then
+            echo 'ERROR: dependency-only drift unexpectedly passed exact closure binding' >&2
+            exit 1
+          fi
+          cp /tmp/asset_geometry.py ".uc-current/$UC_DEPENDENCY"
+          python tools/technical_art_python_dependency_closure.py \
+            --repo-root .uc-current --entry "$UC_ENTRY" --package-root src/axm_uc \
+            --output /tmp/restored-current-closure.json
+          echo PASS_DEPENDENCY_ONLY_DRIFT_REJECTED
+
+      - name: Download and bind prior exact owner-to-UC-to-Godot evidence
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_material_uc_receiver_closure
+          mkdir -p "$root/prior"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${PRIOR_ARTIFACT_ID}/zip" \
+            -o "$root/prior-artifact.zip"
+          echo "$PRIOR_ARTIFACT_SHA256  $root/prior-artifact.zip" | sha256sum --check --strict
+          unzip -q "$root/prior-artifact.zip" -d "$root/prior"
+          carrier=$(find "$root/prior" -type f -name 'utility-panel-material-review-transport.glb' -print -quit)
+          negative=$(find "$root/prior" -type f -name 'utility-panel-material-review-transport-aspect-blind-negative.glb' -print -quit)
+          prior_exact=$(find "$root/prior" -type f -name 'exact-path-receipt.json' -print -quit)
+          prior_godot=$(find "$root/prior" -type f -name 'godot-target-host-receipt.json' -print -quit)
+          test -n "$carrier" && test -n "$negative" && test -n "$prior_exact" && test -n "$prior_godot"
+          echo "$CARRIER_SHA256  $carrier" | sha256sum --check --strict
+          cp "$carrier" "$root/carrier.glb"
+          cp "$negative" "$root/aspect-blind-negative.glb"
+          cp "$prior_exact" "$root/prior-exact-path-receipt.json"
+          cp "$prior_godot" "$root/prior-godot-target-host-receipt.json"
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('evidence/technical_art_building_material_uc_receiver_closure')
+          exact=json.loads((root/'prior-exact-path-receipt.json').read_text())
+          godot=json.loads((root/'prior-godot-target-host-receipt.json').read_text())
+          assert exact['result']=='PASS_EXACT_OWNER_UV_MATERIAL_IMAGE_TO_CURRENT_UC_AND_REAL_GODOT__HOLD_VISUAL_RUNTIME_ADOPTION',exact
+          assert godot['state']=='PASS_TARGET_HOST_IMPORTED_MATERIAL_BEARING_GLB',godot
+          assert exact['uc_head']=='13a823349a568db266099564d6f5d8d7bac48b2b',exact
+          print('PASS_PRIOR_EXACT_TARGET_HOST_EVIDENCE_BOUND')
+          PY
+
+      - name: Re-observe exact retained carriers with tested and current UC closures
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_material_uc_receiver_closure
+          PYTHONPATH=.uc-tested/src python - <<'PY'
+          import json, pathlib
+          from axm_uc.material_uv_evidence import inspect_material_uv_density
+          root=pathlib.Path('evidence/technical_art_building_material_uc_receiver_closure')
+          for name in ('carrier','aspect-blind-negative'):
+              report=inspect_material_uv_density(root/f'{name}.glb')
+              (root/f'tested-{name}-report.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          PY
+          PYTHONPATH=.uc-current/src python - <<'PY'
+          import json, pathlib
+          from axm_uc.material_uv_evidence import inspect_material_uv_density
+          root=pathlib.Path('evidence/technical_art_building_material_uc_receiver_closure')
+          for name in ('carrier','aspect-blind-negative'):
+              report=inspect_material_uv_density(root/f'{name}.glb')
+              (root/f'current-{name}-report.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          PY
+          TESTED_UC_HEAD="$TESTED_UC_HEAD" CURRENT_UC_HEAD="$CURRENT_UC_HEAD" PRIOR_RUN_ID="$PRIOR_RUN_ID" PRIOR_ARTIFACT_ID="$PRIOR_ARTIFACT_ID" PRIOR_ARTIFACT_SHA256="$PRIOR_ARTIFACT_SHA256" CARRIER_SHA256="$CARRIER_SHA256" python - <<'PY'
+          import json, os, pathlib
+          root=pathlib.Path('evidence/technical_art_building_material_uc_receiver_closure')
+          tested=json.loads((root/'tested-carrier-report.json').read_text())
+          current=json.loads((root/'current-carrier-report.json').read_text())
+          tested_neg=json.loads((root/'tested-aspect-blind-negative-report.json').read_text())
+          current_neg=json.loads((root/'current-aspect-blind-negative-report.json').read_text())
+          assert tested==current,(tested,current)
+          assert tested_neg==current_neg,(tested_neg,current_neg)
+          assert current['status']=='MEASURED',current
+          binding=current['primitives'][0]['bindings'][0]['directional_texels_per_m']
+          assert abs(binding['min_texels_per_m']-320.0)<=1e-4,binding
+          assert abs(binding['max_texels_per_m']-320.0)<=1e-4,binding
+          negative=current_neg['primitives'][0]['bindings'][0]['directional_texels_per_m']
+          assert abs(negative['min_texels_per_m']-341.3333333333333)<=1e-4,negative
+          assert abs(negative['max_texels_per_m']-465.45454545454544)<=1e-4,negative
+          tested_closure=json.loads((root/'tested-uc-receiver-closure.json').read_text())
+          current_closure=json.loads((root/'current-uc-receiver-closure.json').read_text())
+          receipt={
+              'schema':'axm.technical-art-building-material-uc-receiver-closure-continuity/v0.1',
+              'result':'PASS_BUILDING_MATERIAL_CURRENT_UC_EXECUTABLE_RECEIVER_CLOSURE_AND_OBSERVATION_IDENTICAL_TO_TESTED_RECEIVER',
+              'technical_art_head':pathlib.Path('technical-art-head.txt').read_text().strip(),
+              'tested_uc_head':os.environ['TESTED_UC_HEAD'],
+              'current_uc_head':os.environ['CURRENT_UC_HEAD'],
+              'tested_is_ancestor_of_current':True,
+              'tested_receiver_dependency_closure':tested_closure['local_dependency_closure'],
+              'current_receiver_dependency_closure':current_closure['local_dependency_closure'],
+              'receiver_closure_identical':True,
+              'exact_carrier':{
+                  'sha256':os.environ['CARRIER_SHA256'],
+                  'tested_observation_equals_current_observation':True,
+                  'directional_texels_per_m':[binding['min_texels_per_m'],binding['max_texels_per_m']],
+              },
+              'aspect_blind_negative':{
+                  'tested_observation_equals_current_observation':True,
+                  'directional_texels_per_m':[negative['min_texels_per_m'],negative['max_texels_per_m']],
+                  'anisotropy':negative['max_anisotropy_ratio'],
+              },
+              'prior_real_target_evidence':{
+                  'workflow_run':int(os.environ['PRIOR_RUN_ID']),
+                  'artifact_id':int(os.environ['PRIOR_ARTIFACT_ID']),
+                  'artifact_sha256':os.environ['PRIOR_ARTIFACT_SHA256'],
+                  'real_godot_receipt_retained':True,
+                  'carrier_bytes_reused_exactly':True,
+              },
+              'truth_boundary':{
+                  'uc_product_modified':False,
+                  'building_domain_policy_moved_into_uc':False,
+                  'material_or_uv_policy_selected':False,
+                  'real_godot_rerun_needed_for_unchanged_carrier':False,
+                  'visual_acceptance_claimed':False,
+                  'runtime_device_acceptance_claimed':False,
+                  'canon_claimed':False,
+                  'production_ready':False,
+              },
+          }
+          (root/'current-uc-receiver-continuity-receipt.json').write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+          print(receipt['result'])
+          PY
+
+      - name: Retain current-UC receiver-closure continuity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-building-material-uc-receiver-closure-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            technical-art-head.txt
+            tools/technical_art_python_dependency_closure.py
+            evidence/technical_art_building_material_uc_receiver_closure
+          if-no-files-found: warn
+          retention-days: 30
