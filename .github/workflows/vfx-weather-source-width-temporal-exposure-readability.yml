@@ -1,0 +1,146 @@
+name: VFX Weather normalized exposure readability review
+
+on:
+  push:
+    branches: [studio/vfx-weather-source-width-current-world-001]
+    paths:
+      - "tools/environment_weather_width_temporal_exposure_readability.py"
+      - ".github/workflows/vfx-weather-source-width-temporal-exposure-readability.yml"
+  pull_request:
+    paths:
+      - "tools/environment_weather_width_temporal_exposure_readability.py"
+      - ".github/workflows/vfx-weather-source-width-temporal-exposure-readability.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  readability-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact review head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind review-only lineage
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > review-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e dd4a85223ba70f7086db2fdc292e4cb57ac38e47^{commit}
+          git merge-base --is-ancestor dd4a85223ba70f7086db2fdc292e4cb57ac38e47 HEAD
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compile exact review tooling
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            tools/environment_weather_width_current_world.py \
+            tools/environment_weather_width_interpolated.py \
+            tools/environment_weather_width_temporal_exposure.py \
+            tools/environment_weather_width_temporal_exposure_normalized.py \
+            tools/environment_weather_width_temporal_exposure_readability.py
+
+      - name: Download exact retained real-Godot normalized candidate evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: environment-weather-source-width-temporal-exposure-normalized-001-dd4a85223ba70f7086db2fdc292e4cb57ac38e47
+          path: .normalized-evidence
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: mike-axiom-mir/axm-map-design
+          run-id: 35147580525
+
+      - name: Rebind exact retained evidence layout
+        run: |
+          set -euo pipefail
+          target="$(find .normalized-evidence -name target_host.json -print -quit)"
+          test -n "$target"
+          root="$(dirname "$target")"
+          printf '%s\n' "$root" > .normalized-root.txt
+          test "$(tr -d '\n\r' < "$root/exact-head.txt")" = "dd4a85223ba70f7086db2fdc292e4cb57ac38e47"
+          test -f "$root/current_world_weather_width.json"
+          test -f "$root/runtime.json"
+          mkdir -p .review-image-root/temporal-exposure-frames .review-image-root/temporal-exposure-raw
+          cp "$root"/frames/*.png .review-image-root/temporal-exposure-frames/
+          cp "$root"/raw/*.rgba .review-image-root/temporal-exposure-raw/
+
+      - name: Build deterministic effect-readability review surface
+        run: |
+          set -euo pipefail
+          root="$(cat .normalized-root.txt)"
+          out=evidence/environment_weather_source_width_temporal_exposure_readability_001
+          mkdir -p "$out"
+          cp review-head.txt "$out/review-head.txt"
+          cp "$root/exact-head.txt" "$out/candidate-head.txt"
+          python tools/environment_weather_width_temporal_exposure_readability.py \
+            --payload "$root/current_world_weather_width.json" \
+            --receipt "$root/runtime.json" \
+            --normalized-report "$root/target_host.json" \
+            --image-root .review-image-root \
+            --output "$out/readability.json" \
+            --svg "$out/readability.svg"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('evidence/environment_weather_source_width_temporal_exposure_readability_001/readability.json').read_text())
+          assert report['state']=='PASS_OPACITY_NORMALIZED_TEMPORAL_EXPOSURE_READABILITY_REVIEW_SURFACE', report
+          assert report['decision']=='REVIEW_SURFACE_ONLY_NO_ART_OR_QA_PREFERENCE', report
+          assert all(report['checks'].values()), report
+          assert report['receiving_head']=='dd4a85223ba70f7086db2fdc292e4cb57ac38e47', report
+          print(json.dumps({
+              'state': report['state'],
+              'decision': report['decision'],
+              'contexts': {
+                  name: {
+                      'changed_pixels_mean': block['changed_pixels_mean'],
+                      'changed_pixels_max': block['changed_pixels_max'],
+                      'changed_fraction_mean': block['changed_fraction_mean'],
+                      'changed_fraction_max': block['changed_fraction_max'],
+                      'peak_changed_phase_us': block['peak_changed_phase_us'],
+                      'union_changed_pixel_bbox_xyxy': block['union_changed_pixel_bbox_xyxy'],
+                  }
+                  for name, block in report['contexts'].items()
+              },
+          }, indent=2))
+          PY
+
+      - name: Exercise deliberate receiving-identity negative control
+        run: |
+          set -euo pipefail
+          root="$(cat .normalized-root.txt)"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import tools.environment_weather_width_temporal_exposure_readability as review
+          root=Path('.normalized-root.txt').read_text().strip()
+          payload=json.loads((Path(root)/'current_world_weather_width.json').read_text())
+          receipt=json.loads((Path(root)/'runtime.json').read_text())
+          normalized=json.loads((Path(root)/'target_host.json').read_text())
+          report=review.exercise_identity_negative_control(payload,receipt,normalized,'.review-image-root')
+          assert report['state']=='FAIL', report
+          assert report['checks']['retained_normalized_report_matches_exact_receiving_identity'] is False, report
+          print('PASS_FAIL_CLOSED_READABILITY_RECEIVING_IDENTITY_DRIFT')
+          PY
+
+      - name: Upload readability review evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-weather-source-width-temporal-exposure-readability-001-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/environment_weather_source_width_temporal_exposure_readability_001/review-head.txt
+            evidence/environment_weather_source_width_temporal_exposure_readability_001/candidate-head.txt
+            evidence/environment_weather_source_width_temporal_exposure_readability_001/readability.json
+            evidence/environment_weather_source_width_temporal_exposure_readability_001/readability.svg
+          if-no-files-found: warn
+          compression-level: 6
+          retention-days: 30
