@@ -13,11 +13,11 @@ This lane closes only that transport gap. It does not author a new UV chart, cho
 - Materials PR #3 head `5f096369eee2ef44275ea8f1c7dc1b6e564e71c8`: serialized-review contract blob `620bc298256d21ee008b6fe870135f09212f8db9`; retained artifact `10518114336` from workflow `35270493702`; exact review PNG 2531 B, SHA-256 `e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198`; reloaded RGBA8 SHA-256 `02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b`.
 - Current UC head selected for this proof: `13a823349a568db266099564d6f5d8d7bac48b2b`; generic material UV observer blob remains `bc7aa2ffc2c598d75a78739c70fd349138f511e2`.
 
-The base64 fixture in this Technical Art lane is an exact byte copy of the retained Materials PNG, pinned by the artifact/run/digest record. It is a transport fixture, not a transfer of Materials authority.
+The Technical Art provenance fixture records the exact checker values observed in the retained Materials payload and receipt. `tools/technical_art_rebuild_materials_review_png.py` reproduces those owner pixels and the Godot 4.7.2 PNG serialization deterministically, and accepts the result only when both the retained raw RGBA8 digest and retained PNG digest match exactly. This is transport reproduction, not a transfer of Materials authority.
 
 ## Smallest reusable contract
 
-`tools/technical_art_building_utility_panel_material_glb_bridge.py` consumes owner contracts and the exact retained review PNG and emits one bounded proof carrier:
+`tools/technical_art_building_utility_panel_material_glb_bridge.py` consumes owner contracts and the exactly reproduced retained review PNG and emits one bounded proof carrier:
 
 - Hard-Surface-owned local corner positions;
 - Geometry-owned triangle connectivity and normalized chart;
@@ -32,11 +32,11 @@ The bridge also retains the existing full-square/aspect-blind negative using the
 The workflow must prove all of the following on the exact Technical Art head:
 
 1. all owner heads and Git blobs match the pinned contracts;
-2. the copied PNG exactly matches Materials retained bytes;
+2. owner-provenanced checker values reproduce both the exact Materials RGBA8 digest and exact retained PNG bytes;
 3. the positive GLB is material-bearing and embeds that exact image;
 4. current generic UC reads the positive GLB as 320 texels/m in both principal directions and reads the aspect-blind negative as approximately 341.33/465.45 texels/m;
 5. a real Godot 4.7.2 import exposes the same four UV corners, the expected material scalars, a readable 512 × 512 image, and the exact Materials RGBA8 base-level digest;
-6. one-byte image drift and active-region drift fail closed.
+6. owner pixel drift and active-region drift fail closed.
 
 ## Truth boundary
 
