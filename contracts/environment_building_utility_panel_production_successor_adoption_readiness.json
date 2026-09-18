@@ -1,0 +1,109 @@
+{
+  "schema": "axm.environment-building-utility-panel-production-successor-adoption-readiness/v0.1",
+  "study_id": "environment-building-utility-panel-production-successor-adoption-readiness-001",
+  "expected_result": "HOLD_BUILDING_UTILITY_PANEL_PRODUCTION_SUCCESSOR_ENVIRONMENT_REBIND__INDEPENDENT_VISUAL_QA_PENDING",
+  "reusable_rule": "WORLD_ADOPTION_REQUIRES_EXACT_IDENTITY_CONVERGENCE_ACROSS_OWNER_ART_QA_RUNTIME_RECEIPTS__MISSING_ONE_GATE_HOLDS_REBIND_WITHOUT_DISCARDING_GREEN_EVIDENCE",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 51,
+    "current_world_head": "595df99daf866b5e3dcaa4be87eeb650af637919",
+    "direct_parent_pr": 49,
+    "direct_parent_head": "07f04aa9b5d1620907240acb12c97759fd7c77f4",
+    "historical_rollback_pr": 24,
+    "building_variant": "header-segmented-23",
+    "building_vertices": 184,
+    "building_triangles": 276,
+    "building_surfaces": 5,
+    "object_motion_sample_index": 40,
+    "retained_current_world_frames_per_variant": 68,
+    "environment_adoption": false,
+    "rebind_authorized": false
+  },
+  "materials_owner": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pull_request": 3,
+    "head": "75bf511be8a89778ab40868707a68e80a210608a",
+    "workflow_run": 35303626025,
+    "workflow_result": "SUCCESS",
+    "artifact_id": 10531260523,
+    "artifact_sha256": "75369c8d71ce5491eec2e058ecacc56948ca94662cc0b34d123b82273f2b4b8b",
+    "result": "PASS_BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_SUCCESSOR_CURRENT_WORLD_THREE_WAY_REVIEW_READY__HOLD_ART_QA_ENV_RUNTIME_ADOPTION",
+    "surface_id": "utility_panel_ochre_production_surface_001",
+    "png_sha256": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "rgba8_sha256": "408a6eaecf99fa328487785f85d089c93da2b84c3ae9ead0bf6e1f8d2a0bdcad",
+    "metallic": 0.18,
+    "roughness": 0.62,
+    "frames_per_variant": 68,
+    "variants": [
+      "scalar_ochre_control",
+      "checker_diagnostic",
+      "production_successor_001"
+    ],
+    "successor_visible_frames": 68,
+    "scalar_to_successor_pixels_gt_1lsb": 182257,
+    "scalar_to_successor_max_delta_lsb": 10,
+    "localization_minimum": 1.0
+  },
+  "art_direction": {
+    "coordination_commit": "fe39317b1e32f38a52994bb7ae40a8a8a0c42c67",
+    "direction_packet": "studio/direction/BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_DIRECTION_043.md",
+    "result": "PASS_ART_DIRECTION_BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_SUCCESSOR_001_043",
+    "materials_head_reviewed": "75bf511be8a89778ab40868707a68e80a210608a",
+    "successor_png_sha256_reviewed": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "accepted_for_direction": true,
+    "final_adoption": false
+  },
+  "visual_qa": {
+    "required_scope": "INDEPENDENT_REVIEW_OF_EXACT_PRODUCTION_SUCCESSOR_001_AGAINST_SCALAR_AND_CHECKER_CONTROLS",
+    "materials_head_required": "75bf511be8a89778ab40868707a68e80a210608a",
+    "successor_png_sha256_required": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "status": "PENDING",
+    "accepted": false,
+    "review_id": null,
+    "evidence_sha256": null
+  },
+  "runtime": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 52,
+    "head": "cb4a4c7b4b8e77eba1195f0032d318d27588fd12",
+    "workflow_run": 35304987658,
+    "workflow_result": "SUCCESS",
+    "artifact_id": 10530522907,
+    "artifact_sha256": "a5aa3b66eeff1698cf2544a18478058ddd21aa26ce0881598197c2a01953f9e3",
+    "materials_head_rebound": "75bf511be8a89778ab40868707a68e80a210608a",
+    "successor_png_sha256_rebound": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "rgba8_to_rgb8_pairs": 68,
+    "changed_pixels": 0,
+    "texture_full_mip_bytes_before": 1398100,
+    "texture_full_mip_bytes_after": 1048575,
+    "exact_texture_saving_bytes": 349525,
+    "target_device_acceptance": false
+  },
+  "held_world_identity": {
+    "building": "184V_276T_5_SURFACE_HEADER_SEGMENTED_23_WITH_CORRECTED_UTILITY_PANEL_PLACEMENT",
+    "object": "ARTICULATED_OBJECT_AT_OWNER_SAMPLE_40",
+    "nature": [
+      "COMPACT_EAST_CURRENT_RECEIVER",
+      "EAST_REAR_CURRENT_RECEIVER"
+    ],
+    "weather": "CURRENT_SOURCE_WIDTH_PRESENTATION",
+    "cameras": [
+      "path_eye",
+      "elevated_oblique"
+    ],
+    "lights_changed": false,
+    "checker_retained_as_diagnostic_rollback": true
+  },
+  "promotion": {
+    "materials_owner_green": true,
+    "art_direction_green": true,
+    "independent_visual_qa_green": false,
+    "runtime_representation_green": true,
+    "runtime_target_device_green": false,
+    "environment_rebind_authorized": false,
+    "environment_adoption": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "truth_boundary": "This gate proves only exact cross-owner identity convergence for the production-surface successor already rendered in the retained current world, and records the remaining independent Visual QA gate explicitly. It does not mutate the Map scene, rebind the successor, transfer Runtime target-device acceptance, promote receiver-local UV fill to Building source authority, grant CANON, or claim production readiness."
+}
