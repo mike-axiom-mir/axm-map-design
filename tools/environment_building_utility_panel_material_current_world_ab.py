@@ -32,7 +32,8 @@ def canonical_runtime(runtime: dict) -> dict:
         "environment_building_utility_panel_material_runtime_acceptance",
         "environment_building_utility_panel_material_truth_boundary",
     }
-    def scrub(value):
+
+    def scrub(value, path=()):
         if isinstance(value, dict):
             out = {}
             for k, v in value.items():
@@ -42,12 +43,60 @@ def canonical_runtime(runtime: dict) -> dict:
                     continue
                 if k == "environment_building_utility_panel_material_current_world":
                     continue
-                out[k] = scrub(v)
+                # These are intentionally process/presentation-sensitive. The exact
+                # material adds one texture and changes PNG compressibility, so they
+                # are characterized separately rather than mistaken for scene drift.
+                if path and path[-1] == "capture" and k == "bytes":
+                    continue
+                if path and path[-1] == "runtime" and k in {"buffer_mem_bytes", "texture_mem_bytes"}:
+                    continue
+                out[k] = scrub(v, path + (k,))
             return out
         if isinstance(value, list):
-            return [scrub(v) for v in value]
+            return [scrub(v, path + (str(i),)) for i, v in enumerate(value)]
         return value
+
     return scrub(runtime)
+
+
+def presentation_metrics(control: dict, candidate: dict) -> dict:
+    cs = control.get("samples", [])
+    ds = candidate.get("samples", [])
+    assert len(cs) == len(ds) == 17
+    capture_deltas = []
+    buffer_deltas = []
+    texture_deltas = []
+    observations = 0
+    for c_state, d_state in zip(cs, ds):
+        assert c_state.get("index") == d_state.get("index")
+        c_contexts = c_state.get("contexts", {})
+        d_contexts = d_state.get("contexts", {})
+        assert set(c_contexts) == set(d_contexts)
+        for context_name in sorted(c_contexts):
+            c_context = c_contexts[context_name]
+            d_context = d_contexts[context_name]
+            assert set(c_context) == set(d_context)
+            for presentation_name in sorted(c_context):
+                c_row = c_context[presentation_name]
+                d_row = d_context[presentation_name]
+                capture_deltas.append(int(d_row["capture"]["bytes"]) - int(c_row["capture"]["bytes"]))
+                buffer_deltas.append(int(d_row["runtime"]["buffer_mem_bytes"]) - int(c_row["runtime"]["buffer_mem_bytes"]))
+                texture_deltas.append(int(d_row["runtime"]["texture_mem_bytes"]) - int(c_row["runtime"]["texture_mem_bytes"]))
+                observations += 1
+    assert observations == 68
+    # The exact review texture is expected to increase these process metrics. Keep
+    # the values visible rather than silently normalizing them out of the evidence.
+    assert all(v > 0 for v in capture_deltas)
+    assert all(v > 0 for v in buffer_deltas)
+    assert all(v > 0 for v in texture_deltas)
+    return {
+        "observations": observations,
+        "capture_png_bytes_delta_min": min(capture_deltas),
+        "capture_png_bytes_delta_max": max(capture_deltas),
+        "capture_png_bytes_delta_mean": float(sum(capture_deltas) / observations),
+        "buffer_mem_bytes_delta_values": sorted(set(buffer_deltas)),
+        "texture_mem_bytes_delta_values": sorted(set(texture_deltas)),
+    }
 
 
 def image_metrics(a: Path, b: Path) -> dict:
@@ -97,9 +146,10 @@ def main():
     assert candidate.get("environment_building_utility_panel_material_art_qa_acceptance") is False
     assert candidate.get("environment_building_utility_panel_material_runtime_acceptance") is False
 
+    process_metrics = presentation_metrics(control, candidate)
     c0 = canonical_runtime(control)
     c1 = canonical_runtime(candidate)
-    assert c0 == c1, "unrelated current-world runtime identity changed outside bounded material binding receipt"
+    assert c0 == c1, "unrelated current-world runtime identity changed outside bounded material binding receipt and expected presentation metrics"
 
     control_files = sorted(args.control_rendered.glob("atmosphere-width-*.png"))
     candidate_files = sorted(args.candidate_rendered.glob("atmosphere-width-*.png"))
@@ -133,7 +183,8 @@ def main():
             "building_vertices": 184,
             "building_triangles": 276,
             "building_surfaces": 5,
-            "runtime_identity_equal_outside_material_binding_receipt": True,
+            "runtime_identity_equal_outside_material_binding_receipt_and_expected_presentation_metrics": True,
+            "presentation_metrics": process_metrics,
         },
         "material_binding": {
             "technical_art_head": TA_HEAD,
@@ -159,6 +210,7 @@ def main():
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     print(RESULT)
     print(json.dumps(report["raster_delta"], sort_keys=True))
+    print(json.dumps(process_metrics, sort_keys=True))
 
 
 if __name__ == "__main__":
