@@ -1,0 +1,43 @@
+{
+  "schema": "axm.runtime-object-static-batching-successor-continuity/v0.1",
+  "scope": "structural eligibility continuity only; do not transfer prior Runtime counters or visual acceptance by ancestry",
+  "prior_runtime_head": "08c5514835acc942858820b27874498c1c84c2ae",
+  "prior_runtime_artifact_id": 10522290719,
+  "prior_runtime_artifact_sha256": "a93a66ebc035c7d11ec00389b9c9f3b70c163dd83138f32a418e45f103963ee3",
+  "successor_animation_head": "343668b80acd52367e3427f3ef97d1662625c18f",
+  "successor_animation_artifact_id": 10523121895,
+  "successor_animation_artifact_sha256": "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707",
+  "successor_technical_art_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
+  "owner_animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "owner_sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
+  "expected_component_map_sha256": "94edd332308593df020bc5c796950292d2963fbe7f19de0c9fadc9ab6b6905d6",
+  "expected_stable_motion_subset_sha256": "da5eec826861ee4501a12e76eacd9d448e5fb8bf9c7f45d2db781a63a2fcdea2",
+  "expected_component_count": 31,
+  "expected_moving_component_count": 7,
+  "expected_static_component_count": 24,
+  "prior_measured_candidate_render_surface_count": 14,
+  "prior_measured_min_draw_calls_saved": 38,
+  "prior_measured_buffer_bytes_saved": 89360,
+  "continuity_authorizes": [
+    "reuse of the exact 7-moving / 24-static classification as the next Runtime rebind starting point",
+    "reuse of exact component identity and exact owner-motion subset provenance"
+  ],
+  "continuity_does_not_authorize": [
+    "transfer of prior draw-call counts to the successor receiver",
+    "transfer of prior buffer-memory measurements to the successor receiver",
+    "transfer of prior shaded pixel identity to the successor receiver",
+    "target-device CPU/GPU/FPS/VRAM/thermal acceptance",
+    "future arbitrary articulation safety",
+    "Environment or VFX adoption",
+    "Art Direction or Visual QA acceptance",
+    "CANON",
+    "production readiness"
+  ],
+  "coordination_repo": "mike-axiom-mir/axm-create-me remains coordination-only",
+  "merge_gate": [
+    "Truth",
+    "Agency / non-domination",
+    "Continuity",
+    "Wisdom before speed"
+  ]
+}
