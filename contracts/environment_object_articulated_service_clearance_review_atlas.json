@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "art_direction_acceptance": false,
+    "canon": false,
+    "environment_adoption": false,
+    "independent_visual_qa_acceptance": false,
+    "runtime_acceptance": false
+  },
+  "schema": "axm.environment-object-articulated-service-clearance-review-atlas/v0.1",
+  "selection": {
+    "camera_contexts": [
+      "path_eye",
+      "elevated_oblique"
+    ],
+    "diff_amplification": 16,
+    "owner_samples": [
+      0,
+      40
+    ],
+    "presentation_modes": [
+      "control",
+      "candidate"
+    ],
+    "weather_state_index": 8,
+    "zoom_padding_px": 24
+  },
+  "source_artifact": {
+    "artifact_id": 10524764391,
+    "exact_head": "7cceec9f3e55a71f51ec227301a92e1896ea2d74",
+    "pr": 49,
+    "repository": "mike-axiom-mir/axm-map-design",
+    "sha256": "a6699ed54f7486640d468b995ca68320ae384dc406ef02ac880cdfa0fa131155",
+    "size_bytes": 23440762
+  },
+  "truth_boundary": "Compact review-atlas selection only. Full retained 272-frame artifact remains authoritative."
+}
