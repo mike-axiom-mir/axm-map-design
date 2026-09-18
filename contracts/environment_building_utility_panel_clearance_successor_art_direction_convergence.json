@@ -1,0 +1,79 @@
+{
+  "schema": "axm.environment-building-utility-panel-clearance-successor-art-direction-convergence/v0.1",
+  "study_id": "environment-building-utility-panel-clearance-successor-art-direction-convergence-001",
+  "expected_result": "PASS_CURRENT_WORLD_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_ART_DIRECTION_PROVENANCE_CONVERGENCE__NO_WORLD_RERENDER_REQUIRED__RUNTIME_CLOSE_RANGE_FINAL_ADOPTION_HELD",
+  "reusable_rule": "ART_DIRECTION_MAY_REBIND_TO_AN_ALREADY_PROVEN_WORLD_SUBJECT_WITHOUT_RERENDER_ONLY_WHEN_EXACT_OWNER_HEAD_SURFACE_BYTES_PLACEMENT_QA_AND_DIRECTION_PACKET_CONVERGE__DEVICE_CLOSE_RANGE_AND_FINAL_ADOPTION_AUTHORITY_DO_NOT_TRANSFER",
+  "environment": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "pull_request": 51,
+    "branch": "studio/environment-building-utility-panel-material-receiver-readiness-001",
+    "prior_review_convergence_head": "be5815257c9bf4dd688f3ee297ea8c53ecd1984d",
+    "prior_review_convergence_run": 35330825201,
+    "prior_review_convergence_artifact_id": 10541355043,
+    "prior_review_convergence_artifact_sha256": "7fc4ece422af3140fad290335999797f63a3ffdfee5d02415aa6455f2e04089f",
+    "current_world_content_changed": false,
+    "duplicate_world_rerender_required": false,
+    "environment_adoption": false
+  },
+  "fresh_owner": {
+    "repository": "mike-axiom-mir/axm-building-design",
+    "pull_request": 3,
+    "head": "eb31efc1639f58f2797bac44ce7f1bad774841ef",
+    "workflow_run": 35324926942,
+    "artifact_id": 10538777520,
+    "artifact_sha256": "2ea191b56c46007122bc46b3a6e9ddc661318d41999e5b9f970445408fb84bb0",
+    "surface_id": "utility_panel_ochre_production_surface_001",
+    "png_sha256": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "rgba8_sha256": "408a6eaecf99fa328487785f85d089c93da2b84c3ae9ead0bf6e1f8d2a0bdcad",
+    "metallic": 0.18,
+    "roughness": 0.62,
+    "front_successor_center_source_xyz_m": [-2.45, -1.1, 1.65],
+    "east_successor_center_source_xyz_m": [3.9, 0.1, 1.65],
+    "physical_body_gap_m": 0.02,
+    "placement_shift_pixels_gt_1lsb": 10202,
+    "successor_lit_vs_unshaded_pixels_gt_1lsb": 555878
+  },
+  "independent_visual_qa": {
+    "review_id": 5246028775,
+    "review_commit_id": "eb31efc1639f58f2797bac44ce7f1bad774841ef",
+    "coherence_result": "PASS_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_LOCAL_RECEIVER_VISUAL_COHERENCE__THREE_RETAINED_CONTEXTS",
+    "activity_result": "PASS_BUILDING_UTILITY_PANEL_PRODUCTION_SURFACE_ACTIVITY_AFTER_CLEARANCE_REBIND__THREE_RETAINED_CONTEXTS",
+    "aggregate_pixels_gt_1lsb": 10202,
+    "front_support_xor_pixels": 0,
+    "east_support_xor_pixels": 0,
+    "three_quarter_support_xor_pixels": 689
+  },
+  "fresh_art_direction": {
+    "repository": "mike-axiom-mir/axm-create-me",
+    "coordination_commit": "58cc1aaa04a597927185f5c61ebdf57f73ef6534",
+    "direction_packet": "studio/direction/BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_DIRECTION_049.md",
+    "packet_blob_sha": "3d9a7f44b735a8cccfb8c884d2dc311da2b8f572",
+    "result": "PASS_ART_DIRECTION_BUILDING_UTILITY_PANEL_CLEARANCE_SUCCESSOR_049",
+    "materials_head_reviewed": "eb31efc1639f58f2797bac44ce7f1bad774841ef",
+    "environment_convergence_head_reviewed": "be5815257c9bf4dd688f3ee297ea8c53ecd1984d",
+    "successor_png_sha256_reviewed": "fdf56d0c0b2e65a181a23cb5db4067555f188cce28ef2479fd5a71c8e11d220c",
+    "fresh_owner_exact_head_green": true,
+    "surface_retune_requested": false,
+    "final_environment_adoption": false
+  },
+  "held_world_identity": {
+    "building": "184V_276T_5_SURFACE_HEADER_SEGMENTED_23_WITH_CORRECTED_UTILITY_PANEL_PLACEMENT",
+    "object": "ARTICULATED_OBJECT_CURRENT_WORLD_RECEIVER",
+    "nature": ["COMPACT_EAST_CURRENT_RECEIVER", "EAST_REAR_CURRENT_RECEIVER"],
+    "weather": "CURRENT_SOURCE_WIDTH_17_STATE_PRESENTATION",
+    "environment_dressing": "OBJECT_SERVICE_FRAME_REAR_EDGE_PLUS_20MM_SUCCESSOR",
+    "cameras": ["path_eye", "elevated_oblique"],
+    "lights_changed": false
+  },
+  "promotion": {
+    "latest_owner_provenance_converged": true,
+    "independent_visual_qa_exact_head_green": true,
+    "art_direction_fresh_owner_exact_head_green": true,
+    "runtime_target_device_green": false,
+    "close_range_surface_stack_green": false,
+    "environment_adoption": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "truth_boundary": "This gate closes only the exact fresh Art Direction authority missing from the already-proven current-world Building utility-panel subject. It reuses the unchanged retained multi-asset world because exact owner head, production surface bytes, corrected placement, independent QA and Direction 049 converge. It does not transfer Runtime target-device acceptance, arbitrary close-range/final surface-stack acceptance, final Environment adoption, CANON or production readiness."
+}
