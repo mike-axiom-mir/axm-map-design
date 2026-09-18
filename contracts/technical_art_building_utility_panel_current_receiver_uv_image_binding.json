@@ -1,0 +1,93 @@
+{
+  "schema": "axm.technical-art-building-utility-panel-current-receiver-uv-image-binding/v0.1",
+  "study_id": "technical-art-building-utility-panel-current-receiver-uv-image-binding-001",
+  "reusable_rule": "EXACT_OWNER_SURFACE_CHART_AND_IMAGE_MAY_ENTER_A_CURRENT_RECEIVER_ONLY_THROUGH_EXPLICIT_RECEIVER_FRAME_AND_INSTANCE_IDENTITY__NON_SOURCE_FILL_MUST_STAY_RECEIVER_LOCAL_AND_LABELED",
+  "owner_bindings": {
+    "environment": {
+      "repository": "mike-axiom-mir/axm-map-design",
+      "pull_request": 51,
+      "head": "787ad51687da2df52c9f6191d1778a7f66cbd3db",
+      "contract_path": "contracts/environment_building_utility_panel_clearance_current_world.json",
+      "contract_blob_sha": "6835a1f2cbe73eb44da721f0ab45e621fb758da6"
+    },
+    "hard_surface": {
+      "repository": "mike-axiom-mir/axm-building-design",
+      "pull_request": 17,
+      "head": "fbfa3b47048755b45dac91451171d5511c8d4f47",
+      "source_content_head": "32bbdd54f00aaac87ba8139bf932d8aff6109a66",
+      "pavilion_path": "assets/service_pavilion_001.json",
+      "pavilion_blob_sha": "5a5ec3ce6ee4e9b111db086ba93038a75c482a2e",
+      "panel_path": "assets/utility_access_panel_001.json",
+      "panel_blob_sha": "51b7fa61dd87934a89e033a2fdf5cc3b99992454",
+      "surface_domain_path": "assets/utility_access_panel_001_service_surface_domain.json",
+      "surface_domain_blob_sha": "8b4484d4ccbd500e58910a2835d8780112489919"
+    },
+    "geometry": {
+      "repository": "mike-axiom-mir/axm-building-design",
+      "pull_request": 18,
+      "head": "02944a9f10528a051603df3a6fd7b3183730773f",
+      "chart_path": "geometry/utility_access_panel_service_surface_chart_001.json",
+      "chart_blob_sha": "08431f75edff5ae7d8b8c32468190e7a1b81d526"
+    },
+    "materials": {
+      "repository": "mike-axiom-mir/axm-building-design",
+      "pull_request": 3,
+      "head": "38260f31a49766ec27746b785934248176796d59",
+      "serialized_contract_path": "lookdev/building_utility_panel_serialized_review_texture_001.json",
+      "serialized_contract_blob_sha": "620bc298256d21ee008b6fe870135f09212f8db9",
+      "retained_image_origin_head": "5f096369eee2ef44275ea8f1c7dc1b6e564e71c8",
+      "retained_png_sha256": "e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198",
+      "retained_rgba8_sha256": "02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b"
+    }
+  },
+  "current_receiver_identity": {
+    "variant_id": "header-segmented-23",
+    "vertex_count": 184,
+    "triangle_count": 276,
+    "surface_count": 5,
+    "surface_roles": [
+      "frame_galvanized",
+      "infill_coating",
+      "roof_membrane",
+      "slab_mineral",
+      "utility_panel_ochre"
+    ],
+    "placement_translation_source_xyz_m": [0.0, 7.2, 0.0],
+    "utility_panel_surface_role": "utility_panel_ochre"
+  },
+  "panel_bindings": {
+    "front-utility-bay": {
+      "current_receiver_vertex_indices": [168,169,170,171,172,173,174,175],
+      "outer_service_face_receiver_vertex_indices": [172,174,175,173],
+      "chart_corner_order": [0,1,2,3],
+      "receiver_frame_source": "Building Hard Surface interface front-utility-bay"
+    },
+    "east-utility-bay": {
+      "current_receiver_vertex_indices": [176,177,178,179,180,181,182,183],
+      "outer_service_face_receiver_vertex_indices": [180,182,183,181],
+      "chart_corner_order": [0,1,2,3],
+      "receiver_frame_source": "Building Hard Surface interface east-utility-bay"
+    }
+  },
+  "transport_policy": {
+    "owner_equivalent_scope": "ONLY_THE_FOUR_POSITIVE_LOCAL_X_OUTER_SERVICE_FACE_CORNERS_PER_PANEL",
+    "full_box_uv_fill": "PLANAR_PROJECT_OWNER_LOCAL_YZ_CHART_ACROSS_PANEL_DEPTH",
+    "full_box_uv_fill_authority": "TECHNICAL_ART_RECEIVER_LOCAL_ONLY",
+    "full_box_uv_fill_source_equivalent": false,
+    "topology_split_required": false,
+    "current_five_surface_identity_preserved": true,
+    "materials_active_region_px": [352,480],
+    "materials_active_region_origin_px": [80,16],
+    "materials_image_size_px": [512,512],
+    "mapped_uv_bounds": [0.15625,0.03125,0.84375,0.96875]
+  },
+  "promotion": {
+    "environment_adoption": false,
+    "runtime_acceptance": false,
+    "art_direction_acceptance": false,
+    "visual_qa_acceptance": false,
+    "canon": false,
+    "production_ready": false
+  },
+  "truth_boundary": "This is a Technical Art receiving contract, not a Building or Geometry rewrite. It binds the exact Hard-Surface receiver frames, Geometry service-face chart and retained Materials image to the two current Environment receiver instances. Only the four outer service-face corners per panel are owner-equivalent. Planar-projected UV values on the remaining box vertices are explicitly receiver-local fill used to preserve the existing five-surface current receiver without inventing a topology split; they do not become source, Geometry, Materials, Environment, Runtime or visual authority. UC remains generic and unchanged."
+}
