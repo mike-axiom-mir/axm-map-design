@@ -21,7 +21,7 @@
   },
   "target_envelope_fixture": {
     "path": "evidence-fixtures/environment_nature_north_low_target_envelope_10542513318.json",
-    "sha256": "9803de5640069a9ad9f02ed387d81218ffd57a23cbfbce65d370d62f859a9557",
+    "git_blob_sha1": "29eeec1c601b4747f1a5f98e454f94d364f98388",
     "source_repository": "mike-axiom-mir/axm-nature-design",
     "technical_art_head": "02c5223dd9288c12607f0553e2f1103be38ae71f",
     "workflow_run": 35336912571,
