@@ -1,0 +1,139 @@
+name: Environment Building utility-panel material receiver readiness
+
+on:
+  push:
+    branches: [studio/environment-building-utility-panel-material-receiver-readiness-001]
+    paths:
+      - "contracts/environment_building_utility_panel_material_receiver_readiness.json"
+      - "tools/environment_building_utility_panel_material_receiver_readiness.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_MATERIAL_RECEIVER_READINESS_001.md"
+      - ".github/workflows/environment-building-utility-panel-material-receiver-readiness.yml"
+  pull_request:
+    paths:
+      - "contracts/environment_building_utility_panel_material_receiver_readiness.json"
+      - "tools/environment_building_utility_panel_material_receiver_readiness.py"
+      - "docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_MATERIAL_RECEIVER_READINESS_001.md"
+      - ".github/workflows/environment-building-utility-panel-material-receiver-readiness.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-receiver-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Bind exact Environment lineage and current receiver implementation
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e 07f04aa9b5d1620907240acb12c97759fd7c77f4^{commit}
+          git merge-base --is-ancestor 07f04aa9b5d1620907240acb12c97759fd7c77f4 HEAD
+          test "$(git rev-parse HEAD:environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd)" = "fdc6f72abe820517f4af85811913f4daa3fea48b"
+          test "$(git rev-parse HEAD:environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd)" = "685d8b1474dfb5eb941cb8cd78385a43be4d4ea7"
+          test "$(git rev-parse HEAD:environment-proof/atmosphere_current_world_object_rigid_component_observe.gd)" = "8e947edbd3d1773f201456328d0320543321538f"
+          python -m py_compile tools/environment_building_utility_panel_material_receiver_readiness.py
+          python -m json.tool contracts/environment_building_utility_panel_material_receiver_readiness.json >/dev/null
+
+      - name: Download exact retained real-world and Technical Art evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_material_receiver_readiness_001
+          mkdir -p "$root/world" "$root/technical-art"
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10524764391/zip" \
+            -o "$root/world.zip"
+          echo "a6699ed54f7486640d468b995ca68320ae384dc406ef02ac880cdfa0fa131155  $root/world.zip" | sha256sum --check --strict
+          unzip -q "$root/world.zip" -d "$root/world"
+          test "$(cat "$root/world/exact-head.txt")" = "7cceec9f3e55a71f51ec227301a92e1896ea2d74"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10527162239/zip" \
+            -o "$root/technical-art.zip"
+          echo "d760a61cd95f756de7e0143096bb7923a0dfbaff0d480ccff9a17dfd19f0c70c  $root/technical-art.zip" | sha256sum --check --strict
+          unzip -q "$root/technical-art.zip" -d "$root/technical-art"
+          test "$(cat "$root/technical-art/exact-head.txt")" = "457c086d27f3a9c010b365fe75d54b8f812b01ef"
+          printf '%s  world.zip\n%s  technical-art.zip\n' \
+            "a6699ed54f7486640d468b995ca68320ae384dc406ef02ac880cdfa0fa131155" \
+            "d760a61cd95f756de7e0143096bb7923a0dfbaff0d480ccff9a17dfd19f0c70c" \
+            > "$root/input-artifact-sha256.txt"
+
+      - name: Verify exact current-world receiver readiness boundary
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_material_receiver_readiness_001
+          python tools/environment_building_utility_panel_material_receiver_readiness.py \
+            --contract contracts/environment_building_utility_panel_material_receiver_readiness.json \
+            --world-root "$root/world" \
+            --ta-root "$root/technical-art" \
+            --header-script environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd \
+            --clearance-script environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd \
+            --output "$root/report.json" | tee "$root/verify.log"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/environment_building_utility_panel_material_receiver_readiness_001/report.json'))
+          assert p['state']=='HOLD_CURRENT_WORLD_BUILDING_UTILITY_PANEL_MATERIAL_RECEIVER__CURRENT_184V_RECEIVER_HAS_NO_EXACT_UV0_IMAGE_TRANSPORT_BINDING',p
+          assert p['world']['runtime_receipt_count']==4,p
+          assert p['world']['world_state_observations']==68,p
+          assert p['world']['weather_width_measurements']==4896,p
+          assert p['world']['current_building_vertices']==184 and p['world']['current_building_triangles']==276 and p['world']['current_building_surfaces']==5,p
+          assert p['gap']['material_role_matches_current_world'] is True,p
+          assert p['gap']['exact_owner_uv0_available_upstream'] is True,p
+          assert p['gap']['exact_owner_image_available_upstream'] is True,p
+          assert p['gap']['current_receiver_uv0_binding_proven'] is False,p
+          assert p['gap']['current_receiver_image_binding_proven'] is False,p
+          assert p['decision']['environment_adoption'] is False,p
+          assert p['decision']['scene_mutated'] is False,p
+          print(p['state'])
+          PY
+
+      - name: Negative control rejects invented Environment UV/image authority
+        run: |
+          set -euo pipefail
+          root=evidence/environment_building_utility_panel_material_receiver_readiness_001
+          set +e
+          python tools/environment_building_utility_panel_material_receiver_readiness.py \
+            --contract contracts/environment_building_utility_panel_material_receiver_readiness.json \
+            --world-root "$root/world" \
+            --ta-root "$root/technical-art" \
+            --header-script environment-proof/atmosphere_current_world_building_header_segmentation_observe.gd \
+            --clearance-script environment-proof/atmosphere_current_world_building_utility_panel_clearance_observe.gd \
+            --force-claimed-binding \
+            --output "$root/negative-report.json" > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -F "Environment cannot self-declare an exact UV0/image binding" "$root/negative.log"
+          echo PASS_REJECTED_INVENTED_ENVIRONMENT_UV_IMAGE_AUTHORITY
+
+      - name: Retain exact readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-building-utility-panel-material-receiver-readiness-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_building_utility_panel_material_receiver_readiness.json
+            docs/ENVIRONMENT_BUILDING_UTILITY_PANEL_MATERIAL_RECEIVER_READINESS_001.md
+            evidence/environment_building_utility_panel_material_receiver_readiness_001/report.json
+            evidence/environment_building_utility_panel_material_receiver_readiness_001/verify.log
+            evidence/environment_building_utility_panel_material_receiver_readiness_001/negative.log
+            evidence/environment_building_utility_panel_material_receiver_readiness_001/input-artifact-sha256.txt
+          if-no-files-found: warn
