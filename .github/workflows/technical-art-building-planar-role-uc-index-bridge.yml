@@ -1,0 +1,349 @@
+name: Technical Art Building planar-role UC index bridge evidence
+
+on:
+  push:
+    branches: [studio/technical-art-building-planar-role-uc-index-bridge-001]
+    paths:
+      - 'environment-proof/atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd'
+      - 'tools/technical_art_building_planar_role_uc_index_bridge.py'
+      - 'tools/technical_art_building_planar_role_source_consumer_normal_boundary.py'
+      - 'docs/TECHNICAL_ART_BUILDING_PLANAR_ROLE_UC_INDEX_BRIDGE_001.md'
+      - '.github/workflows/technical-art-building-planar-role-uc-index-bridge.yml'
+  pull_request:
+    paths:
+      - 'environment-proof/atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd'
+      - 'tools/technical_art_building_planar_role_uc_index_bridge.py'
+      - 'tools/technical_art_building_planar_role_source_consumer_normal_boundary.py'
+      - 'docs/TECHNICAL_ART_BUILDING_PLANAR_ROLE_UC_INDEX_BRIDGE_001.md'
+      - '.github/workflows/technical-art-building-planar-role-uc-index-bridge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-building-uc-index-bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    env:
+      RUNTIME_HEAD: 8d5860c308c244d314ede5b79021e46f35c4040d
+      RUNTIME_RUN: '35183939323'
+      RUNTIME_ARTIFACT_NAME: runtime-building-planar-role-surface-index-budget-001-8d5860c308c244d314ede5b79021e46f35c4040d
+      ENVIRONMENT_HEAD: b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      UNINDEXED_RUN: '35182784756'
+      UNINDEXED_ARTIFACT_NAME: environment-building-planar-role-current-world-001-b758f9ca006ec5885ff1c2c52e2fb09e9ccdd464
+      WEATHER_WIDTH_OBSERVER_HEAD: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+      UC_PROVEN_DRAFT_HEAD: 237ea786a56a0b5c6fa3647ed302c3a8f04fcbed
+      UC_HEAD: 2295495cccf60c1fbd541b20215d17ac18e32821
+      UC_OBSERVER_PATH: src/axm_uc/indexed_surface_eligibility.py
+      UC_OBSERVER_BLOB: cea48b2326813de6bd09430beafdac5315638657
+      CURRENT_UC_HEAD: 68100dbd20b0b4cf792d070a4341696085f3e6bc
+      HARD_SURFACE_AUTHORITY_HEAD: 7b86b1a9da1ef8dc670ca01cf4918728e68ece92
+    steps:
+      - name: Checkout exact Technical Art head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Bind exact Technical Art parent and compile verifier
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          git cat-file -e "$RUNTIME_HEAD^{commit}"
+          git merge-base --is-ancestor "$RUNTIME_HEAD" HEAD
+          python -m py_compile tools/technical_art_building_planar_role_uc_index_bridge.py
+          python -m py_compile tools/technical_art_building_planar_role_source_consumer_normal_boundary.py
+          grep -F 'TECHNICAL_ART_INDEX_BUNDLE_SCHEMA := "axm.technical-art-building-planar-role-index-bundle/v0.1"' environment-proof/atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd
+
+      - name: Download exact retained Runtime indexing evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.RUNTIME_ARTIFACT_NAME }}
+          path: evidence/technical_art_building_uc_index_bridge/runtime
+          github-token: ${{ github.token }}
+          run-id: ${{ env.RUNTIME_RUN }}
+
+      - name: Download exact Environment unindexed planar-role input
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.UNINDEXED_ARTIFACT_NAME }}
+          path: evidence/technical_art_building_uc_index_bridge/unindexed
+          github-token: ${{ github.token }}
+          run-id: ${{ env.UNINDEXED_RUN }}
+
+      - name: Bind retained Runtime and current-world payload
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_uc_index_bridge
+          runtime_report="$(find "$root/runtime" -type f -name report.json -print -quit)"
+          test -n "$runtime_report"
+          cp "$runtime_report" "$root/runtime-report.json"
+          payload="$(find "$root/unindexed" -type f -name combined_current_world.json -print -quit)"
+          test -n "$payload"
+          mkdir -p environment-proof/generated
+          cp "$payload" environment-proof/generated/current_world_nature_winding_migration.json
+          python - <<'PY'
+          import json
+          r=json.load(open('evidence/technical_art_building_uc_index_bridge/runtime-report.json'))
+          assert r['schema']=='axm.runtime-building-planar-role-surface-index-budget/v0.1',r
+          assert r['exact_runtime_head']=='8d5860c308c244d314ede5b79021e46f35c4040d',r
+          assert r['building_representation']['after']['total_vertices']==312,r
+          assert r['building_representation']['after']['total_indices']==1008,r
+          assert r['building_representation']['triangle_count']==336,r
+          print('PASS_EXACT_RETAINED_RUNTIME_INDEX_REPORT')
+          PY
+
+      - name: Restore exact inherited Weather-width observer donor
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.WEATHER_WIDTH_OBSERVER_HEAD }}
+          path: .vfx-width-donor
+          fetch-depth: 1
+
+      - name: Restore exact observer chain dependency
+        run: |
+          set -euo pipefail
+          test "$(git -C .vfx-width-donor rev-parse HEAD)" = "$WEATHER_WIDTH_OBSERVER_HEAD"
+          cp .vfx-width-donor/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          test -f environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd
+
+      - name: Checkout merged UC main observer
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: ${{ env.UC_HEAD }}
+          path: .uc
+          fetch-depth: 0
+
+      - name: Bind merged UC continuity and install exact observer
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_uc_index_bridge
+          mkdir -p "$root"
+          test "$(git -C .uc rev-parse HEAD)" = "$UC_HEAD"
+          git -C .uc cat-file -e "$UC_PROVEN_DRAFT_HEAD^{commit}"
+          git -C .uc merge-base --is-ancestor "$UC_PROVEN_DRAFT_HEAD" "$UC_HEAD"
+          test "$(git -C .uc rev-list --count "$UC_PROVEN_DRAFT_HEAD..$UC_HEAD")" = "4"
+          actual="$(git -C .uc diff --name-only "$UC_PROVEN_DRAFT_HEAD..$UC_HEAD" | sort)"
+          expected="$(printf '%s\n' '.github/workflows/indexed-surface-eligibility.yml' 'src/axm_uc/indexed_surface_eligibility.py' 'tests/test_indexed_surface_cross_source_metrics.py' | sort)"
+          test "$actual" = "$expected"
+          grep -F 'CROSS_SOURCE_TUPLE_POLICY = "ATTRIBUTES_AND_PROTECTED_SPLITS"' ".uc/$UC_OBSERVER_PATH"
+          test "$(git -C .uc rev-parse "HEAD:$UC_OBSERVER_PATH")" = "$UC_OBSERVER_BLOB"
+          python -m pip install --disable-pip-version-check -e .uc
+          sha256sum ".uc/$UC_OBSERVER_PATH" > "$root/uc-observer.sha256"
+          git -C .uc rev-parse HEAD > "$root/uc-head.txt"
+          printf '%s\n' "$UC_PROVEN_DRAFT_HEAD" > "$root/uc-proven-draft-head.txt"
+          UC_PROVEN_DRAFT_HEAD="$UC_PROVEN_DRAFT_HEAD" UC_HEAD="$UC_HEAD" python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          repo=pathlib.Path('.uc')
+          observer=repo / 'src/axm_uc/indexed_surface_eligibility.py'
+          payload={
+              'schema':'axm.technical-art-uc-merge-continuity/v0.1',
+              'previous_proven_head':os.environ['UC_PROVEN_DRAFT_HEAD'],
+              'merged_main_head':os.environ['UC_HEAD'],
+              'previous_proven_head_is_ancestor':True,
+              'commit_distance':4,
+              'changed_paths':subprocess.check_output([
+                  'git','-C',str(repo),'diff','--name-only',f"{os.environ['UC_PROVEN_DRAFT_HEAD']}..{os.environ['UC_HEAD']}"
+              ],text=True).splitlines(),
+              'observer_sha256':hashlib.sha256(observer.read_bytes()).hexdigest(),
+              'rebind_requires_real_receiver_reproof':True,
+              'automatic_semantic_equivalence_claimed':False,
+          }
+          pathlib.Path('evidence/technical_art_building_uc_index_bridge/uc-merge-continuity.json').write_text(
+              json.dumps(payload,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print('PASS_UC_MERGED_MAIN_CONTINUITY_BOUND')
+          PY
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+
+      - name: Install virtual display
+        run: |
+          set -euo pipefail
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Capture exact Godot pre-index and post-index surface arrays
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          rm -f environment-proof/technical-art-building-planar-role-index-bundle.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof --script atmosphere_current_world_building_planar_role_uc_index_bridge_observe.gd \
+            2>&1 | tee evidence/technical_art_building_uc_index_bridge/godot.log
+          status=${PIPESTATUS[0]}; set -e
+          test "$status" = 0
+          test -f environment-proof/technical-art-building-planar-role-index-bundle.json
+          cp environment-proof/technical-art-building-planar-role-index-bundle.json evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
+
+      - name: Re-prove exact index grouping against merged UC main and observe normal repack drift
+        run: |
+          set -euo pipefail
+          out=evidence/technical_art_building_uc_index_bridge/final
+          rm -rf "$out" && mkdir -p "$out"
+          python tools/technical_art_building_planar_role_uc_index_bridge.py \
+            --bundle evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json \
+            --runtime-report evidence/technical_art_building_uc_index_bridge/runtime-report.json \
+            --output "$out" \
+            --technical-art-head "$(cat exact-head.txt)" \
+            --uc-head "$UC_HEAD" \
+            --uc-observer ".uc/$UC_OBSERVER_PATH"
+          cp exact-head.txt "$out/technical-art-head.txt"
+          cp evidence/technical_art_building_uc_index_bridge/uc-head.txt "$out/uc-head.txt"
+          cp evidence/technical_art_building_uc_index_bridge/uc-proven-draft-head.txt "$out/uc-proven-draft-head.txt"
+          cp evidence/technical_art_building_uc_index_bridge/uc-observer.sha256 "$out/uc-observer.sha256"
+          cp evidence/technical_art_building_uc_index_bridge/uc-merge-continuity.json "$out/uc-merge-continuity.json"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_building_uc_index_bridge/final/receipt.json'))
+          assert p['result']=='PASS_BUILDING_EXACT_GODOT_INDEX_GROUPING_MATCHES_UC_CROSS_SOURCE_TUPLE_CANDIDATE__HOLD_GODOT_NORMAL_REPACK_EXACTNESS_AND_VISUAL_REVIEW',p
+          assert p['uc_head']=='2295495cccf60c1fbd541b20215d17ac18e32821',p
+          assert p['uc_candidate']['candidate_vertices']==312,p
+          assert p['uc_candidate']['candidate_indices']==1008,p
+          assert p['uc_candidate']['exact_corner_grouping_isomorphic_to_godot_all_surfaces'] is True,p
+          assert p['uc_candidate']['exact_decoded_position_corner_stream_match_all_surfaces'] is True,p
+          assert p['uc_candidate']['raw_index_numbering_or_vertex_order_claimed'] is False,p
+          assert p['godot_postindex_normal_transport']['exact'] is False,p
+          assert p['godot_postindex_normal_transport']['changed_corner_count']==120,p
+          assert p['negative_controls']['default_source_lineage_mode_preserves_all_1008_triangle_corners'] is True,p
+          c=json.load(open('evidence/technical_art_building_uc_index_bridge/final/uc-merge-continuity.json'))
+          assert c['previous_proven_head']=='237ea786a56a0b5c6fa3647ed302c3a8f04fcbed',c
+          assert c['merged_main_head']=='2295495cccf60c1fbd541b20215d17ac18e32821',c
+          assert c['previous_proven_head_is_ancestor'] is True,c
+          assert c['automatic_semantic_equivalence_claimed'] is False,c
+          print('PASS_BUILDING_EXACT_GODOT_INDEX_GROUPING_REBOUND_TO_MERGED_UC_MAIN__HOLD_GODOT_NORMAL_REPACK_EXACTNESS')
+          PY
+
+      - name: Deliberate fail-closed corner-group mutation
+        run: |
+          set -euo pipefail
+          cp evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json /tmp/mutated-bundle.json
+          python - <<'PY'
+          import json
+          p='/tmp/mutated-bundle.json'
+          d=json.load(open(p))
+          row=d['after']['surfaces'][0]['storage_indices']
+          row[0],row[1]=row[1],row[0]
+          open(p,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          if python tools/technical_art_building_planar_role_uc_index_bridge.py \
+            --bundle /tmp/mutated-bundle.json \
+            --runtime-report evidence/technical_art_building_uc_index_bridge/runtime-report.json \
+            --output /tmp/mutated-output \
+            --technical-art-head "$(cat exact-head.txt)" \
+            --uc-head "$UC_HEAD" \
+            --uc-observer ".uc/$UC_OBSERVER_PATH"; then
+            echo 'ERROR: corner-group mutation unexpectedly passed' >&2
+            exit 1
+          fi
+          echo PASS_FAIL_CLOSED_CORNER_GROUP_MUTATION
+
+      - name: Checkout exact Building hard-normal source authority
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.HARD_SURFACE_AUTHORITY_HEAD }}
+          path: .building-hard-normal-authority
+          fetch-depth: 1
+
+      - name: Rebuild exact Building hard-normal authority evidence
+        run: |
+          set -euo pipefail
+          test "$(git -C .building-hard-normal-authority rev-parse HEAD)" = "$HARD_SURFACE_AUTHORITY_HEAD"
+          authority=evidence/technical_art_building_uc_index_bridge/hard-normal-authority
+          rm -rf "$authority" && mkdir -p "$authority"
+          python .building-hard-normal-authority/tools/verify_service_pavilion_planar_role_hard_normal_authority.py \
+            --exact-head "$HARD_SURFACE_AUTHORITY_HEAD" \
+            --output-dir "$authority"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_building_uc_index_bridge/hard-normal-authority/hard-normal-authority-evidence.json'))
+          assert p['result']=='PASS_SOURCE_OWNED_PLANAR_ROLE_HARD_NORMAL_AUTHORITY_BOUNDARY',p
+          assert p['exact_head']=='7b86b1a9da1ef8dc670ca01cf4918728e68ece92',p
+          assert p['metrics']['source_intent_render_vertices']==604,p
+          assert p['metrics']['role_position_quotient_groups']==312,p
+          assert p['metrics']['source_render_vertex_identities_removed']==292,p
+          assert p['metrics']['hard_normal_crossing_groups']==188,p
+          print('PASS_EXACT_BUILDING_HARD_NORMAL_SOURCE_AUTHORITY_REBUILT')
+          PY
+
+      - name: Checkout current UC for observer continuity only
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: ${{ env.CURRENT_UC_HEAD }}
+          path: .uc-current
+          fetch-depth: 1
+
+      - name: Bind 312 Godot consumer normal identity to source authority
+        run: |
+          set -euo pipefail
+          test "$(git -C .uc-current rev-parse HEAD)" = "$CURRENT_UC_HEAD"
+          test "$(git -C .uc-current rev-parse "HEAD:$UC_OBSERVER_PATH")" = "$UC_OBSERVER_BLOB"
+          test "$(git -C .uc rev-parse "HEAD:$UC_OBSERVER_PATH")" = "$UC_OBSERVER_BLOB"
+          out=evidence/technical_art_building_uc_index_bridge/source-consumer-normal-boundary
+          rm -rf "$out" && mkdir -p "$out"
+          python tools/technical_art_building_planar_role_source_consumer_normal_boundary.py \
+            --technical-art-receipt evidence/technical_art_building_uc_index_bridge/final/receipt.json \
+            --hard-surface-policy evidence/technical_art_building_uc_index_bridge/hard-normal-authority/service_pavilion_001_planar_role_hard_normal_authority_policy.json \
+            --hard-surface-evidence evidence/technical_art_building_uc_index_bridge/hard-normal-authority/hard-normal-authority-evidence.json \
+            --normal-generator-source environment-proof/atmosphere_current_world_building_planar_role_observe.gd \
+            --post-normal-indexer-source environment-proof/atmosphere_current_world_building_planar_role_surface_index_observe.gd \
+            --proven-uc-observer ".uc/$UC_OBSERVER_PATH" \
+            --current-uc-observer ".uc-current/$UC_OBSERVER_PATH" \
+            --technical-art-head "$(cat exact-head.txt)" \
+            --hard-surface-head "$HARD_SURFACE_AUTHORITY_HEAD" \
+            --current-uc-head "$CURRENT_UC_HEAD" \
+            --output "$out"
+          python - <<'PY'
+          import json
+          p=json.load(open('evidence/technical_art_building_uc_index_bridge/source-consumer-normal-boundary/source-consumer-normal-boundary-receipt.json'))
+          assert p['result']=='PASS_BUILDING_312_GODOT_CONSUMER_NORMAL_IDENTITY_BOUND_TO_SOURCE_HARD_NORMAL_AUTHORITY__HOLD_NORMAL_NUMERIC_EXACTNESS_RUNTIME_VISUAL',p
+          assert p['source_authority']['source_render_equivalence_classes']==604,p
+          assert p['source_authority']['role_position_quotient_groups']==312,p
+          assert p['source_authority']['dropped_source_attribute']=='EXACT_CARDINAL_HARD_NORMAL',p
+          assert p['consumer_representation']['stored_vertices']==312,p
+          assert p['consumer_representation']['source_equivalence_claimed'] is False,p
+          assert p['consumer_representation']['source_hard_normal_preservation_claimed'] is False,p
+          assert p['universal_creation']['current_head']=='68100dbd20b0b4cf792d070a4341696085f3e6bc',p
+          assert p['universal_creation']['current_observer_byte_identical_to_proven_observer'] is True,p
+          assert all(v['status']=='PASS_REJECTED' for v in p['negative_controls'].values()),p
+          print('PASS_BUILDING_SOURCE_CONSUMER_NORMAL_AUTHORITY_BOUNDARY_RETAINED')
+          PY
+
+      - name: Upload retained Technical Art bridge evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-building-planar-role-uc-index-bridge-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            evidence/technical_art_building_uc_index_bridge/final/
+            evidence/technical_art_building_uc_index_bridge/source-consumer-normal-boundary/
+            evidence/technical_art_building_uc_index_bridge/hard-normal-authority/
+            evidence/technical_art_building_uc_index_bridge/godot-index-bundle.json
+            evidence/technical_art_building_uc_index_bridge/runtime-report.json
+            evidence/technical_art_building_uc_index_bridge/uc-head.txt
+            evidence/technical_art_building_uc_index_bridge/uc-proven-draft-head.txt
+            evidence/technical_art_building_uc_index_bridge/uc-observer.sha256
+            evidence/technical_art_building_uc_index_bridge/uc-merge-continuity.json
+            evidence/technical_art_building_uc_index_bridge/godot.log
+          if-no-files-found: error
+          retention-days: 30

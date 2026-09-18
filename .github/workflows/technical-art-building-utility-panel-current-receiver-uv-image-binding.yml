@@ -1,0 +1,327 @@
+name: Technical Art Building current-receiver utility-panel UV image binding evidence
+
+on:
+  push:
+    branches: [studio/technical-art-building-planar-role-uc-index-bridge-001]
+    paths:
+      - 'contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json'
+      - 'tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py'
+      - 'environment-proof/technical_art_building_utility_panel_current_receiver_uv_observe.gd'
+      - '.github/workflows/technical-art-building-utility-panel-current-receiver-uv-image-binding.yml'
+  pull_request:
+    paths:
+      - 'contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json'
+      - 'tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py'
+      - 'environment-proof/technical_art_building_utility_panel_current_receiver_uv_observe.gd'
+      - '.github/workflows/technical-art-building-utility-panel-current-receiver-uv-image-binding.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile bounded receiver bridge and run repository regressions
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          python -m py_compile tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py
+          python -m json.tool contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json >/dev/null
+          if [ -d tests ]; then python -m unittest discover -s tests -v; fi
+
+  exact-current-receiver-path:
+    needs: python-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ENVIRONMENT_HEAD: 787ad51687da2df52c9f6191d1778a7f66cbd3db
+      ENVIRONMENT_CONTRACT_PATH: contracts/environment_building_utility_panel_clearance_current_world.json
+      ENVIRONMENT_CONTRACT_BLOB: 6835a1f2cbe73eb44da721f0ab45e621fb758da6
+      HARD_SURFACE_HEAD: fbfa3b47048755b45dac91451171d5511c8d4f47
+      PAVILION_PATH: assets/service_pavilion_001.json
+      PAVILION_BLOB: 5a5ec3ce6ee4e9b111db086ba93038a75c482a2e
+      PANEL_PATH: assets/utility_access_panel_001.json
+      PANEL_BLOB: 51b7fa61dd87934a89e033a2fdf5cc3b99992454
+      SURFACE_DOMAIN_PATH: assets/utility_access_panel_001_service_surface_domain.json
+      SURFACE_DOMAIN_BLOB: 8b4484d4ccbd500e58910a2835d8780112489919
+      GEOMETRY_HEAD: 02944a9f10528a051603df3a6fd7b3183730773f
+      GEOMETRY_CHART_PATH: geometry/utility_access_panel_service_surface_chart_001.json
+      GEOMETRY_CHART_BLOB: 08431f75edff5ae7d8b8c32468190e7a1b81d526
+      MATERIALS_HEAD: 38260f31a49766ec27746b785934248176796d59
+      MATERIALS_CONTRACT_PATH: lookdev/building_utility_panel_serialized_review_texture_001.json
+      MATERIALS_CONTRACT_BLOB: 620bc298256d21ee008b6fe870135f09212f8db9
+      MATERIALS_PROFILE_PATH: lookdev/building_material_profile_001.json
+      MATERIALS_PROFILE_BLOB: f7945f4c17b7720f176c1b0ac4e1baa298691b25
+      MATERIALS_PNG_SHA256: e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198
+      MATERIALS_RGBA_SHA256: 02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b
+      UC_HEAD: bb3885c38cf1661971f8a5a4bb99e88a54e0f5d7
+      UC_MODULE_PATH: src/axm_uc/material_uv_evidence.py
+      UC_MODULE_BLOB: bc7aa2ffc2c598d75a78739c70fd349138f511e2
+      UC_DEP_PATH: src/axm_uc/asset_geometry.py
+      UC_DEP_BLOB: 628c862a46b46f814a67521e9558e343dfe000a1
+      GLB_HELPER_BLOB: 2834dafd2fdfe0bb151139a370c9d0f3e0e40da3
+      GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+      GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+    steps:
+      - name: Checkout exact Technical Art head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Bind exact Technical Art head
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD > exact-head.txt
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse 'HEAD:tools/technical_art_building_utility_panel_material_glb_bridge.py')" = "$GLB_HELPER_BLOB"
+      - name: Checkout exact Environment receiver
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: ${{ env.ENVIRONMENT_HEAD }}
+          path: .owner-environment
+          fetch-depth: 1
+      - name: Checkout exact Hard-Surface owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.HARD_SURFACE_HEAD }}
+          path: .owner-hard-surface
+          fetch-depth: 1
+      - name: Checkout exact Geometry owner
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.GEOMETRY_HEAD }}
+          path: .owner-geometry
+          fetch-depth: 1
+      - name: Checkout current Materials continuity head
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-building-design
+          ref: ${{ env.MATERIALS_HEAD }}
+          path: .owner-materials
+          fetch-depth: 1
+      - name: Checkout current generic UC observer
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-universal-creation
+          ref: ${{ env.UC_HEAD }}
+          path: .uc
+          fetch-depth: 1
+      - name: Fail-close exact owner and generic observer identities
+        run: |
+          set -euo pipefail
+          test "$(git -C .owner-environment rev-parse HEAD)" = "$ENVIRONMENT_HEAD"
+          test "$(git -C .owner-environment rev-parse "HEAD:$ENVIRONMENT_CONTRACT_PATH")" = "$ENVIRONMENT_CONTRACT_BLOB"
+          test "$(git -C .owner-hard-surface rev-parse HEAD)" = "$HARD_SURFACE_HEAD"
+          test "$(git -C .owner-hard-surface rev-parse "HEAD:$PAVILION_PATH")" = "$PAVILION_BLOB"
+          test "$(git -C .owner-hard-surface rev-parse "HEAD:$PANEL_PATH")" = "$PANEL_BLOB"
+          test "$(git -C .owner-hard-surface rev-parse "HEAD:$SURFACE_DOMAIN_PATH")" = "$SURFACE_DOMAIN_BLOB"
+          test "$(git -C .owner-geometry rev-parse HEAD)" = "$GEOMETRY_HEAD"
+          test "$(git -C .owner-geometry rev-parse "HEAD:$GEOMETRY_CHART_PATH")" = "$GEOMETRY_CHART_BLOB"
+          test "$(git -C .owner-materials rev-parse HEAD)" = "$MATERIALS_HEAD"
+          test "$(git -C .owner-materials rev-parse "HEAD:$MATERIALS_CONTRACT_PATH")" = "$MATERIALS_CONTRACT_BLOB"
+          test "$(git -C .owner-materials rev-parse "HEAD:$MATERIALS_PROFILE_PATH")" = "$MATERIALS_PROFILE_BLOB"
+          test "$(git -C .uc rev-parse HEAD)" = "$UC_HEAD"
+          test "$(git -C .uc rev-parse "HEAD:$UC_MODULE_PATH")" = "$UC_MODULE_BLOB"
+          test "$(git -C .uc rev-parse "HEAD:$UC_DEP_PATH")" = "$UC_DEP_BLOB"
+      - name: Rebuild exact retained Materials PNG
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_current_receiver_uv_image
+          mkdir -p "$root/final" "$root/owner" environment-proof/generated
+          python tools/technical_art_rebuild_materials_review_png.py \
+            --provenance evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json \
+            --output "$root/owner/utility-panel-review-checker-512.png"
+          echo "$MATERIALS_PNG_SHA256  $root/owner/utility-panel-review-checker-512.png" | sha256sum --check --strict
+      - name: Build exact current-receiver service-face binding
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_current_receiver_uv_image
+          python tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py \
+            --binding-contract contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json \
+            --environment-contract ".owner-environment/$ENVIRONMENT_CONTRACT_PATH" \
+            --pavilion-source ".owner-hard-surface/$PAVILION_PATH" \
+            --panel-source ".owner-hard-surface/$PANEL_PATH" \
+            --surface-domain ".owner-hard-surface/$SURFACE_DOMAIN_PATH" \
+            --geometry-chart ".owner-geometry/$GEOMETRY_CHART_PATH" \
+            --materials-contract ".owner-materials/$MATERIALS_CONTRACT_PATH" \
+            --materials-profile ".owner-materials/$MATERIALS_PROFILE_PATH" \
+            --materials-provenance evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json \
+            --materials-png "$root/owner/utility-panel-review-checker-512.png" \
+            --glb-helper tools/technical_art_building_utility_panel_material_glb_bridge.py \
+            --output-dir "$root/final" \
+            --technical-art-head "$(cat exact-head.txt)" \
+            --environment-head "$ENVIRONMENT_HEAD" \
+            --hard-surface-head "$HARD_SURFACE_HEAD" \
+            --geometry-head "$GEOMETRY_HEAD" \
+            --materials-head "$MATERIALS_HEAD" \
+            --uc-head "$UC_HEAD" \
+            --uc-module-blob "$UC_MODULE_BLOB"
+          cp "$root/final/current-receiver-utility-panel-service-faces.glb" environment-proof/generated/
+          cp exact-head.txt "$root/final/technical-art-head.txt"
+      - name: Consume current-receiver service-face carrier with current generic UC observer
+        env:
+          PYTHONPATH: .uc/src
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          from axm_uc.material_uv_evidence import inspect_material_uv_density
+          root=pathlib.Path('evidence/technical_art_building_current_receiver_uv_image/final')
+          receipt=json.loads((root/'current-receiver-utility-panel-uv-image-binding-receipt.json').read_text())
+          report=inspect_material_uv_density(root/'current-receiver-utility-panel-service-faces.glb')
+          (root/'current-uc-material-uv-report.json').write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          assert report['schema']=='axm.material-uv-evidence/v0.1' and report['status']=='MEASURED',report
+          assert report['artifact_sha256']==receipt['proof_carrier']['sha256'],(report,receipt)
+          p=report['primitives'][0]
+          assert p['triangles']==4 and p['measured_triangles']==4,p
+          assert abs(float(p['world_area_m2'])-3.3) <= 1e-5,p
+          b=p['bindings'][0]
+          assert b['sha256']=='e932cdd94d370184c7361862d5064149cc193e3a8fd80b269cab6543c0919198',b
+          assert [b['width'],b['height']]==[512,512],b
+          d=b['directional_texels_per_m']
+          assert d['complete'] is True,d
+          assert abs(float(d['min_texels_per_m'])-320.0) <= 1e-3,d
+          assert abs(float(d['max_texels_per_m'])-320.0) <= 1e-3,d
+          print('PASS_CURRENT_UC_MEASURES_CURRENT_RECEIVER_SERVICE_FACE_CARRIER_AT_320_TEXELS_PER_M')
+          PY
+      - name: Fail-close receiver-group and owner-face drift
+        run: |
+          set -euo pipefail
+          root=evidence/technical_art_building_current_receiver_uv_image
+          cp ".owner-environment/$ENVIRONMENT_CONTRACT_PATH" /tmp/bad-env.json
+          python - <<'PY'
+          import json
+          p='/tmp/bad-env.json'; d=json.load(open(p)); d['receiver_rebind']['current_receiver_vertex_groups']['front-utility-bay'][7]=183
+          open(p,'w').write(json.dumps(d))
+          PY
+          if python tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py \
+            --binding-contract contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json \
+            --environment-contract /tmp/bad-env.json --pavilion-source ".owner-hard-surface/$PAVILION_PATH" --panel-source ".owner-hard-surface/$PANEL_PATH" \
+            --surface-domain ".owner-hard-surface/$SURFACE_DOMAIN_PATH" --geometry-chart ".owner-geometry/$GEOMETRY_CHART_PATH" \
+            --materials-contract ".owner-materials/$MATERIALS_CONTRACT_PATH" --materials-profile ".owner-materials/$MATERIALS_PROFILE_PATH" \
+            --materials-provenance evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json --materials-png "$root/owner/utility-panel-review-checker-512.png" \
+            --glb-helper tools/technical_art_building_utility_panel_material_glb_bridge.py --output-dir /tmp/should-not-pass \
+            --technical-art-head "$(cat exact-head.txt)" --environment-head "$ENVIRONMENT_HEAD" --hard-surface-head "$HARD_SURFACE_HEAD" --geometry-head "$GEOMETRY_HEAD" --materials-head "$MATERIALS_HEAD" --uc-head "$UC_HEAD" --uc-module-blob "$UC_MODULE_BLOB"; then
+            echo 'ERROR: receiver-group drift unexpectedly passed' >&2; exit 1
+          fi
+          cp ".owner-hard-surface/$SURFACE_DOMAIN_PATH" /tmp/bad-surface.json
+          python - <<'PY'
+          import json
+          p='/tmp/bad-surface.json'; d=json.load(open(p)); d['face_selector']='LOCAL_NEGATIVE_X_OUTER_FACE'; open(p,'w').write(json.dumps(d))
+          PY
+          if python tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py \
+            --binding-contract contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json \
+            --environment-contract ".owner-environment/$ENVIRONMENT_CONTRACT_PATH" --pavilion-source ".owner-hard-surface/$PAVILION_PATH" --panel-source ".owner-hard-surface/$PANEL_PATH" \
+            --surface-domain /tmp/bad-surface.json --geometry-chart ".owner-geometry/$GEOMETRY_CHART_PATH" \
+            --materials-contract ".owner-materials/$MATERIALS_CONTRACT_PATH" --materials-profile ".owner-materials/$MATERIALS_PROFILE_PATH" \
+            --materials-provenance evidence-fixtures/building_utility_panel_materials_retained_image_provenance_001.json --materials-png "$root/owner/utility-panel-review-checker-512.png" \
+            --glb-helper tools/technical_art_building_utility_panel_material_glb_bridge.py --output-dir /tmp/should-not-pass-2 \
+            --technical-art-head "$(cat exact-head.txt)" --environment-head "$ENVIRONMENT_HEAD" --hard-surface-head "$HARD_SURFACE_HEAD" --geometry-head "$GEOMETRY_HEAD" --materials-head "$MATERIALS_HEAD" --uc-head "$UC_HEAD" --uc-module-blob "$UC_MODULE_BLOB"; then
+            echo 'ERROR: owner-face drift unexpectedly passed' >&2; exit 1
+          fi
+          echo PASS_FAIL_CLOSED_RECEIVER_GROUP_AND_OWNER_FACE_DRIFT
+      - name: Download pinned Godot 4.7.2
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" --output .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --version
+      - name: Install virtual display
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+      - name: Import exact current-receiver service-face carrier through real Godot
+        run: |
+          set -euo pipefail
+          rm -f environment-proof/generated/current-receiver-utility-panel-target-host-receipt.json
+          set +e
+          xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+            .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
+            --display-driver x11 --rendering-method gl_compatibility \
+            --path environment-proof \
+            --script technical_art_building_utility_panel_current_receiver_uv_observe.gd \
+            2>&1 | tee evidence/technical_art_building_current_receiver_uv_image/godot.log
+          status=${PIPESTATUS[0]}; set -e
+          test "$status" = 0
+          test -f environment-proof/generated/current-receiver-utility-panel-target-host-receipt.json
+          cp environment-proof/generated/current-receiver-utility-panel-target-host-receipt.json evidence/technical_art_building_current_receiver_uv_image/final/godot-target-host-receipt.json
+      - name: Verify real target positions UV image and exact receiver mapping
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('evidence/technical_art_building_current_receiver_uv_image/final')
+          source=json.loads((root/'current-receiver-utility-panel-uv-image-binding-receipt.json').read_text())
+          godot=json.loads((root/'godot-target-host-receipt.json').read_text())
+          assert godot['state']=='PASS_TARGET_HOST_IMPORTED_CURRENT_RECEIVER_SERVICE_FACE_UV_IMAGE_CARRIER',godot
+          assert godot['mesh']['surface_count']==1 and godot['mesh']['vertex_count']==8 and godot['mesh']['uv_count']==8 and godot['mesh']['index_count']==12,godot
+          expected=source['proof_carrier']['positions_current_receiver_xyz_m']; got=godot['mesh']['positions']
+          assert len(expected)==len(got)==8
+          max_pos=max(abs(float(a)-float(b)) for er,gr in zip(expected,got) for a,b in zip(er,gr))
+          assert max_pos <= 2e-6,(max_pos,expected,got)
+          expected_uv=source['proof_carrier']['uv0']; got_uv=godot['mesh']['uvs']
+          max_uv=max(abs(float(a)-float(b)) for er,gr in zip(expected_uv,got_uv) for a,b in zip(er,gr))
+          assert max_uv <= 2e-7,(max_uv,expected_uv,got_uv)
+          assert godot['image']['width']==512 and godot['image']['height']==512,godot
+          assert godot['image']['rgba8_sha256']=='02f8f464eabc734a3be687a7706edf8b8f62ece834fa981c8c993fbb8227bb4b',godot
+          assert abs(float(godot['material']['metallic'])-0.18) <= 1e-6,godot
+          assert abs(float(godot['material']['roughness'])-0.62) <= 1e-6,godot
+          final={
+            'schema':'axm.technical-art-building-current-receiver-uv-image-exact-path/v0.1',
+            'result':'PASS_CURRENT_184V_RECEIVER_SERVICE_FACE_UV_IMAGE_BINDING_TO_CURRENT_UC_AND_REAL_GODOT__HOLD_ENVIRONMENT_VISUAL_RUNTIME_ADOPTION',
+            'technical_art_head':pathlib.Path('exact-head.txt').read_text().strip(),
+            'environment_head':'787ad51687da2df52c9f6191d1778a7f66cbd3db',
+            'hard_surface_head':'fbfa3b47048755b45dac91451171d5511c8d4f47',
+            'geometry_head':'02944a9f10528a051603df3a6fd7b3183730773f',
+            'materials_head':'38260f31a49766ec27746b785934248176796d59',
+            'uc_head':'bb3885c38cf1661971f8a5a4bb99e88a54e0f5d7',
+            'front_service_indices':source['panel_bindings']['front-utility-bay']['outer_service_face_receiver_vertex_indices'],
+            'east_service_indices':source['panel_bindings']['east-utility-bay']['outer_service_face_receiver_vertex_indices'],
+            'max_target_position_delta_m':max_pos,
+            'max_target_uv_delta':max_uv,
+            'embedded_rgba8_sha256':godot['image']['rgba8_sha256'],
+            'environment_adoption':False,
+            'runtime_acceptance':False,
+            'visual_acceptance':False,
+            'uc_modified':False,
+            'canon':False,
+            'production_ready':False
+          }
+          (root/'exact-path-receipt.json').write_text(json.dumps(final,indent=2,sort_keys=True)+'\n')
+          print(final['result'])
+          PY
+      - name: Retain exact current-receiver UV image evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: technical-art-building-current-receiver-uv-image-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            exact-head.txt
+            contracts/technical_art_building_utility_panel_current_receiver_uv_image_binding.json
+            tools/technical_art_building_utility_panel_current_receiver_uv_image_binding.py
+            environment-proof/technical_art_building_utility_panel_current_receiver_uv_observe.gd
+            evidence/technical_art_building_current_receiver_uv_image
+          if-no-files-found: warn
+          retention-days: 30
