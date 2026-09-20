@@ -94,7 +94,7 @@ jobs:
           assert d['result']=='PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLES_THROUGH_RIGID_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD',d
           assert d['environment_adoption'] is False and d['runtime_acceptance'] is False,d
           PY
-          for sample in 0 10 50 100; do test -f "$root/ta/sample-$sample/runtime.json"; done
+          for sample in 0 10 50 100; do test -f "$root/ta/runtime-$sample.json"; done
           test -f "$root/world/combined_current_world.json"
 
       - name: Prove full 101-sample articulated service envelope and bounded successor
@@ -105,10 +105,10 @@ jobs:
             --contract contracts/environment_object_articulated_service_clearance.json \
             --component-map "$root/ta/object-rigid-component-map.json" \
             --motion-plan "$root/ta/object-motion-receiver-plan.json" \
-            --runtime "$root/ta/sample-0/runtime.json" \
-            --runtime "$root/ta/sample-10/runtime.json" \
-            --runtime "$root/ta/sample-50/runtime.json" \
-            --runtime "$root/ta/sample-100/runtime.json" \
+            --runtime "$root/ta/runtime-0.json" \
+            --runtime "$root/ta/runtime-10.json" \
+            --runtime "$root/ta/runtime-50.json" \
+            --runtime "$root/ta/runtime-100.json" \
             --final-receipt "$root/ta/final-receipt.json" \
             --combined-world "$root/world/combined_current_world.json" \
             --output "$root/report.json"
@@ -129,10 +129,10 @@ jobs:
             --contract contracts/environment_object_articulated_service_clearance.json.negative \
             --component-map "$root/ta/object-rigid-component-map.json" \
             --motion-plan "$root/ta/object-motion-receiver-plan.json" \
-            --runtime "$root/ta/sample-0/runtime.json" \
-            --runtime "$root/ta/sample-10/runtime.json" \
-            --runtime "$root/ta/sample-50/runtime.json" \
-            --runtime "$root/ta/sample-100/runtime.json" \
+            --runtime "$root/ta/runtime-0.json" \
+            --runtime "$root/ta/runtime-10.json" \
+            --runtime "$root/ta/runtime-50.json" \
+            --runtime "$root/ta/runtime-100.json" \
             --final-receipt "$root/ta/final-receipt.json" \
             --combined-world "$root/world/combined_current_world.json" \
             --rear-expansion-m 0.01 \
