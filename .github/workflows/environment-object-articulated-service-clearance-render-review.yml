@@ -44,17 +44,19 @@ jobs:
           python -m py_compile tools/environment_object_articulated_service_clearance_render_review.py
           python -m json.tool contracts/environment_object_articulated_service_clearance.json >/dev/null
           git merge-base --is-ancestor 04c7f27a749c634daef4bde98dc330fb83e13f91 HEAD
+          git merge-base --is-ancestor 317d4b177180d0ca62beafc6412bd59a12f06b95 HEAD
           python - <<'PY'
           import subprocess
-          expected={
-            '.github/workflows/environment-object-articulated-service-clearance-render-review.yml',
+          protected=[
             'docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_RENDER_REVIEW_001.md',
             'environment-proof/atmosphere_current_world_object_articulated_service_clearance_successor_observe.gd',
             'tools/environment_object_articulated_service_clearance_render_review.py',
-          }
-          changed=set(subprocess.check_output(['git','diff','--name-only','04c7f27a749c634daef4bde98dc330fb83e13f91','HEAD'],text=True).splitlines())
-          assert changed==expected,(sorted(changed),sorted(expected))
-          print('PASS_RENDER_REVIEW_ONLY_DELTA_OVER_CURRENT_CLEARANCE_CORE')
+          ]
+          for path in protected:
+              proven=subprocess.check_output(['git','rev-parse',f'317d4b177180d0ca62beafc6412bd59a12f06b95:{path}'],text=True).strip()
+              current=subprocess.check_output(['git','rev-parse',f'HEAD:{path}'],text=True).strip()
+              assert current==proven,(path,proven,current)
+          print('PASS_RENDER_REVIEW_PAYLOAD_CONTINUITY_OVER_PROVEN_317D')
           PY
           git rev-parse HEAD > exact-head.txt
 
