@@ -1,4 +1,4 @@
-extends "res://atmosphere_current_world_object_motion_observe_base.gd"
+extends "res://atmosphere_current_world_object_motion_current_rebind_base.gd"
 
 # The owner Animation/UC proof intentionally uses the glTF receiver frame
 # source [x,y,z] -> [x,z,y], which is a handedness-changing reflection.
@@ -66,5 +66,9 @@ func write_receipt()->void:
     receipt["technical_art_object_motion_current_world_host_frame_conversion"]=CURRENT_WORLD_HOST_FRAME_CONVERSION
     receipt["technical_art_object_motion_owner_to_host_frame_rule"]=OWNER_TO_HOST_FRAME_RULE
     receipt["technical_art_object_motion_uc_modified"]=false
+    receipt["technical_art_object_motion_current_object_animation_head"]="86bdbe9771bf9eb1bc92bd4160442941763fab1d"
+    receipt["technical_art_object_motion_current_lid_target_rig_head"]="f6dab93a342330175a7494274f3f40a4e53d4c85"
+    receipt["technical_art_object_motion_current_latch_target_rig_head"]="f59e0f205de2d81611cfed0cbf795faa2c3f22b3"
+    receipt["technical_art_object_motion_current_latch_source_rig_head"]="3a17a02528918ec63a46e954e883179f752c8151"
     receipt["technical_art_object_motion_host_frame_truth_boundary"]="The exact owner Animation/UC transform contract is preserved in its [x,z,y] receiver frame, then adapted only at the real Map/Godot receiving boundary to the host's existing [x,z,-y] gvec convention. No source motion, Environment placement, Object/Rigging semantics, UC implementation, VFX, Runtime acceptance, Art/QA acceptance or CANON state is changed."
     super.write_receipt()

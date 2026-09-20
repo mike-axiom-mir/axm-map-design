@@ -34,7 +34,8 @@ jobs:
           set -euo pipefail
           python -m py_compile tools/verify_runtime_object_static_batching_successor_rebind.py
           python -m json.tool contracts/runtime_object_static_batching_successor_rebind.json >/dev/null
-          git merge-base --is-ancestor f42edfccfd77202d17c1e94487930af07fd1d755 HEAD
+          git merge-base --is-ancestor d2df5a7eb03b806eb991028d3ed5e3bfaa755bca HEAD
+          git merge-base --is-ancestor 51f1c0002f58f138911cce7d95a30add9a1e03af HEAD
           git rev-parse HEAD > runtime-exact-head.txt
           cp environment-proof/runtime_object_current_world_static_batching_observe.gd /tmp/runtime_object_current_world_static_batching_observe.gd
           echo PASS_RUNTIME_PASS48_LINEAGE_BOUND
@@ -43,24 +44,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: mike-axiom-mir/axm-map-design
-          ref: 343668b80acd52367e3427f3ef97d1662625c18f
+          ref: 51f1c0002f58f138911cce7d95a30add9a1e03af
           path: .successor-map
           fetch-depth: 1
 
       - name: Overlay exact successor receiver source without changing Runtime git identity
         run: |
           set -euo pipefail
-          test "$(git -C .successor-map rev-parse HEAD)" = "343668b80acd52367e3427f3ef97d1662625c18f"
+          test "$(git -C .successor-map rev-parse HEAD)" = "51f1c0002f58f138911cce7d95a30add9a1e03af"
           rsync -a --exclude='.git' .successor-map/ ./
           test "$(git rev-parse HEAD)" = "$(cat runtime-exact-head.txt)"
           test -f environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd
           test -f environment-proof/animation_object_current_world_wallclock_rebind_observe.gd
-          test -f environment-proof/atmosphere_current_world_object_motion_observe.gd
+          test -f environment-proof/atmosphere_current_world_object_motion_current_rebind_observe.gd
           {
-            echo "successor_animation_head=343668b80acd52367e3427f3ef97d1662625c18f"
+            echo "successor_animation_head=51f1c0002f58f138911cce7d95a30add9a1e03af"
             sha256sum environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd
             sha256sum environment-proof/animation_object_current_world_wallclock_rebind_observe.gd
-            sha256sum environment-proof/atmosphere_current_world_object_motion_observe.gd
+            sha256sum environment-proof/atmosphere_current_world_object_motion_current_rebind_observe.gd
             sha256sum tools/technical_art_object_motion_current_world_bridge.py
           } > successor-source-bind.txt
           echo PASS_EXACT_SUCCESSOR_SOURCE_OVERLAY
@@ -73,19 +74,20 @@ jobs:
           root=evidence/runtime_object_static_batching_successor_rebind
           mkdir -p "$root/successor-animation" environment-proof/generated
           curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10523121895/zip" -o "$root/successor-animation.zip"
-          echo "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707  $root/successor-animation.zip" | sha256sum --check --strict
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371667/zip" -o "$root/successor-animation.zip"
+          echo "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3  $root/successor-animation.zip" | sha256sum --check --strict
           unzip -q "$root/successor-animation.zip" -d "$root/successor-animation"
           python - <<'PY'
           import json, pathlib
           root=pathlib.Path('evidence/runtime_object_static_batching_successor_rebind/successor-animation/evidence/animation_object_current_world_wallclock')
           d=json.loads((root/'SUMMARY.json').read_text())
-          assert d['exact_head']=='343668b80acd52367e3427f3ef97d1662625c18f', d
-          assert d['technical_art_parent_head']=='e085437f6cc958bbf7c5c6464578923d542962b0', d
-          assert d['animation_head']=='c688936a84f80f292e43587c9d3386bd717f8178', d
-          assert d['result']=='PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_E085_RECEIVER', d
+          assert d['exact_head']=='51f1c0002f58f138911cce7d95a30add9a1e03af', d
+          assert d['technical_art_parent_head']=='fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7', d
+          assert d['animation_head']=='86bdbe9771bf9eb1bc92bd4160442941763fab1d', d
+          assert d['result']=='PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_FC567_RECEIVER', d
           assert d['timed_natural_stop'] is True, d
           assert d['target_device_performance_accepted'] is False, d
+          assert d['predecessor_animation_evidence_head']=='343668b80acd52367e3427f3ef97d1662625c18f', d
           assert d['art_qa_accepted'] is False, d
           print('PASS_EXACT_GREEN_SUCCESSOR_ANIMATION_ARTIFACT')
           PY
@@ -93,7 +95,7 @@ jobs:
           cp "$src/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
           cp "$src/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
           python tools/technical_art_object_motion_current_world_bridge.py validate-plan \
-            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --contract contracts/technical_art_object_motion_current_world_current_object_rebind.json \
             --plan environment-proof/generated/object-motion-receiver-plan.json
 
       - name: Download exact current-world payload and selected roughness inputs
@@ -150,8 +152,8 @@ jobs:
             ('extends "res://animation_object_current_world_wallclock_observe.gd"', 'extends "res://animation_object_current_world_wallclock_quaternion_observe.gd"'),
             ('axm.runtime-object-current-world-static-batching-observation/v0.1', 'axm.runtime-object-static-batching-successor-rebind-observation/v0.1'),
             ('PASS_OBJECT_CURRENT_WORLD_STATIC_COMPONENT_BATCHING__HOLD_ART_QA_TARGET_DEVICE_FUTURE_ARTICULATION', 'PASS_OBJECT_STATIC_BATCHING_SUCCESSOR_REBIND__HOLD_ART_QA_TARGET_DEVICE_FUTURE_ARTICULATION'),
-            ('c2695f654f9dd44312ca5d205eceb27f7c2680ee', '343668b80acd52367e3427f3ef97d1662625c18f'),
-            ('d2974dec5043ed9afad346574b23ef8bd4438a76', 'e085437f6cc958bbf7c5c6464578923d542962b0'),
+            ('c2695f654f9dd44312ca5d205eceb27f7c2680ee', '51f1c0002f58f138911cce7d95a30add9a1e03af'),
+            ('d2974dec5043ed9afad346574b23ef8bd4438a76', 'fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7'),
             ('_build_current_world()', '_anim_build_world()'),
             ('_latch_angles(', '_anim_latch_angles('),
             ('OWNER_RATE_HZ', 'ANIM_RATE_HZ'),
@@ -167,8 +169,8 @@ jobs:
           print('PASS_BOUNDED_SUCCESSOR_API_ADAPTER')
           PY
           grep -F 'extends "res://animation_object_current_world_wallclock_quaternion_observe.gd"' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
-          grep -F '343668b80acd52367e3427f3ef97d1662625c18f' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
-          grep -F 'e085437f6cc958bbf7c5c6464578923d542962b0' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
+          grep -F '51f1c0002f58f138911cce7d95a30add9a1e03af' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
+          grep -F 'fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7' environment-proof/runtime_object_static_batching_successor_rebind_observe.gd
 
       - name: Download pinned Godot 4.7.2
         env:
@@ -274,7 +276,7 @@ jobs:
             'exact_runtime_head':head,
             'successor_animation_head':d['animation_parent_head'],
             'successor_technical_art_head':d['technical_art_parent_head'],
-            'owner_animation_head':'c688936a84f80f292e43587c9d3386bd717f8178',
+            'owner_animation_head':'86bdbe9771bf9eb1bc92bd4160442941763fab1d',
             'component_count':d['component_count'],
             'moving_component_count':d['moving_component_count'],
             'static_component_count':d['static_component_count'],

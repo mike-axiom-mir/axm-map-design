@@ -1,20 +1,25 @@
 {
   "schema": "axm.runtime-object-static-batching-successor-rebind/v0.1",
   "scope": "exact current-world Object successor receiver only",
-  "prior_runtime_head": "f42edfccfd77202d17c1e94487930af07fd1d755",
-  "successor_animation_head": "343668b80acd52367e3427f3ef97d1662625c18f",
-  "successor_technical_art_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
-  "owner_animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "prior_runtime_head": "d2df5a7eb03b806eb991028d3ed5e3bfaa755bca",
+  "successor_animation_head": "51f1c0002f58f138911cce7d95a30add9a1e03af",
+  "successor_technical_art_head": "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7",
+  "owner_animation_head": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
   "owner_sequence": "lid-latch-open-hold-close-001",
   "owner_sample_count": 101,
-  "owner_rate_hz": 40.0,
-  "retained_sample_indices": [0, 10, 50, 100],
+  "owner_rate_hz": 40,
+  "retained_sample_indices": [
+    0,
+    10,
+    50,
+    100
+  ],
   "control_receiver": {
     "component_nodes": 31,
     "component_surface_instances": 33,
     "triangles": 812
   },
-  "candidate_rule": "Reuse the pass-48-proven 7-moving/24-static classification on the exact successor receiver. Preserve every semantic component node and every moving render mesh; detach only the 24 exact-sequence-static component meshes and union their exact indexed surfaces by identical material plus identical non-index attribute arrays into one shared static ArrayMesh.",
+  "candidate_rule": "Reuse only the semantically re-proven 7-moving/24-static classification on the exact current receiver. Preserve every semantic component node and every moving render mesh; detach only the 24 exact-sequence-static component meshes and union their exact indexed surfaces by identical material plus identical non-index attribute arrays into one shared static ArrayMesh. Fresh proof-host counters and pixels are mandatory.",
   "required_evidence": [
     "exact successor Animation artifact is hash-bound",
     "exact successor Animation/Technical-Art source observer chain is consumed",
@@ -39,5 +44,16 @@
     "production readiness"
   ],
   "coordination_repo": "mike-axiom-mir/axm-create-me remains coordination-only",
-  "merge_gate": ["Truth", "Agency / non-domination", "Continuity", "Wisdom before speed"]
+  "merge_gate": [
+    "Truth",
+    "Agency / non-domination",
+    "Continuity",
+    "Wisdom before speed"
+  ],
+  "successor_animation_artifact_id": 10597371667,
+  "successor_animation_artifact_sha256": "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3",
+  "object_technical_art_head": "b9848c62b2adde84e9e0afc219088113216799d6",
+  "historical_object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+  "historical_measured_runtime_head": "d2df5a7eb03b806eb991028d3ed5e3bfaa755bca",
+  "historical_measurements_reused_as_current": false
 }

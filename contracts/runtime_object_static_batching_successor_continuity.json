@@ -1,17 +1,16 @@
 {
   "schema": "axm.runtime-object-static-batching-successor-continuity/v0.1",
-  "scope": "structural eligibility continuity only; do not transfer prior Runtime counters or visual acceptance by ancestry",
+  "scope": "structural eligibility continuity only; compare semantic component/motion payload separately from producer provenance; do not transfer prior Runtime counters or visual acceptance by ancestry",
   "prior_runtime_head": "08c5514835acc942858820b27874498c1c84c2ae",
   "prior_runtime_artifact_id": 10522290719,
   "prior_runtime_artifact_sha256": "a93a66ebc035c7d11ec00389b9c9f3b70c163dd83138f32a418e45f103963ee3",
-  "successor_animation_head": "343668b80acd52367e3427f3ef97d1662625c18f",
-  "successor_animation_artifact_id": 10523121895,
-  "successor_animation_artifact_sha256": "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707",
-  "successor_technical_art_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
-  "owner_animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "successor_animation_head": "51f1c0002f58f138911cce7d95a30add9a1e03af",
+  "successor_animation_artifact_id": 10597371667,
+  "successor_animation_artifact_sha256": "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3",
+  "successor_technical_art_head": "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7",
+  "owner_animation_head": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
   "owner_sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
-  "expected_component_map_sha256": "94edd332308593df020bc5c796950292d2963fbe7f19de0c9fadc9ab6b6905d6",
-  "expected_stable_motion_subset_sha256": "da5eec826861ee4501a12e76eacd9d448e5fb8bf9c7f45d2db781a63a2fcdea2",
+  "expected_stable_motion_subset_sha256": "02d9e8aa07ca6963d79160e872a9b481175d9accedf2d3bf9c24f914e70295b1",
   "expected_component_count": 31,
   "expected_moving_component_count": 7,
   "expected_static_component_count": 24,
@@ -19,13 +18,15 @@
   "prior_measured_min_draw_calls_saved": 38,
   "prior_measured_buffer_bytes_saved": 89360,
   "continuity_authorizes": [
-    "reuse of the exact 7-moving / 24-static classification as the next Runtime rebind starting point",
-    "reuse of exact component identity and exact owner-motion subset provenance"
+    "reuse of the semantically identical 7-moving / 24-static classification as the next Runtime rebind starting point",
+    "reuse of exact component geometry/parentage/material topology and exact owner sample/station motion semantics"
   ],
   "continuity_does_not_authorize": [
-    "transfer of prior draw-call counts to the successor receiver",
-    "transfer of prior buffer-memory measurements to the successor receiver",
-    "transfer of prior shaded pixel identity to the successor receiver",
+    "pretending current component-map bytes equal historical bytes",
+    "pretending current Technical-Art/UC/Animation provenance equals historical provenance",
+    "transfer of prior draw-call counts to the current receiver",
+    "transfer of prior buffer-memory measurements to the current receiver",
+    "transfer of prior shaded pixel identity to the current receiver",
     "target-device CPU/GPU/FPS/VRAM/thermal acceptance",
     "future arbitrary articulation safety",
     "Environment or VFX adoption",
@@ -39,5 +40,22 @@
     "Agency / non-domination",
     "Continuity",
     "Wisdom before speed"
-  ]
+  ],
+  "expected_component_map_semantic_sha256": "2ca7b7cd0bf545e1cb3cf2d99fd35a541c5ac33728262d2fb0de64587e53e254",
+  "prior_component_map_file_sha256": "94edd332308593df020bc5c796950292d2963fbe7f19de0c9fadc9ab6b6905d6",
+  "successor_component_map_file_sha256": "c94511765180804e1195618475ef80a77b07721065526afdb90ae0ab72d3cf53",
+  "successor_predecessor_animation_head": "343668b80acd52367e3427f3ef97d1662625c18f",
+  "prior_object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+  "successor_object_technical_art_head": "b9848c62b2adde84e9e0afc219088113216799d6",
+  "prior_inspected_uc_head": "e9eed3d9eb66392992cc18c8884bfade0d3b8efd",
+  "successor_inspected_uc_head": "5a6356270d0c7822576239b99c2b3ca3371cfdd7",
+  "component_map_byte_identity_required": false,
+  "provenance_change_required": true,
+  "historical_successor": {
+    "animation_head": "343668b80acd52367e3427f3ef97d1662625c18f",
+    "technical_art_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
+    "owner_animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+    "artifact_id": 10523121895,
+    "artifact_sha256": "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707"
+  }
 }

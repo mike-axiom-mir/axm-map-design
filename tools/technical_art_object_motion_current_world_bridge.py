@@ -104,6 +104,7 @@ def validate(
         assert abs(row["lid_target_rotation_deg_x"] - lid) < 1e-9
         assert abs(row["latch_target_rotation_deg_x"] - latch) < 1e-9
 
+    owner_motion_invariants: dict[str, float] = {}
     if target is not None:
         assert target["schema"] == "axm.object-animationplayer-target-proof/v0.1"
         assert target["animation_sequence_head"] == contract["animation_head"]
@@ -112,6 +113,17 @@ def validate(
         assert target["animationplayer_key_counts"] == [101, 101, 101]
         assert int(target["closed_to_endpoint_changed_pixels"]) == 0
         assert float(target["neutral_pivot_wrapper_max_drift_m"]) == 0.0
+        assert target["truth_boundary"]["discrete_exact_authored_sample_seek_equivalence_observed"] is True
+        owner_motion_invariants = {
+            "neutral_pivot_wrapper_max_drift_m": float(target["neutral_pivot_wrapper_max_drift_m"]),
+            "release_keeper_drift_m": float(target["release_keeper_drift_m"]),
+            "release_min_lever_move_m": float(target["release_min_lever_move_m"]),
+            "peak_min_keeper_move_m": float(target["peak_min_keeper_move_m"]),
+            "endpoint_keeper_drift_m": float(target["endpoint_keeper_drift_m"]),
+            "endpoint_lever_drift_m": float(target["endpoint_lever_drift_m"]),
+        }
+        assert owner_motion_invariants["release_min_lever_move_m"] > 0.001
+        assert owner_motion_invariants["peak_min_keeper_move_m"] > 0.03
 
     return {
         "schema": PLAN_SCHEMA,
@@ -128,12 +140,13 @@ def validate(
         "lid_component": "lid_shell",
         "stations": station_plan,
         "samples": samples,
+        "owner_target_motion_invariants": owner_motion_invariants,
         "environment_adoption": False,
         "vfx_adoption": False,
         "runtime_acceptance": False,
         "art_qa_acceptance": False,
         "canon": False,
-        "truth_boundary": "Receiver-only transform adapter from exact Object Animation evidence onto the already-proven current-world rigid component boundary. It does not author timing/easing, infer mechanics, adopt VFX, claim Runtime/device performance, final visual acceptance, CANON or production readiness.",
+        "truth_boundary": "Receiver-only transform adapter from exact Object Animation evidence onto the already-proven current-world rigid component boundary. Owner-target center-displacement invariants are retained because a rigid Environment placement must preserve those distances. It does not author timing/easing, infer mechanics, adopt VFX, claim Runtime/device performance, final visual acceptance, CANON or production readiness.",
     }
 
 
@@ -158,8 +171,8 @@ def main() -> int:
         write(args.output, plan)
         receipt = {key: plan[key] for key in (
             "schema", "result", "object_source_sha256", "object_technical_art_head", "animation_head",
-            "sequence_id", "sequence_digest", "sample_count", "coordinate_conversion", "environment_adoption",
-            "vfx_adoption", "runtime_acceptance", "art_qa_acceptance", "canon", "truth_boundary",
+            "sequence_id", "sequence_digest", "sample_count", "coordinate_conversion", "owner_target_motion_invariants",
+            "environment_adoption", "vfx_adoption", "runtime_acceptance", "art_qa_acceptance", "canon", "truth_boundary",
         )}
         receipt["component_map_sha256"] = sha256(args.component_map)
         receipt["sequence_evidence_sha256"] = sha256(args.sequence)
@@ -177,6 +190,9 @@ def main() -> int:
     assert plan["animation_head"] == contract["animation_head"]
     assert plan["sequence_digest"] == contract["sequence_digest"]
     assert plan["sample_count"] == 101 and len(plan["samples"]) == 101 and len(plan["stations"]) == 2
+    invariants = plan["owner_target_motion_invariants"]
+    assert invariants["release_min_lever_move_m"] > 0.001
+    assert invariants["peak_min_keeper_move_m"] > 0.03
     print("PASS_OBJECT_MOTION_RECEIVER_PLAN_VALID")
     return 0
 

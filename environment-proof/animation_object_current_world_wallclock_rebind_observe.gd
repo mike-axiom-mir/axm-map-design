@@ -1,65 +1,78 @@
-extends "res://atmosphere_current_world_object_motion_observe.gd"
+extends "res://atmosphere_current_world_object_motion_current_rebind_observe.gd"
 
-const OUTPUT_PATH := "res://animation-object-current-world-wallclock-runtime.json"
-const CONTRACT_SCHEMA := "axm.animation-object-current-world-wallclock/v0.1"
-const RECEIPT_SCHEMA := "axm.animation-object-current-world-wallclock-observation/v0.1"
-const PASS_STATE := "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_AND_SHADED_REVIEW_SEQUENCE"
-const EXACT_TA_PARENT_HEAD := "d2974dec5043ed9afad346574b23ef8bd4438a76"
-const OWNER_ANIMATION_HEAD := "c688936a84f80f292e43587c9d3386bd717f8178"
-const OWNER_SEQUENCE_DIGEST := "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
-const OWNER_DURATION_S := 2.5
-const OWNER_RATE_HZ := 40.0
-const OWNER_SAMPLE_COUNT := 101
-const CAMERA_CONTEXT := "path_eye"
-const ANGLE_EPS_DEG := 0.0002
-const POSITION_EPS_M := 0.000001
-const MAX_TIMED_FRAMES := 2000
-const MAX_REVIEW_FRAMES := 240
+const ANIM_OUTPUT_PATH := "res://animation-object-current-world-wallclock-runtime.json"
+const ANIM_CONTRACT_SCHEMA := "axm.animation-object-current-world-wallclock/v0.2"
+const ANIM_RECEIPT_SCHEMA := "axm.animation-object-current-world-wallclock-observation/v0.2"
+const ANIM_PASS_STATE := "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_FC567_RECEIVER"
+const ANIM_TA_PARENT_HEAD := "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7"
+const ANIM_PREDECESSOR_EVIDENCE_HEAD := "343668b80acd52367e3427f3ef97d1662625c18f"
+const ANIM_HISTORICAL_TA_PARENT_HEAD := "e085437f6cc958bbf7c5c6464578923d542962b0"
+const ANIM_OWNER_HEAD := "86bdbe9771bf9eb1bc92bd4160442941763fab1d"
+const ANIM_SEQUENCE_DIGEST := "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
+const ANIM_DURATION_S := 2.5
+const ANIM_RATE_HZ := 40.0
+const ANIM_SAMPLE_COUNT := 101
+const ANIM_CAMERA_CONTEXT := "path_eye"
+const ANIM_ANGLE_EPS_DEG := 0.0002
+const ANIM_POSITION_EPS_M := 0.000001
+const ANIM_MAX_TIMED_FRAMES := 2000
+const ANIM_MAX_REVIEW_FRAMES := 240
+const ANIM_FRAME_RULE := "MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_TECHNICAL_ART_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN__DO_NOT_ASSUME_SOURCE_EULER_X_EQUALS_HOST_EULER_X"
 
-var animation_receipt:Dictionary = {}
+var anim_receipt:Dictionary = {}
+var anim_host_axis := Vector3.RIGHT
 
-func _write_animation_receipt()->void:
-    var file := FileAccess.open(OUTPUT_PATH, FileAccess.WRITE)
+func _anim_write_receipt()->void:
+    var file := FileAccess.open(ANIM_OUTPUT_PATH, FileAccess.WRITE)
     if file != null:
-        file.store_string(JSON.stringify(animation_receipt, "  ") + "\n")
+        file.store_string(JSON.stringify(anim_receipt, "  ") + "\n")
         file.close()
 
-func _animation_fail(message:String)->void:
-    animation_receipt["state"] = "FAIL"
-    animation_receipt["error"] = message
-    _write_animation_receipt()
+func _anim_fail(message:String)->void:
+    anim_receipt["state"] = "FAIL"
+    anim_receipt["error"] = message
+    _anim_write_receipt()
     push_error(message)
     quit(1)
 
-func _find_animation_player(root:Node)->AnimationPlayer:
+func _anim_find_player(root:Node)->AnimationPlayer:
     if root is AnimationPlayer and String(root.name) == "AXM_CURRENT_WORLD_OBJECT_OWNER_SAMPLES":
         return root as AnimationPlayer
     for child in root.get_children():
-        var found := _find_animation_player(child)
+        var found := _anim_find_player(child)
         if found != null:
             return found
     return null
 
-func _collect_pivots(container:Node3D, plan:Dictionary)->Dictionary:
+func _anim_collect_pivots(container:Node3D, plan:Dictionary)->Dictionary:
     var pivots:Dictionary = {}
     for raw in plan.get("stations", []) as Array:
         var station := raw as Dictionary
         var sid := String(station.get("station_id", ""))
-        var node := _motion_find_node(container, "technical_art_motion_pivot_" + sid)
+        var node := _motion_find_node(container, "technical_art_motion_latch_world_pivot_" + sid)
         if node == null:
             return {}
         pivots[sid] = node
     return pivots
 
-func _latch_angles(pivots:Dictionary)->Array:
+func _anim_adapted_receiver_angle(node:Node3D)->float:
+    var q := node.quaternion.normalized()
+    if q.w < 0.0:
+        q = Quaternion(-q.x, -q.y, -q.z, -q.w)
+    var signed_sin_half := Vector3(q.x, q.y, q.z).dot(anim_host_axis)
+    return rad_to_deg(2.0 * atan2(signed_sin_half, q.w))
+
+func _anim_latch_angles(pivots:Dictionary)->Array:
     var values:Array = []
     var keys:Array = pivots.keys()
     keys.sort()
     for sid in keys:
-        values.append((pivots[sid] as Node3D).rotation_degrees.x)
+        values.append(_anim_adapted_receiver_angle(pivots[sid] as Node3D))
     return values
 
-func _match_owner_sample(plan:Dictionary, position_s:float, lid_angle:float, latch_angles:Array)->Dictionary:
+func _anim_match_owner_sample(plan:Dictionary, position_s:float, lid:Node3D, pivots:Dictionary)->Dictionary:
+    var lid_angle := _anim_adapted_receiver_angle(lid)
+    var latch_angles := _anim_latch_angles(pivots)
     var best_error := INF
     var best_time_error := INF
     var best_index := -1
@@ -73,28 +86,43 @@ func _match_owner_sample(plan:Dictionary, position_s:float, lid_angle:float, lat
             best_error = error
             best_time_error = time_error
             best_index = int(row["index"])
-    return {"index":best_index, "max_error_deg":best_error, "time_error_s":best_time_error}
+    return {
+        "index":best_index,
+        "max_error_deg":best_error,
+        "time_error_s":best_time_error,
+        "adapted_receiver_lid_rotation_deg":lid_angle,
+        "adapted_receiver_latch_rotation_deg":latch_angles
+    }
 
-func _mesh_center(container:Node3D, name:String)->Vector3:
+func _anim_mesh_center(container:Node3D, name:String)->Vector3:
     var node := _motion_find_node(container, name)
     if node == null:
-        _animation_fail("Animation current-world node missing: " + name)
+        _anim_fail("Animation current-world node missing: " + name)
         return Vector3.ZERO
-    return _motion_receiver_local_mesh_center(container, node)
+    return _motion_receiver_local_component_center(container, node)
 
-func _build_current_world()->Dictionary:
+func _anim_build_world()->Dictionary:
     var payload := load_payload()
     if payload.is_empty():
-        _animation_fail("Animation current-world payload missing")
+        _anim_fail("Animation current-world payload missing")
         return {}
     var states := payload.get("states", []) as Array
     if states.size() != 17:
-        _animation_fail("Animation current-world proof requires exact 17-state world payload")
+        _anim_fail("Animation current-world proof requires exact 17-state world payload")
         return {}
     var first_row := states[0] as Dictionary
     var data := first_row.get("scene", {}) as Dictionary
     if data.is_empty():
-        _animation_fail("Animation current-world state 00 scene missing")
+        _anim_fail("Animation current-world state 00 scene missing")
+        return {}
+
+    var placement := _motion_current_world_placement()
+    if placement.is_empty():
+        _anim_fail("Animation current-world exact Technical-Art placement missing")
+        return {}
+    anim_host_axis = placement["axis_receiver"] as Vector3
+    if absf(anim_host_axis.length() - 1.0) > 0.000001:
+        _anim_fail("Animation current-world Technical-Art host axis is not unit length")
         return {}
 
     var viewport := SubViewport.new()
@@ -105,7 +133,7 @@ func _build_current_world()->Dictionary:
     get_root().add_child(viewport)
 
     var root3d := Node3D.new()
-    root3d.name = "animation-object-current-world-root"
+    root3d.name = "animation-object-current-world-successor-root"
     viewport.add_child(root3d)
     add_environment(root3d)
     for item in data.get("items", []) as Array:
@@ -115,7 +143,7 @@ func _build_current_world()->Dictionary:
     var culling_review := data.get("environment_rear_tree_culling_review", {}) as Dictionary
     var cull_target_asset_id := String(culling_review.get("target_asset_id", ""))
     if cull_target_asset_id != VARIANT_TARGET_REAR_ASSET_ID:
-        _animation_fail("Animation current-world rear-tree identity drift")
+        _anim_fail("Animation current-world rear-tree identity drift")
         return {}
 
     var static_root := Node3D.new()
@@ -123,7 +151,7 @@ func _build_current_world()->Dictionary:
     root3d.add_child(static_root)
     var static_stats := add_static_sources(static_root, data, cull_target_asset_id)
     if static_stats.is_empty():
-        _animation_fail("Animation current-world static receiver construction failed")
+        _anim_fail("Animation current-world static receiver construction failed")
         return {}
 
     make_weather()
@@ -133,7 +161,7 @@ func _build_current_world()->Dictionary:
     root3d.add_child(sapling_node)
     var sapling_update := fill_sapling(data.get("sapling", {}) as Dictionary)
     if sapling_update.is_empty():
-        _animation_fail("Animation current-world west sapling phase 00 failed")
+        _anim_fail("Animation current-world west sapling phase 00 failed")
         return {}
 
     var camera := Camera3D.new()
@@ -141,47 +169,44 @@ func _build_current_world()->Dictionary:
     camera.far = 120.0
     root3d.add_child(camera)
     camera.make_current()
-    configure_camera(camera, data, CAMERA_CONTEXT)
+    configure_camera(camera, data, ANIM_CAMERA_CONTEXT)
     await settle()
     var weather_update := fill_weather_width_ribbons(data.get("weather_lines", []) as Array, camera)
     if String(weather_update.get("state", "")) != "PASS_SOURCE_WIDTH_PX_CAMERA_PROJECTED_RIBBONS":
-        _animation_fail("Animation current-world Weather phase 00 failed")
+        _anim_fail("Animation current-world Weather phase 00 failed")
         return {}
     await settle()
 
-    # Technical Art owns receiver construction. Bind Animation to its uniquely named
-    # inherited player, then derive the receiver from that player's direct parent.
-    # This avoids assuming the source asset ID survives Godot Node-name sanitization.
-    var player := _find_animation_player(static_root)
+    var player := _anim_find_player(static_root)
     if player == null:
-        _animation_fail("Animation current-world owner AnimationPlayer missing")
+        _anim_fail("Animation current-world owner AnimationPlayer missing")
         return {}
     var player_parent := player.get_parent()
     if not (player_parent is Node3D):
-        _animation_fail("Animation current-world owner AnimationPlayer parent is not the rigid receiver")
+        _anim_fail("Animation current-world owner AnimationPlayer parent is not the rigid receiver")
         return {}
     var container := player_parent as Node3D
 
     var plan := _motion_read_json(MOTION_PLAN_PATH)
     if plan.is_empty():
-        _animation_fail("Animation current-world exact motion plan missing")
+        _anim_fail("Animation current-world exact motion plan missing")
         return {}
-    if String(plan.get("animation_head", "")) != OWNER_ANIMATION_HEAD or String(plan.get("sequence_digest", "")) != OWNER_SEQUENCE_DIGEST:
-        _animation_fail("Animation current-world owner identity drift")
+    if String(plan.get("animation_head", "")) != ANIM_OWNER_HEAD or String(plan.get("sequence_digest", "")) != ANIM_SEQUENCE_DIGEST:
+        _anim_fail("Animation current-world owner identity drift")
         return {}
-    if int(plan.get("sample_count", -1)) != OWNER_SAMPLE_COUNT or absf(float(plan.get("duration_s", -1.0)) - OWNER_DURATION_S) > 0.000001:
-        _animation_fail("Animation current-world owner timing identity drift")
+    if int(plan.get("sample_count", -1)) != ANIM_SAMPLE_COUNT or absf(float(plan.get("duration_s", -1.0)) - ANIM_DURATION_S) > 0.000001:
+        _anim_fail("Animation current-world owner timing identity drift")
         return {}
 
-    var lid := _motion_find_node(container, "lid_shell")
+    var lid := _motion_find_node(container, "technical_art_motion_hinge_world_pivot")
     var keeper0 := _motion_find_node(container, "latch_0_keeper")
     var keeper1 := _motion_find_node(container, "latch_1_keeper")
     if lid == null or keeper0 == null or keeper1 == null:
-        _animation_fail("Animation current-world lid/keeper hierarchy missing")
+        _anim_fail("Animation current-world hinge/keeper hierarchy missing")
         return {}
-    var pivots := _collect_pivots(container, plan)
+    var pivots := _anim_collect_pivots(container, plan)
     if pivots.size() != 2:
-        _animation_fail("Animation current-world latch pivot count drift")
+        _anim_fail("Animation current-world latch pivot count drift")
         return {}
 
     return {
@@ -198,7 +223,7 @@ func _build_current_world()->Dictionary:
         "camera":camera
     }
 
-func _timed_playback(world:Dictionary)->Dictionary:
+func _anim_timed_playback(world:Dictionary)->Dictionary:
     var container := world["container"] as Node3D
     var player := world["player"] as AnimationPlayer
     var plan := world["plan"] as Dictionary
@@ -211,13 +236,13 @@ func _timed_playback(world:Dictionary)->Dictionary:
     await process_frame
     await RenderingServer.frame_post_draw
 
-    var start_keeper0 := _mesh_center(container, "latch_0_keeper")
-    var start_keeper1 := _mesh_center(container, "latch_1_keeper")
+    var start_keeper0 := _anim_mesh_center(container, "latch_0_keeper")
+    var start_keeper1 := _anim_mesh_center(container, "latch_1_keeper")
     var start_levers:Dictionary = {}
     for raw in plan.get("stations", []) as Array:
         var station := raw as Dictionary
         var lever_name := String(station["lever_component"])
-        start_levers[lever_name] = _mesh_center(container, lever_name)
+        start_levers[lever_name] = _anim_mesh_center(container, lever_name)
 
     var player_id := player.get_instance_id()
     var receiver_id := container.get_instance_id()
@@ -234,7 +259,7 @@ func _timed_playback(world:Dictionary)->Dictionary:
     var natural_stop := false
 
     player.play("owner_samples")
-    while frame_count < MAX_TIMED_FRAMES:
+    while frame_count < ANIM_MAX_TIMED_FRAMES:
         await process_frame
         await RenderingServer.frame_post_draw
         frame_count += 1
@@ -242,26 +267,23 @@ func _timed_playback(world:Dictionary)->Dictionary:
         intervals_ms.append(float(now_usec - previous_usec) / 1000.0)
         previous_usec = now_usec
         if player.get_instance_id() != player_id or container.get_instance_id() != receiver_id:
-            _animation_fail("Animation current-world receiver or AnimationPlayer identity changed")
+            _anim_fail("Animation current-world receiver or AnimationPlayer identity changed")
             return {}
         var position_s := player.current_animation_position
-        var lid_angle := lid.rotation_degrees.x
-        var latch_angles := _latch_angles(pivots)
-        if latch_angles.size() != 2:
-            _animation_fail("Animation current-world lost bilateral latch pivots")
-            return {}
-        var matched := _match_owner_sample(plan, position_s, lid_angle, latch_angles)
+        var matched := _anim_match_owner_sample(plan, position_s, lid, pivots)
         var sample_error := float(matched["max_error_deg"])
         max_sample_error_deg = maxf(max_sample_error_deg, sample_error)
-        if sample_error > ANGLE_EPS_DEG:
-            _animation_fail("Animation current-world wall-clock pose escaped exact owner samples")
+        if sample_error > ANIM_ANGLE_EPS_DEG:
+            _anim_fail("Animation current-world wall-clock pose escaped exact adapted receiver samples")
             return {}
         var matched_index := int(matched["index"])
+        var lid_angle := float(matched["adapted_receiver_lid_rotation_deg"])
+        var latch_angles := matched["adapted_receiver_latch_rotation_deg"] as Array
         seen_indices[matched_index] = true
         max_lid_angle_deg = maxf(max_lid_angle_deg, absf(lid_angle))
         for raw_angle in latch_angles:
             min_latch_angle_deg = minf(min_latch_angle_deg, float(raw_angle))
-            if absf(lid_angle) > ANGLE_EPS_DEG and absf(float(raw_angle) + 50.0) > ANGLE_EPS_DEG:
+            if absf(lid_angle) > ANIM_ANGLE_EPS_DEG and absf(float(raw_angle) + 50.0) > ANIM_ANGLE_EPS_DEG:
                 phase_order_violations += 1
         if observations.is_empty() or int((observations[observations.size()-1] as Dictionary)["matched_owner_sample_index"]) != matched_index:
             observations.append({
@@ -270,8 +292,8 @@ func _timed_playback(world:Dictionary)->Dictionary:
                 "animation_position_s":position_s,
                 "matched_owner_sample_index":matched_index,
                 "max_owner_sample_error_deg":sample_error,
-                "lid_rotation_deg_x":lid_angle,
-                "latch_rotation_deg_x":latch_angles
+                "adapted_receiver_lid_rotation_deg":lid_angle,
+                "adapted_receiver_latch_rotation_deg":latch_angles
             })
         if not player.is_playing():
             natural_stop = true
@@ -279,22 +301,22 @@ func _timed_playback(world:Dictionary)->Dictionary:
 
     var elapsed_s := float(Time.get_ticks_usec() - start_usec) / 1000000.0
     if not natural_stop:
-        _animation_fail("Animation current-world timed playback did not stop naturally")
+        _anim_fail("Animation current-world timed playback did not stop naturally")
         return {}
     if phase_order_violations != 0:
-        _animation_fail("Animation current-world wall-clock phase ordering violated")
+        _anim_fail("Animation current-world wall-clock phase ordering violated")
         return {}
     if max_lid_angle_deg < 99.0 or min_latch_angle_deg > -49.9:
-        _animation_fail("Animation current-world wall-clock playback did not traverse owner peak poses")
+        _anim_fail("Animation current-world wall-clock playback did not traverse owner peak poses")
         return {}
 
-    var endpoint_keeper_drift := maxf(start_keeper0.distance_to(_mesh_center(container, "latch_0_keeper")), start_keeper1.distance_to(_mesh_center(container, "latch_1_keeper")))
+    var endpoint_keeper_drift := maxf(start_keeper0.distance_to(_anim_mesh_center(container, "latch_0_keeper")), start_keeper1.distance_to(_anim_mesh_center(container, "latch_1_keeper")))
     var endpoint_lever_drift := 0.0
     for lever_name in start_levers.keys():
         var start_center:Vector3 = start_levers[lever_name]
-        endpoint_lever_drift = maxf(endpoint_lever_drift, start_center.distance_to(_mesh_center(container, String(lever_name))))
-    if endpoint_keeper_drift > POSITION_EPS_M or endpoint_lever_drift > POSITION_EPS_M:
-        _animation_fail("Animation current-world wall-clock endpoint closure drift")
+        endpoint_lever_drift = maxf(endpoint_lever_drift, start_center.distance_to(_anim_mesh_center(container, String(lever_name))))
+    if endpoint_keeper_drift > ANIM_POSITION_EPS_M or endpoint_lever_drift > ANIM_POSITION_EPS_M:
+        _anim_fail("Animation current-world wall-clock endpoint closure drift")
         return {}
 
     var min_interval_ms := 0.0
@@ -333,7 +355,7 @@ func _timed_playback(world:Dictionary)->Dictionary:
         "performance_authority":false
     }
 
-func _review_playback(world:Dictionary)->Dictionary:
+func _anim_review_playback(world:Dictionary)->Dictionary:
     var viewport := world["viewport"] as SubViewport
     var player := world["player"] as AnimationPlayer
     var plan := world["plan"] as Dictionary
@@ -349,43 +371,41 @@ func _review_playback(world:Dictionary)->Dictionary:
     var frame_index := 0
     var first_image := viewport.get_texture().get_image()
     if first_image == null or first_image.is_empty():
-        _animation_fail("Animation current-world neutral review raster unavailable")
+        _anim_fail("Animation current-world neutral review raster unavailable")
         return {}
     var first_path := "res://animation-object-current-world-wallclock-frame-%03d.png" % frame_index
     if first_image.save_png(first_path) != OK:
-        _animation_fail("Animation current-world neutral review raster save failed")
+        _anim_fail("Animation current-world neutral review raster save failed")
         return {}
-    frames.append({"frame":frame_index,"animation_position_s":0.0,"matched_owner_sample_index":0,"path":first_path,"bytes":FileAccess.get_file_as_bytes(first_path).size()})
+    frames.append({"frame":frame_index,"animation_position_s":0.0,"matched_owner_sample_index":0,"max_owner_sample_error_deg":0.0,"path":first_path,"bytes":FileAccess.get_file_as_bytes(first_path).size()})
     frame_index += 1
 
     player.play("owner_samples")
     var safety := 0
-    while safety < MAX_REVIEW_FRAMES:
+    while safety < ANIM_MAX_REVIEW_FRAMES:
         await process_frame
         await RenderingServer.frame_post_draw
         safety += 1
         var position_s := player.current_animation_position
-        var lid_angle := lid.rotation_degrees.x
-        var latch_angles := _latch_angles(pivots)
-        var matched := _match_owner_sample(plan, position_s, lid_angle, latch_angles)
-        if float(matched["max_error_deg"]) > ANGLE_EPS_DEG:
-            _animation_fail("Animation current-world captured playback escaped exact owner sample")
+        var matched := _anim_match_owner_sample(plan, position_s, lid, pivots)
+        if float(matched["max_error_deg"]) > ANIM_ANGLE_EPS_DEG:
+            _anim_fail("Animation current-world captured playback escaped exact adapted receiver sample")
             return {}
         var image := viewport.get_texture().get_image()
         if image == null or image.is_empty():
-            _animation_fail("Animation current-world wall-clock review raster unavailable")
+            _anim_fail("Animation current-world wall-clock review raster unavailable")
             return {}
         var path := "res://animation-object-current-world-wallclock-frame-%03d.png" % frame_index
         if image.save_png(path) != OK:
-            _animation_fail("Animation current-world wall-clock review raster save failed")
+            _anim_fail("Animation current-world wall-clock review raster save failed")
             return {}
         frames.append({
             "frame":frame_index,
             "animation_position_s":position_s,
             "matched_owner_sample_index":int(matched["index"]),
             "max_owner_sample_error_deg":float(matched["max_error_deg"]),
-            "lid_rotation_deg_x":lid_angle,
-            "latch_rotation_deg_x":latch_angles,
+            "adapted_receiver_lid_rotation_deg":float(matched["adapted_receiver_lid_rotation_deg"]),
+            "adapted_receiver_latch_rotation_deg":matched["adapted_receiver_latch_rotation_deg"],
             "path":path,
             "bytes":FileAccess.get_file_as_bytes(path).size()
         })
@@ -393,15 +413,15 @@ func _review_playback(world:Dictionary)->Dictionary:
         if not player.is_playing():
             break
     if player.is_playing():
-        _animation_fail("Animation current-world captured review playback exceeded safety frame budget")
+        _anim_fail("Animation current-world captured review playback exceeded safety frame budget")
         return {}
     if frames.size() < 12:
-        _animation_fail("Animation current-world captured review sequence too short")
+        _anim_fail("Animation current-world captured review sequence too short")
         return {}
 
     return {
         "observation_semantics":"SECOND_REAL_ANIMATIONPLAYER_PLAYBACK_WITH_VIEWPORT_READBACK_AND_PNG_IO__TIMING_NOT_PERFORMANCE_EVIDENCE",
-        "camera_context":CAMERA_CONTEXT,
+        "camera_context":ANIM_CAMERA_CONTEXT,
         "frame_count":frames.size(),
         "frames":frames,
         "capture_timing_accepted":false,
@@ -409,18 +429,25 @@ func _review_playback(world:Dictionary)->Dictionary:
     }
 
 func _initialize()->void:
-    animation_receipt = {
-        "schema":RECEIPT_SCHEMA,
+    anim_receipt = {
+        "schema":ANIM_RECEIPT_SCHEMA,
         "state":"STARTED",
-        "contract_schema":CONTRACT_SCHEMA,
-        "technical_art_parent_head":EXACT_TA_PARENT_HEAD,
-        "animation_head":OWNER_ANIMATION_HEAD,
-        "sequence_digest":OWNER_SEQUENCE_DIGEST,
-        "duration_s":OWNER_DURATION_S,
-        "sample_rate_hz":OWNER_RATE_HZ,
-        "sample_count":OWNER_SAMPLE_COUNT,
+        "contract_schema":ANIM_CONTRACT_SCHEMA,
+        "technical_art_parent_head":ANIM_TA_PARENT_HEAD,
+        "historical_technical_art_parent_head":ANIM_HISTORICAL_TA_PARENT_HEAD,
+        "historical_receipts_reused_as_current_evidence":false,
+        "predecessor_animation_evidence_head":ANIM_PREDECESSOR_EVIDENCE_HEAD,
+        "animation_head":ANIM_OWNER_HEAD,
+        "sequence_digest":ANIM_SEQUENCE_DIGEST,
+        "duration_s":ANIM_DURATION_S,
+        "sample_rate_hz":ANIM_RATE_HZ,
+        "sample_count":ANIM_SAMPLE_COUNT,
         "proof_runtime":"Godot 4.7.2 GL Compatibility",
         "receiver_construction_owned_by_technical_art":true,
+        "receiver_frame_matching_rule":ANIM_FRAME_RULE,
+        "acceptance_pose_match_uses_host_quaternion_projected_to_exact_receiver_axis":true,
+        "receiver_plan_already_encodes_owner_to_host_angle_adaptation":true,
+        "source_euler_x_not_used_for_acceptance":true,
         "source_motion_retimed":false,
         "source_keys_changed":false,
         "source_easing_changed":false,
@@ -436,19 +463,19 @@ func _initialize()->void:
         "production_ready":false
     }
 
-    var world := await _build_current_world()
+    var world := await _anim_build_world()
     if world.is_empty():
         return
-    var timed := await _timed_playback(world)
+    var timed := await _anim_timed_playback(world)
     if timed.is_empty():
         return
-    var review := await _review_playback(world)
+    var review := await _anim_review_playback(world)
     if review.is_empty():
         return
 
-    animation_receipt["state"] = PASS_STATE
-    animation_receipt["timed_playback"] = timed
-    animation_receipt["shaded_review_playback"] = review
-    animation_receipt["truth_boundary"] = "The exact owner-authored 2.5 s / 40 Hz / 101-key Object sequence is played by the real Godot AnimationPlayer on the exact Technical-Art current-world rigid receiver. A first metadata-only frame_post_draw pass proves natural completion, exact-owner-sample pose membership, release-before-lid/lid-neutral-before-reengage ordering and neutral endpoint closure without viewport readback or disk IO. A second real playback retains shaded frames for visual review; that capture pass is instrumentation and is not performance evidence. No Runtime/controller, device-performance, VFX, Environment-adoption, gameplay, physics, Art/QA, CANON or production acceptance is transferred."
-    _write_animation_receipt()
+    anim_receipt["state"] = ANIM_PASS_STATE
+    anim_receipt["timed_playback"] = timed
+    anim_receipt["shaded_review_playback"] = review
+    anim_receipt["truth_boundary"] = "The frozen 2.5 s / 40 Hz / 101-key owner sequence is replayed on exact current Technical-Art successor fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7. The prior e085437f6cc958bbf7c5c6464578923d542962b0 receiver proof remains historical and is not reused as current evidence. Acceptance pose membership is measured from actual pivot quaternions about the exact receiver axis against Technical Art's already-adapted receiver plan; source Euler X is not assumed to equal host Euler X. No source retime, receiver-construction authority, Runtime/controller, target-device/display performance, VFX, Environment adoption, gameplay, physics, Art/QA, CANON or production acceptance transfers."
+    _anim_write_receipt()
     quit(0)

@@ -35,6 +35,8 @@ jobs:
           python -m py_compile tools/verify_runtime_object_static_batching_successor_continuity.py
           python -m json.tool contracts/runtime_object_static_batching_successor_continuity.json >/dev/null
           git merge-base --is-ancestor 08c5514835acc942858820b27874498c1c84c2ae HEAD
+          git merge-base --is-ancestor d2df5a7eb03b806eb991028d3ed5e3bfaa755bca HEAD
+          git merge-base --is-ancestor 51f1c0002f58f138911cce7d95a30add9a1e03af HEAD
           git rev-parse HEAD > runtime-successor-continuity-exact-head.txt
           echo PASS_RUNTIME_SUCCESSOR_CONTINUITY_LINEAGE_BOUND
 
@@ -62,8 +64,8 @@ jobs:
           root=evidence/runtime_object_static_batching_successor_continuity
           mkdir -p "$root/successor"
           curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10523121895/zip" -o "$root/successor.zip"
-          echo "41246a9990b90f33e537195747c71bcb19de8797668af71bf372d35883f54707  $root/successor.zip" | sha256sum --check --strict
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371667/zip" -o "$root/successor.zip"
+          echo "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3  $root/successor.zip" | sha256sum --check --strict
           unzip -q "$root/successor.zip" -d "$root/successor"
           test -f "$root/successor/evidence/animation_object_current_world_wallclock/SUMMARY.json"
           test -f "$root/successor/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json"
@@ -147,7 +149,9 @@ jobs:
             'successor_animation_head':receipt['successor_animation_head'],
             'successor_technical_art_head':receipt['successor_technical_art_head'],
             'owner_animation_head':receipt['owner_animation_head'],
-            'component_map_sha256':receipt['component_map_sha256'],
+            'component_map_semantic_sha256':receipt['component_map_semantic_sha256'],
+            'prior_component_map_file_sha256':receipt['prior_component_map_file_sha256'],
+            'successor_component_map_file_sha256':receipt['successor_component_map_file_sha256'],
             'stable_motion_subset_sha256':receipt['stable_motion_subset_sha256'],
             'component_count':receipt['component_count'],
             'moving_component_count':receipt['moving_component_count'],

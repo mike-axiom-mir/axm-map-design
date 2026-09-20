@@ -1,3 +1,4 @@
+# FROZEN HISTORICAL RUNTIME OBSERVER TEMPLATE. Current successor workflows adapt this file explicitly; embedded historical heads are not current evidence.
 extends "res://animation_object_current_world_wallclock_observe.gd"
 
 const RUNTIME_OUTPUT_PATH := "res://runtime-object-current-world-static-batching.json"

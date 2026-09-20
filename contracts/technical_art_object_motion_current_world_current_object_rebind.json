@@ -1,0 +1,35 @@
+{
+  "schema": "axm.technical-art-object-motion-current-world-bridge/v0.1",
+  "object_source_sha256": "49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a",
+  "object_technical_art_head": "b9848c62b2adde84e9e0afc219088113216799d6",
+  "animation_head": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
+  "sequence_id": "lid-latch-open-hold-close-001",
+  "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
+  "coordinate_conversion": "source [x,y,z] -> UC/glTF [x,z,y]; handedness flip requires target +X rotation = negative source mathematical +X rotation",
+  "reusable_rule": "ANIMATION_OWNER_SAMPLES_MAY_ENTER_A_CURRENT_WORLD_RIGID_RECEIVER_ONLY_THROUGH_EXACT_COMPONENT_PIVOT_AND_TARGET_ROTATION_BINDINGS_WITH_NEUTRAL_AND_ENDPOINT_CLOSURE_PROVEN",
+  "truth_boundary": "Technical Art may adapt exact owner-authored transforms to the current-world receiver but does not author motion, mechanics, VFX, Runtime acceptance, final visual acceptance or CANON. This current rebind consumes the repaired Object Technical Art and current target-Rigging-bound Animation artifact. Historical Object Technical Art evidence remains historical only; the owner sequence digest is unchanged and is neither reauthored nor retimed.",
+  "map_rigid_receiver_head": "741ac7a16b607f3dc9b7937cc616cf9fdbc414d9",
+  "historical_object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+  "current_object_animation_artifact": {
+    "id": 10596870102,
+    "sha256": "af92d8ac9a8f7a5daa5adc7ad3b1aebd96e60debcc1a616245a6e7e436fab5a2"
+  },
+  "current_map_rigid_receiver_artifact": {
+    "id": 10596882138,
+    "sha256": "49358b11f977d5dfd44882c405f201bb800ecd5ef1399b09cd6a8af1aab8da13"
+  },
+  "current_target_rigging": {
+    "lid_head": "f6dab93a342330175a7494274f3f40a4e53d4c85",
+    "front_latch_head": "f59e0f205de2d81611cfed0cbf795faa2c3f22b3",
+    "front_latch_source_head": "3a17a02528918ec63a46e954e883179f752c8151"
+  },
+  "provenance_rebind": {
+    "historical_object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+    "current_object_technical_art_head": "b9848c62b2adde84e9e0afc219088113216799d6",
+    "current_animation_head": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
+    "current_map_rigid_receiver_head": "741ac7a16b607f3dc9b7937cc616cf9fdbc414d9",
+    "historical_receipts_reused_as_current_evidence": false,
+    "owner_sequence_reauthored": false,
+    "owner_sequence_retimed": false
+  }
+}
