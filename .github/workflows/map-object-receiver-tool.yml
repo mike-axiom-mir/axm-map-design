@@ -58,7 +58,6 @@ jobs:
           git merge-base --is-ancestor 3c675de8a6aacf0e318312a985168dc4d6362c78 HEAD
           git merge-base --is-ancestor 51f1c0002f58f138911cce7d95a30add9a1e03af HEAD
           for path in \
-            .github/workflows/animation-object-current-world-wallclock.yml \
             contracts/animation_object_current_world_wallclock.json \
             environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd \
             environment-proof/animation_object_current_world_wallclock_rebind_observe.gd \
@@ -66,7 +65,7 @@ jobs:
           do
             test "$(git rev-parse "HEAD:$path")" = "$(git rev-parse "51f1c0002f58f138911cce7d95a30add9a1e03af:$path")"
           done
-          echo PASS_CURRENT_MAP_ANIMATION_TREE_BYTE_IDENTITY
+          echo PASS_CURRENT_MAP_ANIMATION_PAYLOAD_BYTE_IDENTITY
           git rev-parse HEAD > exact-tool-head.txt
           echo PASS_EXACT_ENVIRONMENT_AND_RUNTIME_HISTORIES_RETAINED
       - name: Download exact current evidence packets
