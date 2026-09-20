@@ -256,7 +256,7 @@ jobs:
           xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
             .godot-bin/Godot_v4.7.2-stable_linux.x86_64 \
             --display-driver x11 --rendering-method gl_compatibility \
-            --path environment-proof --script atmosphere_current_world_object_rigid_component_observe.gd \
+            --path environment-proof --script atmosphere_current_world_object_rigid_component_current_rebind_observe.gd \
             2>&1 | tee "$root/candidate/godot.log"
           status=${PIPESTATUS[0]}; set -e
           cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$root/candidate/runtime.json" 2>/dev/null || true
