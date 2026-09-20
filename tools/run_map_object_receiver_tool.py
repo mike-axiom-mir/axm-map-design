@@ -320,7 +320,7 @@ def main() -> int:
         "entrypoint_sha256": sha256_file(script_path),
         "dependency_sha256": actual_hashes,
         "evidence_scopes": ["structural"],
-        "layers": {"ai": "verified", "human": "absent", "intent": "absent"},
+        "layers": read_json(manifest_path).get("layers", {}),
         "holds": HOLDS,
         "nonclaims": NONCLAIMS,
         "authority": packet["authority"],

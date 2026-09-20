@@ -1,0 +1,14 @@
+const {test,expect}=require("@playwright/test");
+const fs=require("node:fs/promises"),path=require("node:path"),evidenceDir=path.join(__dirname,"evidence");
+test("human wrapper invokes the exact receiver tool",async({page},testInfo)=>{
+ const errors=[];page.on("pageerror",e=>errors.push("pageerror: "+e.message));page.on("console",m=>{if(m.type()==="error")errors.push("console: "+m.text())});await fs.mkdir(evidenceDir,{recursive:true});await page.goto("/");
+ await expect(page).toHaveTitle("AXM Map Object Receiver");await expect(page.getByText("Human · verified")).toBeVisible();await expect(page.locator("#server-state")).toContainText("loopback ready");
+ await page.locator("#sample-index").fill("40");await page.getByLabel("Repaired +20 mm").check();await page.getByLabel("Current-sequence static batch").check();await page.getByRole("button",{name:"Build receiver packet"}).click();
+ await expect(page.locator("#result-state")).toContainText("verified PASS");await expect(page.locator("#metric-time")).toHaveText("1.000 s");await expect(page.locator("#metric-clearance")).toContainText("60.659 mm");await expect(page.locator("#metric-surfaces")).toHaveText("14");await expect(page.locator("#clearance-badge")).toContainText("60 mm clearance met");await expect(page.locator("#batch-badge")).toContainText("7 moving / 24 static");await expect(page.locator("#receipt-json")).toContainText('"human": "verified"');await expect(page.locator("#receipt-json")).toContainText("PASS_MAP_OBJECT_RECEIVER_PACKET");
+ await page.screenshot({path:path.join(evidenceDir,testInfo.project.name+"-repaired-batched.png"),fullPage:true});
+ await page.locator("#sample-index").fill("0");await page.getByLabel("Historical",{exact:true}).check();await page.getByLabel("Unbatched").check();await page.getByRole("button",{name:"Build receiver packet"}).click();
+ await expect(page.locator("#result-state")).toContainText("verified PASS");await expect(page.locator("#metric-time")).toHaveText("0.000 s");await expect(page.locator("#metric-surfaces")).toHaveText("33");await expect(page.locator("#clearance-badge")).toContainText("historical clearance miss");await expect(page.locator("#batch-badge")).toContainText("unbatched receiver");
+ await page.screenshot({path:path.join(evidenceDir,testInfo.project.name+"-historical-unbatched.png"),fullPage:true});
+ const observation={revision:process.env.AXM_PR_HEAD||process.env.GITHUB_SHA||"local",project:testInfo.project.name,viewport:testInfo.project.use.viewport,checked:["loopback status","human verified layer","sample 40 repaired +20 mm request","current-sequence 7/24 static batch","same runner PASS receipt","sample 0 historical request","unbatched 33-surface receiver","open hold boundaries visible"],browserErrors:errors};
+ await fs.writeFile(path.join(evidenceDir,testInfo.project.name+"-observation.json"),JSON.stringify(observation,null,2)+"\n","utf8");expect(errors).toEqual([]);
+});

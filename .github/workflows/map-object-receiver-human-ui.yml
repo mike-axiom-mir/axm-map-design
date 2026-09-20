@@ -1,0 +1,111 @@
+name: Map Object receiver human UI
+
+on:
+  push:
+    branches: [chatgpt/map-object-receiver-tool-001]
+    paths:
+      - "tooling/map-object-receiver-packet.manifest.json"
+      - "tooling/human/map-object-receiver/**"
+      - "tools/serve_map_object_receiver_ui.py"
+      - "tools/run_map_object_receiver_tool.py"
+      - ".github/workflows/map-object-receiver-human-ui.yml"
+  pull_request:
+    paths:
+      - "tooling/map-object-receiver-packet.manifest.json"
+      - "tooling/human/map-object-receiver/**"
+      - "tools/serve_map_object_receiver_ui.py"
+      - "tools/run_map_object_receiver_tool.py"
+      - ".github/workflows/map-object-receiver-human-ui.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  browser-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AXM_PR_HEAD: \${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - name: Checkout exact human-wrapper head
+        uses: actions/checkout@v4
+        with:
+          ref: \${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bind local wrapper and same-runner contract
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/run_map_object_receiver_tool.py tools/serve_map_object_receiver_ui.py
+          python -m json.tool tooling/map-object-receiver-packet.manifest.json >/dev/null
+          python - <<'PY'
+          import json
+          m=json.load(open('tooling/map-object-receiver-packet.manifest.json'))
+          assert m['tool_id']=='axm.map.object.receiver.packet',m
+          assert m['layers']=={'ai':'verified','human':'verified','intent':'absent'},m
+          assert m['human_interface']['entrypoint']=='tools/serve_map_object_receiver_ui.py',m
+          assert m['human_interface']['contract_binding']=='same_request_schema_same_runner',m
+          assert m['human_interface']['listen_address']=='127.0.0.1',m
+          assert m['human_interface']['network_required_during_invocation'] is False,m
+          PY
+          grep -q 'run_map_object_receiver_tool.py' tools/serve_map_object_receiver_ui.py
+          git rev-parse HEAD > exact-human-head.txt
+      - name: Download exact current evidence packets
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=/tmp/axm-map-object-human
+          mkdir -p "$root/animation" "$root/environment" "$root/runtime"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371667/zip" -o "$root/animation.zip"
+          echo "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3  $root/animation.zip" | sha256sum --check --strict
+          unzip -q "$root/animation.zip" -d "$root/animation"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371960/zip" -o "$root/environment.zip"
+          echo "92d3cd229d2aae99e383db1626d4f65a28eb8310b24d5a4da4efc4353109bc85  $root/environment.zip" | sha256sum --check --strict
+          unzip -q "$root/environment.zip" -d "$root/environment"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597516810/zip" -o "$root/runtime.zip"
+          echo "00b4b0bb722f2c9606585424b741bf1af6e0b87648350b0ab0f09ad1463355c2  $root/runtime.zip" | sha256sum --check --strict
+          unzip -q "$root/runtime.zip" -d "$root/runtime"
+      - name: Start loopback-only exact tool bridge
+        run: |
+          set -euo pipefail
+          root=/tmp/axm-map-object-human
+          python tools/serve_map_object_receiver_ui.py \
+            --component-map "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json" \
+            --motion-plan "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json" \
+            --environment-report "$root/environment/evidence/environment_object_articulated_service_clearance/report.json" \
+            --runtime-receipt "$root/runtime/evidence/runtime_object_static_batching_successor_rebind/runtime.json" \
+            --port 8787 --no-open > "$root/server.log" 2>&1 &
+          echo $! > "$root/server.pid"
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8787/api/status > "$root/status.json"; then exit 0; fi
+            sleep 1
+          done
+          cat "$root/server.log"
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install bounded browser runner
+        run: |
+          npm install --no-save @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Exercise the real human wrapper on desktop and mobile
+        run: npx playwright test --config tooling/human/map-object-receiver/playwright.config.cjs
+      - name: Retain human-wrapper browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-object-receiver-human-ui-\${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            tooling/human/map-object-receiver/evidence/
+            /tmp/axm-map-object-human/server.log
+            /tmp/axm-map-object-human/status.json
+            exact-human-head.txt
+            tooling/map-object-receiver-packet.manifest.json
+          if-no-files-found: error
+          retention-days: 30

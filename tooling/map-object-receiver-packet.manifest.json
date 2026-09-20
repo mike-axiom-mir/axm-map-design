@@ -1,7 +1,7 @@
 {
   "schema": "axm.specialist-tool-manifest/v0.1",
   "tool_id": "axm.map.object.receiver.packet",
-  "status": "AI_CALLABLE",
+  "status": "AI_CALLABLE_HUMAN_WRAPPED",
   "owner": {
     "specialist": "Technical Art / UC Integration",
     "repository": "mike-axiom-mir/axm-map-design"
@@ -120,7 +120,8 @@
     "Object final Art Direction / independent Visual QA remains open",
     "Environment adoption remains false",
     "target-device Runtime acceptance remains open",
-    "future sequence moves a component classified static by the current owner sequence"
+    "future sequence moves a component classified static by the current owner sequence",
+    "human interface only selects fields already present in the exact request schema; it owns no additional creation semantics"
   ],
   "nonclaims": [
     "No final visual acceptance",
@@ -132,7 +133,16 @@
   ],
   "layers": {
     "ai": "verified",
-    "human": "absent",
+    "human": "verified",
     "intent": "absent"
+  },
+  "human_interface": {
+    "mode": "local_loopback_browser",
+    "entrypoint": "tools/serve_map_object_receiver_ui.py",
+    "static_root": "tooling/human/map-object-receiver",
+    "contract_binding": "same_request_schema_same_runner",
+    "listen_address": "127.0.0.1",
+    "network_required_during_invocation": false,
+    "execution_authority": "tools/run_map_object_receiver_tool.py"
   }
 }

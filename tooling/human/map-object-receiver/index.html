@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AXM Map Object Receiver</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <main class="shell">
+    <header class="hero glass">
+      <div>
+        <p class="eyebrow">AXM · MAP SPECIALIST · HUMAN WRAPPER</p>
+        <h1>Object Receiver Packet</h1>
+        <p class="lede">Choose only the bounded fields already owned by <code>axm.map.object.receiver.packet</code>. The same deterministic runner builds the packet and receipt.</p>
+      </div>
+      <div class="status-stack" aria-label="Tool layers">
+        <span class="badge verified">AI · verified</span>
+        <span class="badge verified">Human · verified</span>
+        <span class="badge held">Intent · absent</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <form id="receiver-form" class="panel glass" aria-label="Receiver packet controls">
+        <div class="panel-head">
+          <div><p class="eyebrow">SELECTION</p><h2>Build a receiver packet</h2></div>
+          <span id="server-state" class="dot-state">checking…</span>
+        </div>
+
+        <label class="field" for="sample-index">
+          <span>Motion sample</span>
+          <span class="field-note">0–100 · 40 Hz · 2.5 s owner sequence</span>
+          <div class="sample-row">
+            <input id="sample-slider" type="range" min="0" max="100" step="1" value="40">
+            <input id="sample-index" type="number" min="0" max="100" step="1" value="40" inputmode="numeric">
+          </div>
+          <div class="sample-scale"><span>0 · neutral</span><span>40 · worst clearance</span><span>100 · return</span></div>
+        </label>
+
+        <fieldset class="field">
+          <legend>Environment service frame</legend>
+          <label class="choice"><input type="radio" name="service_frame" value="successor_20mm" checked><span><strong>Repaired +20 mm</strong><small>Restores the proven 60 mm sweep clearance.</small></span></label>
+          <label class="choice"><input type="radio" name="service_frame" value="historical"><span><strong>Historical</strong><small>Retained comparison state; known to miss the clearance contract.</small></span></label>
+        </fieldset>
+
+        <fieldset class="field">
+          <legend>Runtime representation</legend>
+          <label class="choice"><input type="radio" name="static_batching" value="current_sequence_static_24" checked><span><strong>Current-sequence static batch</strong><small>7 moving / 24 static; sequence-bound optimization.</small></span></label>
+          <label class="choice"><input type="radio" name="static_batching" value="none"><span><strong>Unbatched</strong><small>31 semantic components, original render surfaces.</small></span></label>
+        </fieldset>
+
+        <div class="actions">
+          <button id="build-button" class="primary" type="submit">Build receiver packet</button>
+          <button id="reset-button" class="secondary" type="button">Reset bounded defaults</button>
+        </div>
+        <p class="boundary">No geometry authorship. No motion retiming. No Environment adoption. No target-device or Art/QA acceptance.</p>
+      </form>
+
+      <section class="panel glass result-panel" aria-live="polite">
+        <div class="panel-head">
+          <div><p class="eyebrow">RECEIPT</p><h2>Verified result</h2></div>
+          <span id="result-state" class="badge idle">not run</span>
+        </div>
+
+        <div id="empty-state" class="empty">
+          <div class="orb"></div>
+          <p>Run the bounded request to inspect the exact packet and receipt.</p>
+        </div>
+
+        <div id="result" hidden>
+          <div class="metrics">
+            <article><span>Owner time</span><strong id="metric-time">—</strong></article>
+            <article><span>Lid target</span><strong id="metric-lid">—</strong></article>
+            <article><span>Clearance</span><strong id="metric-clearance">—</strong></article>
+            <article><span>Render surfaces</span><strong id="metric-surfaces">—</strong></article>
+          </div>
+          <div class="truth-row">
+            <span id="clearance-badge" class="badge"></span>
+            <span id="batch-badge" class="badge"></span>
+          </div>
+          <div class="receipt-strip">
+            <span>Exact tool head</span>
+            <code id="exact-head">—</code>
+          </div>
+          <details open><summary>Holds that remain open</summary><ul id="holds"></ul></details>
+          <details><summary>Exact request JSON</summary><pre id="request-json"></pre></details>
+          <details><summary>Receiver packet JSON</summary><pre id="packet-json"></pre></details>
+          <details><summary>Tool receipt JSON</summary><pre id="receipt-json"></pre></details>
+          <div class="downloads">
+            <button data-download="request" class="secondary" type="button">Download request</button>
+            <button data-download="packet" class="secondary" type="button">Download packet</button>
+            <button data-download="receipt" class="secondary" type="button">Download receipt</button>
+          </div>
+        </div>
+        <div id="error" class="error-box" hidden></div>
+      </section>
+    </section>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>

@@ -42,6 +42,18 @@ jobs:
           set -euo pipefail
           python -m py_compile tools/run_map_object_receiver_tool.py
           for p in tooling/map-object-receiver-packet.manifest.json tooling/schemas/map-object-receiver-tool-request.schema.json tooling/schemas/map-object-receiver-packet.schema.json tooling/schemas/map-object-receiver-tool-receipt.schema.json; do python -m json.tool "$p" >/dev/null; done
+          test -f tools/serve_map_object_receiver_ui.py
+          test -f tooling/human/map-object-receiver/index.html
+          test -f tooling/human/map-object-receiver/app.js
+          test -f tooling/human/map-object-receiver/styles.css
+          python - <<'PY'
+          import json
+          m=json.load(open('tooling/map-object-receiver-packet.manifest.json'))
+          assert m['layers']=={'ai':'verified','human':'verified','intent':'absent'},m
+          assert m['human_interface']['contract_binding']=='same_request_schema_same_runner',m
+          assert m['human_interface']['listen_address']=='127.0.0.1',m
+          assert m['human_interface']['network_required_during_invocation'] is False,m
+          PY
           git merge-base --is-ancestor fe30c647933107aa4c535590a4238de009156842 HEAD
           git merge-base --is-ancestor 3c675de8a6aacf0e318312a985168dc4d6362c78 HEAD
           git merge-base --is-ancestor 51f1c0002f58f138911cce7d95a30add9a1e03af HEAD
@@ -93,7 +105,7 @@ jobs:
           assert packet['runtime_representation']['mode']=='current_sequence_static_24' and packet['runtime_representation']['moving_component_count']==7 and packet['runtime_representation']['static_component_count']==24,packet
           assert packet['runtime_representation']['proof_host_min_draw_calls_saved']==38 and packet['authority']['target_device_performance_accepted'] is False,packet
           assert receipt['result']=='PASS_MAP_OBJECT_RECEIVER_PACKET' and receipt['exact_tool_head']==head and receipt['evidence_scopes']==['structural'],receipt
-          assert receipt['layers']=={'ai':'verified','human':'absent','intent':'absent'},receipt
+          assert receipt['layers']=={'ai':'verified','human':'verified','intent':'absent'},receipt
           print('PASS_EXACT_AI_CALLABLE_RECEIVER_PACKET')
           PY
       - name: Prove alternate bounded selection
