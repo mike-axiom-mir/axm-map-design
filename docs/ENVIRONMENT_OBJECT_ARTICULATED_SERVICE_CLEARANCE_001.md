@@ -1,8 +1,10 @@
+> Current-provenance rebind: this document now describes the same bounded +20 mm Environment-owned clearance successor against TA fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7 / Object Animation 86bdbe9771bf9eb1bc92bd4160442941763fab1d. Historical e085437f6cc958bbf7c5c6464578923d542962b0 / c688936a84f80f292e43587c9d3386bd717f8178 evidence remains in Git history and is not reused as current proof.
+
 # Environment Object articulated service-clearance successor 001
 
 ## Scope
 
-This is a bounded **Environment / World Art** receiving lane stacked on exact Map Technical Art PR #45 head `e085437f6cc958bbf7c5c6464578923d542962b0`.
+This is a bounded **Environment / World Art** receiving lane stacked on exact Map Technical Art PR #45 head `fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7`.
 
 It does not change Object source geometry, Object world placement, Rigging, Animation, Technical Art transport, Materials, VFX, Building, Nature, Weather, cameras, lights, gameplay, collision, Runtime policy, Universal Creation, or `axm-create-me` product code.
 
@@ -20,12 +22,12 @@ The reusable rule is:
 
 ## Exact evidence inputs
 
-- Map Technical Art PR #45 head: `e085437f6cc958bbf7c5c6464578923d542962b0`
-- retained motion artifact: `10521663924`
-- retained motion archive SHA-256: `2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24`
-- exact Object Technical Art component map head: `965fb2f24dbd0b0cbb748d9f8b8712d62966315f`
+- Map Technical Art PR #45 head: `fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7`
+- retained motion artifact: `10596947383`
+- retained motion archive SHA-256: `ccffa0dcf90df584caf86f5c3b85f0c90bc306851a99da75dcbb1c28e11724ac`
+- exact Object Technical Art component map head: `b9848c62b2adde84e9e0afc219088113216799d6`
 - exact Object source SHA-256: `49b1f9ed9865893d6de6f1ec8f069576732df694853fde4e3fcff366de32644a`
-- exact Animation head: `c688936a84f80f292e43587c9d3386bd717f8178`
+- exact Animation head: `86bdbe9771bf9eb1bc92bd4160442941763fab1d`
 - exact owner sequence digest: `0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3`
 - retained combined-world artifact: `10509037278`
 - retained combined-world archive SHA-256: `8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97`
