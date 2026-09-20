@@ -27,12 +27,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      AXM_PR_HEAD: \${{ github.event.pull_request.head.sha || github.sha }}
+      AXM_PR_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - name: Checkout exact human-wrapper head
         uses: actions/checkout@v4
         with:
-          ref: \${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -56,7 +56,7 @@ jobs:
           git rev-parse HEAD > exact-human-head.txt
       - name: Download exact current evidence packets
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           root=/tmp/axm-map-object-human
@@ -96,16 +96,21 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Exercise the real human wrapper on desktop and mobile
         run: npx playwright test --config tooling/human/map-object-receiver/playwright.config.cjs
+      - name: Stage human-wrapper browser evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p tooling/human/map-object-receiver/evidence
+          test -f exact-human-head.txt && cp exact-human-head.txt tooling/human/map-object-receiver/evidence/exact-human-head.txt || true
+          test -f /tmp/axm-map-object-human/server.log && cp /tmp/axm-map-object-human/server.log tooling/human/map-object-receiver/evidence/server.log || true
+          test -f /tmp/axm-map-object-human/status.json && cp /tmp/axm-map-object-human/status.json tooling/human/map-object-receiver/evidence/status.json || true
+          cp tooling/map-object-receiver-packet.manifest.json tooling/human/map-object-receiver/evidence/manifest.json
+
       - name: Retain human-wrapper browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: map-object-receiver-human-ui-\${{ github.event.pull_request.head.sha || github.sha }}
-          path: |
-            tooling/human/map-object-receiver/evidence/
-            /tmp/axm-map-object-human/server.log
-            /tmp/axm-map-object-human/status.json
-            exact-human-head.txt
-            tooling/map-object-receiver-packet.manifest.json
+          name: map-object-receiver-human-ui-${{ github.event.pull_request.head.sha || github.sha }}
+          path: tooling/human/map-object-receiver/evidence/
           if-no-files-found: error
           retention-days: 30
