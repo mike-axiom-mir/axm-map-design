@@ -36,16 +36,18 @@ jobs:
           python -m py_compile tools/environment_object_articulated_service_clearance.py
           python -m json.tool contracts/environment_object_articulated_service_clearance.json >/dev/null
           git merge-base --is-ancestor fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7 HEAD
+          git merge-base --is-ancestor 04c7f27a749c634daef4bde98dc330fb83e13f91 HEAD
           python - <<'PY'
           import json, subprocess
-          expected={
-            '.github/workflows/environment-object-articulated-service-clearance.yml',
+          protected=[
             'contracts/environment_object_articulated_service_clearance.json',
             'docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_001.md',
             'tools/environment_object_articulated_service_clearance.py',
-          }
-          changed=set(subprocess.check_output(['git','diff','--name-only','fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7','HEAD'],text=True).splitlines())
-          assert changed==expected,(sorted(changed),sorted(expected))
+          ]
+          for path in protected:
+              core=subprocess.check_output(['git','rev-parse',f'04c7f27a749c634daef4bde98dc330fb83e13f91:{path}'],text=True).strip()
+              current=subprocess.check_output(['git','rev-parse',f'HEAD:{path}'],text=True).strip()
+              assert current==core,(path,core,current)
           d=json.load(open('contracts/environment_object_articulated_service_clearance.json'))
           assert d['technical_art_parent_head']=='fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7',d
           assert d['animation_head']=='86bdbe9771bf9eb1bc92bd4160442941763fab1d',d
