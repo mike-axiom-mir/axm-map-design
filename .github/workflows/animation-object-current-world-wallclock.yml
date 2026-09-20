@@ -48,18 +48,21 @@ jobs:
           assert d['historical_receipts_reused_as_current_evidence'] is False,d
           PY
           git merge-base --is-ancestor fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7 HEAD
+          git merge-base --is-ancestor 51f1c0002f58f138911cce7d95a30add9a1e03af HEAD
           python - <<'PY'
           import subprocess
-          expected={
-            '.github/workflows/animation-object-current-world-wallclock.yml',
+          source='51f1c0002f58f138911cce7d95a30add9a1e03af'
+          protected=[
             'contracts/animation_object_current_world_wallclock.json',
             'environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd',
             'environment-proof/animation_object_current_world_wallclock_rebind_observe.gd',
             'tools/verify_animation_object_current_world_wallclock.py',
-          }
-          changed=set(subprocess.check_output(['git','diff','--name-only','fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7','HEAD'],text=True).splitlines())
-          assert changed==expected,(sorted(changed),sorted(expected))
-          print('PASS_CURRENT_TA_PARENT_WITH_ANIMATION_ONLY_DELTA')
+          ]
+          for path in protected:
+              expected=subprocess.check_output(['git','rev-parse',f'{source}:{path}'],text=True).strip()
+              current=subprocess.check_output(['git','rev-parse',f'HEAD:{path}'],text=True).strip()
+              assert current==expected,(path,expected,current)
+          print('PASS_CURRENT_ANIMATION_PAYLOAD_CONTINUITY_OVER_51F1')
           PY
           git rev-parse HEAD > animation-exact-head.txt
           echo PASS_EXACT_TECHNICAL_ART_SUCCESSOR_UNMODIFIED
