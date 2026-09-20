@@ -1,0 +1,79 @@
+name: Environment Object articulated service clearance review atlas
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - studio/environment-object-articulated-service-clearance-001
+    paths:
+      - contracts/environment_object_articulated_service_clearance_review_atlas.json
+      - tools/environment_object_articulated_service_clearance_review_atlas.py
+      - docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_REVIEW_ATLAS_001.md
+      - .github/workflows/environment-object-articulated-service-clearance-review-atlas.yml
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  review-atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prove retained render-review source ancestry
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 317d4b177180d0ca62beafc6412bd59a12f06b95 HEAD
+          echo PASS_RENDER_REVIEW_SOURCE_ANCESTOR
+
+      - name: Download exact retained PR49 render artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          curl -L --fail --silent --show-error \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/10596622971/zip" \
+            -o /tmp/environment-pr49-render.zip
+          echo "fb19506718c97fbdec10114591fc4281e0aedc7b4d8f56310a070d571376ae7a  /tmp/environment-pr49-render.zip" | sha256sum -c -
+
+      - name: Build deterministic compact review atlas
+        run: |
+          set -euo pipefail
+          python tools/environment_object_articulated_service_clearance_review_atlas.py \
+            --artifact-zip /tmp/environment-pr49-render.zip \
+            --contract contracts/environment_object_articulated_service_clearance_review_atlas.json \
+            --output-dir evidence/environment_object_articulated_service_clearance_review_atlas
+
+      - name: Reject stale exact-head pin
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = Path('contracts/environment_object_articulated_service_clearance_review_atlas.json')
+          data = json.loads(source.read_text())
+          data['source_artifact']['exact_head'] = '0000000000000000000000000000000000000000'
+          Path('/tmp/stale-contract.json').write_text(json.dumps(data, indent=2, sort_keys=True) + '\n')
+          PY
+          if python tools/environment_object_articulated_service_clearance_review_atlas.py \
+            --artifact-zip /tmp/environment-pr49-render.zip \
+            --contract /tmp/stale-contract.json \
+            --output-dir /tmp/stale-atlas; then
+            echo 'FAIL_STALE_EXACT_HEAD_WAS_ACCEPTED'
+            exit 1
+          fi
+          echo 'PASS_REJECTED_STALE_EXACT_HEAD' | tee evidence/environment_object_articulated_service_clearance_review_atlas/negative.log
+
+      - name: Retain review atlas
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-articulated-service-clearance-review-atlas-${{ github.sha }}
+          path: evidence/environment_object_articulated_service_clearance_review_atlas
+          if-no-files-found: error
+          retention-days: 30

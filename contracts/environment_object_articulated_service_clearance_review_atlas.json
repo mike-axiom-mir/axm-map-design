@@ -1,0 +1,36 @@
+{
+  "authority": {
+    "art_direction_acceptance": false,
+    "canon": false,
+    "environment_adoption": false,
+    "independent_visual_qa_acceptance": false,
+    "runtime_acceptance": false
+  },
+  "schema": "axm.environment-object-articulated-service-clearance-review-atlas/v0.1",
+  "selection": {
+    "camera_contexts": [
+      "path_eye",
+      "elevated_oblique"
+    ],
+    "diff_amplification": 16,
+    "owner_samples": [
+      0,
+      40
+    ],
+    "presentation_modes": [
+      "control",
+      "candidate"
+    ],
+    "weather_state_index": 8,
+    "zoom_padding_px": 24
+  },
+  "source_artifact": {
+    "artifact_id": 10596622971,
+    "exact_head": "317d4b177180d0ca62beafc6412bd59a12f06b95",
+    "pr": 49,
+    "repository": "mike-axiom-mir/axm-map-design",
+    "sha256": "fb19506718c97fbdec10114591fc4281e0aedc7b4d8f56310a070d571376ae7a",
+    "size_bytes": 23448460
+  },
+  "truth_boundary": "Compact review-atlas selection only. Source is the exact retained 317d render-review artifact; later branch commits are allowed only because render-review payload continuity is independently protected. Full retained 272-frame artifact remains authoritative. No Environment adoption, Art Direction, Visual QA or Runtime acceptance is granted."
+}
