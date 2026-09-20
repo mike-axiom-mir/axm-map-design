@@ -1,0 +1,140 @@
+name: Map Object receiver specialist tool
+
+on:
+  push:
+    branches: [chatgpt/map-object-receiver-tool-001]
+    paths:
+      - "tooling/map-object-receiver-packet.manifest.json"
+      - "tooling/schemas/map-object-receiver-tool-request.schema.json"
+      - "tooling/schemas/map-object-receiver-packet.schema.json"
+      - "tooling/schemas/map-object-receiver-tool-receipt.schema.json"
+      - "tools/run_map_object_receiver_tool.py"
+      - ".github/workflows/map-object-receiver-tool.yml"
+  pull_request:
+    paths:
+      - "tooling/map-object-receiver-packet.manifest.json"
+      - "tooling/schemas/map-object-receiver-tool-request.schema.json"
+      - "tooling/schemas/map-object-receiver-packet.schema.json"
+      - "tooling/schemas/map-object-receiver-tool-receipt.schema.json"
+      - "tools/run_map_object_receiver_tool.py"
+      - ".github/workflows/map-object-receiver-tool.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  exact-map-object-receiver-tool:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact tool head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Bind syntax, schemas and converged ancestry
+        run: |
+          set -euo pipefail
+          python -m py_compile tools/run_map_object_receiver_tool.py
+          for p in tooling/map-object-receiver-packet.manifest.json tooling/schemas/map-object-receiver-tool-request.schema.json tooling/schemas/map-object-receiver-packet.schema.json tooling/schemas/map-object-receiver-tool-receipt.schema.json; do python -m json.tool "$p" >/dev/null; done
+          git merge-base --is-ancestor fe30c647933107aa4c535590a4238de009156842 HEAD
+          git merge-base --is-ancestor 3c675de8a6aacf0e318312a985168dc4d6362c78 HEAD
+          git rev-parse HEAD > exact-tool-head.txt
+          echo PASS_EXACT_ENVIRONMENT_AND_RUNTIME_HISTORIES_RETAINED
+      - name: Download exact current evidence packets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=/tmp/axm-map-object-tool
+          mkdir -p "$root/animation" "$root/environment" "$root/runtime"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371667/zip" -o "$root/animation.zip"
+          echo "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3  $root/animation.zip" | sha256sum --check --strict
+          unzip -q "$root/animation.zip" -d "$root/animation"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371960/zip" -o "$root/environment.zip"
+          echo "92d3cd229d2aae99e383db1626d4f65a28eb8310b24d5a4da4efc4353109bc85  $root/environment.zip" | sha256sum --check --strict
+          unzip -q "$root/environment.zip" -d "$root/environment"
+          curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597516810/zip" -o "$root/runtime.zip"
+          echo "00b4b0bb722f2c9606585424b741bf1af6e0b87648350b0ab0f09ad1463355c2  $root/runtime.zip" | sha256sum --check --strict
+          unzip -q "$root/runtime.zip" -d "$root/runtime"
+          test -f "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json"
+          test -f "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json"
+          test -f "$root/environment/evidence/environment_object_articulated_service_clearance/report.json"
+          test -f "$root/runtime/evidence/runtime_object_static_batching_successor_rebind/runtime.json"
+      - name: Invoke exact deterministic receiver packet
+        run: |
+          set -euo pipefail
+          root=/tmp/axm-map-object-tool
+          cat > "$root/request.json" <<'JSON'
+          {"schema":"axm.map-object-receiver-tool-request/v0.1","tool_id":"axm.map.object.receiver.packet","sample_index":40,"service_frame":"successor_20mm","static_batching":"current_sequence_static_24"}
+          JSON
+          python tools/run_map_object_receiver_tool.py --request "$root/request.json" --component-map "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json" --motion-plan "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json" --environment-report "$root/environment/evidence/environment_object_articulated_service_clearance/report.json" --runtime-receipt "$root/runtime/evidence/runtime_object_static_batching_successor_rebind/runtime.json" --out "$root/output"
+          python - <<'PY'
+          import json, pathlib, subprocess
+          root=pathlib.Path('/tmp/axm-map-object-tool'); packet=json.loads((root/'output/receiver-packet.json').read_text()); receipt=json.loads((root/'output/receipt.json').read_text()); head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert packet['implementation_head']==head and packet['selection']['sample_index']==40 and packet['selection']['time_s']==1.0,packet
+          assert packet['environment_service_frame']['mode']=='successor_20mm' and packet['environment_service_frame']['meets_60mm_contract'] is True,packet
+          assert packet['runtime_representation']['mode']=='current_sequence_static_24' and packet['runtime_representation']['moving_component_count']==7 and packet['runtime_representation']['static_component_count']==24,packet
+          assert packet['runtime_representation']['proof_host_min_draw_calls_saved']==38 and packet['authority']['target_device_performance_accepted'] is False,packet
+          assert receipt['result']=='PASS_MAP_OBJECT_RECEIVER_PACKET' and receipt['exact_tool_head']==head and receipt['evidence_scopes']==['structural'],receipt
+          assert receipt['layers']=={'ai':'verified','human':'absent','intent':'absent'},receipt
+          print('PASS_EXACT_AI_CALLABLE_RECEIVER_PACKET')
+          PY
+      - name: Prove alternate bounded selection
+        run: |
+          set -euo pipefail
+          root=/tmp/axm-map-object-tool
+          echo '{"schema":"axm.map-object-receiver-tool-request/v0.1","tool_id":"axm.map.object.receiver.packet","sample_index":0,"service_frame":"historical","static_batching":"none"}' > "$root/request-neutral.json"
+          python tools/run_map_object_receiver_tool.py --request "$root/request-neutral.json" --component-map "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json" --motion-plan "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json" --environment-report "$root/environment/evidence/environment_object_articulated_service_clearance/report.json" --runtime-receipt "$root/runtime/evidence/runtime_object_static_batching_successor_rebind/runtime.json" --out "$root/output-neutral"
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/axm-map-object-tool/output-neutral/receiver-packet.json')); assert p['selection']['sample_index']==0 and p['environment_service_frame']['mode']=='historical' and p['environment_service_frame']['meets_60mm_contract'] is False and p['runtime_representation']['mode']=='none',p
+          print('PASS_ALTERNATE_BOUNDED_SELECTION')
+          PY
+      - name: Fail closed on stale dependency and unknown request field
+        run: |
+          set -euo pipefail
+          root=/tmp/axm-map-object-tool
+          cp "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json" "$root/stale-map.json"
+          python - <<'PY'
+          import json
+          p='/tmp/axm-map-object-tool/stale-map.json'; d=json.load(open(p)); d['technical_art_head']='0'*40; open(p,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          d=json.load(open('/tmp/axm-map-object-tool/request.json')); d['silent_override']=True; open('/tmp/axm-map-object-tool/request-bad.json','w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          set +e
+          python tools/run_map_object_receiver_tool.py --request "$root/request.json" --component-map "$root/stale-map.json" --motion-plan "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json" --environment-report "$root/environment/evidence/environment_object_articulated_service_clearance/report.json" --runtime-receipt "$root/runtime/evidence/runtime_object_static_batching_successor_rebind/runtime.json" --out "$root/negative-stale" > "$root/negative-stale.log" 2>&1
+          stale=$?
+          python tools/run_map_object_receiver_tool.py --request "$root/request-bad.json" --component-map "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-rigid-component-map.json" --motion-plan "$root/animation/evidence/animation_object_current_world_wallclock/ta-parent/object-motion-receiver-plan.json" --environment-report "$root/environment/evidence/environment_object_articulated_service_clearance/report.json" --runtime-receipt "$root/runtime/evidence/runtime_object_static_batching_successor_rebind/runtime.json" --out "$root/negative-request" > "$root/negative-request.log" 2>&1
+          bad=$?
+          set -e
+          test "$stale" -ne 0; test "$bad" -ne 0
+          grep -q "component_map_sha256 mismatch" "$root/negative-stale.log"; grep -q "request fields drift" "$root/negative-request.log"
+          echo PASS_FAIL_CLOSED_NEGATIVES
+      - name: Stage retained evidence
+        run: |
+          set -euo pipefail
+          out=evidence/map_object_receiver_tool
+          mkdir -p "$out"
+          cp exact-tool-head.txt "$out/"
+          cp /tmp/axm-map-object-tool/request.json "$out/"
+          cp /tmp/axm-map-object-tool/output/receiver-packet.json "$out/"
+          cp /tmp/axm-map-object-tool/output/receipt.json "$out/"
+          cp /tmp/axm-map-object-tool/negative-stale.log "$out/"
+          cp /tmp/axm-map-object-tool/negative-request.log "$out/"
+      - name: Retain exact tool evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: map-object-receiver-tool-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            tooling/map-object-receiver-packet.manifest.json
+            tooling/schemas/map-object-receiver-tool-request.schema.json
+            tooling/schemas/map-object-receiver-packet.schema.json
+            tooling/schemas/map-object-receiver-tool-receipt.schema.json
+            evidence/map_object_receiver_tool
+          if-no-files-found: error
+          retention-days: 30

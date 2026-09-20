@@ -1,0 +1,138 @@
+{
+  "schema": "axm.specialist-tool-manifest/v0.1",
+  "tool_id": "axm.map.object.receiver.packet",
+  "status": "AI_CALLABLE",
+  "owner": {
+    "specialist": "Technical Art / UC Integration",
+    "repository": "mike-axiom-mir/axm-map-design"
+  },
+  "implementation": {
+    "repository": "mike-axiom-mir/axm-map-design",
+    "identity_policy": "receipt_exact_git_head",
+    "entrypoint": "tools/run_map_object_receiver_tool.py"
+  },
+  "invocation": {
+    "mode": "non_interactive",
+    "command": [
+      "python",
+      "tools/run_map_object_receiver_tool.py",
+      "--request",
+      "<request.json>",
+      "--component-map",
+      "<object-rigid-component-map.json>",
+      "--motion-plan",
+      "<object-motion-receiver-plan.json>",
+      "--environment-report",
+      "<environment-report.json>",
+      "--runtime-receipt",
+      "<runtime-receipt.json>",
+      "--out",
+      "<output-dir>"
+    ],
+    "network_required": false
+  },
+  "contracts": {
+    "request_schema": "tooling/schemas/map-object-receiver-tool-request.schema.json",
+    "result_schema": "tooling/schemas/map-object-receiver-packet.schema.json",
+    "receipt_schema": "tooling/schemas/map-object-receiver-tool-receipt.schema.json"
+  },
+  "determinism": {
+    "declared": true,
+    "seed_policy": "no_randomness",
+    "runtime_assumptions": [
+      "Python 3.11+",
+      "clean tracked Git state",
+      "exact pinned dependency evidence files",
+      "no network during invocation"
+    ]
+  },
+  "dependencies": [
+    {
+      "repository": "mike-axiom-mir/axm-map-design",
+      "exact_identity": "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7",
+      "role": "current-world Object receiver frame/transport authority",
+      "authority": "receiver"
+    },
+    {
+      "repository": "mike-axiom-mir/axm-map-design",
+      "exact_identity": "51f1c0002f58f138911cce7d95a30add9a1e03af",
+      "role": "current Map wall-clock Animation receiver evidence",
+      "authority": "donor"
+    },
+    {
+      "repository": "mike-axiom-mir/axm-object-design",
+      "exact_identity": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
+      "role": "owner-authored Object motion sequence",
+      "authority": "owner"
+    },
+    {
+      "repository": "mike-axiom-mir/axm-object-design",
+      "exact_identity": "b9848c62b2adde84e9e0afc219088113216799d6",
+      "role": "current Object rigid-scene Technical Art identity",
+      "authority": "owner"
+    },
+    {
+      "repository": "mike-axiom-mir/axm-map-design",
+      "exact_identity": "04c7f27a749c634daef4bde98dc330fb83e13f91",
+      "role": "101-sample Environment service-clearance evidence",
+      "authority": "owner"
+    },
+    {
+      "repository": "mike-axiom-mir/axm-map-design",
+      "exact_identity": "fe30c647933107aa4c535590a4238de009156842",
+      "role": "retained current Environment visual-review/atlas context",
+      "authority": "observer"
+    },
+    {
+      "repository": "mike-axiom-mir/axm-map-design",
+      "exact_identity": "3c675de8a6aacf0e318312a985168dc4d6362c78",
+      "role": "fresh proof-host static-batching measurement",
+      "authority": "donor"
+    }
+  ],
+  "evidence_scopes": [
+    "structural"
+  ],
+  "authority": {
+    "owns": [
+      "receiver packet schema",
+      "exact dependency validation",
+      "bounded owner-sample selection",
+      "Environment service-frame selection",
+      "current-sequence static-batching selection"
+    ],
+    "does_not_own": [
+      "Object source geometry",
+      "Animation timing/easing/keys",
+      "Environment production adoption",
+      "Art Direction or Visual QA acceptance",
+      "target-device Runtime performance",
+      "future arbitrary articulation",
+      "gameplay/physics/collision/navigation",
+      "CANON"
+    ]
+  },
+  "hold_conditions": [
+    "any dependency byte digest or exact identity mismatch",
+    "unknown or out-of-range request field",
+    "tracked repository state is dirty",
+    "output directory already exists",
+    "Object final Art Direction / independent Visual QA remains open",
+    "Environment adoption remains false",
+    "target-device Runtime acceptance remains open",
+    "future sequence moves a component classified static by the current owner sequence"
+  ],
+  "nonclaims": [
+    "No final visual acceptance",
+    "No Environment production adoption",
+    "No target-device performance certification",
+    "No source geometry or motion authorship",
+    "No arbitrary future-articulation safety",
+    "No gameplay, physics, collision/navigation, CANON or production-readiness acceptance"
+  ],
+  "layers": {
+    "ai": "verified",
+    "human": "absent",
+    "intent": "absent"
+  }
+}

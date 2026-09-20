@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axm.invalid/schemas/map-object-receiver-tool-receipt.v0.1.json",
+  "title": "AXM Map Object receiver tool receipt",
+  "type": "object",
+  "required": [
+    "schema",
+    "result",
+    "tool_id",
+    "exact_tool_head",
+    "request_sha256",
+    "request_canonical_sha256",
+    "packet_sha256",
+    "manifest_sha256",
+    "entrypoint_sha256",
+    "dependency_sha256",
+    "evidence_scopes",
+    "layers",
+    "holds",
+    "nonclaims",
+    "authority",
+    "truth_boundary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "axm.map-object-receiver-tool-receipt/v0.1"
+    },
+    "result": {
+      "const": "PASS_MAP_OBJECT_RECEIVER_PACKET"
+    },
+    "tool_id": {
+      "const": "axm.map.object.receiver.packet"
+    },
+    "exact_tool_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "request_canonical_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "packet_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "manifest_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "entrypoint_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "dependency_sha256": {
+      "type": "object"
+    },
+    "evidence_scopes": {
+      "const": [
+        "structural"
+      ]
+    },
+    "layers": {
+      "type": "object"
+    },
+    "holds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nonclaims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authority": {
+      "type": "object"
+    },
+    "truth_boundary": {
+      "type": "string"
+    }
+  }
+}

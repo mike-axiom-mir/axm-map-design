@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://axm.invalid/schemas/map-object-receiver-packet.v0.1.json",
+  "title": "AXM Map Object receiver packet",
+  "type": "object",
+  "required": [
+    "schema",
+    "tool_id",
+    "implementation_head",
+    "asset_id",
+    "selection",
+    "component_hierarchy",
+    "environment_service_frame",
+    "runtime_representation",
+    "dependencies",
+    "authority",
+    "holds",
+    "nonclaims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "axm.map-object-receiver-packet/v0.1"
+    },
+    "tool_id": {
+      "const": "axm.map.object.receiver.packet"
+    },
+    "implementation_head": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "asset_id": {
+      "const": "source:object:modular-equipment-case-001"
+    },
+    "selection": {
+      "type": "object"
+    },
+    "component_hierarchy": {
+      "type": "object"
+    },
+    "environment_service_frame": {
+      "type": "object"
+    },
+    "runtime_representation": {
+      "type": "object"
+    },
+    "dependencies": {
+      "type": "object"
+    },
+    "authority": {
+      "type": "object"
+    },
+    "holds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nonclaims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

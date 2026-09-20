@@ -1,0 +1,59 @@
+{
+  "schema": "axm.runtime-object-static-batching-successor-rebind/v0.1",
+  "scope": "exact current-world Object successor receiver only",
+  "prior_runtime_head": "d2df5a7eb03b806eb991028d3ed5e3bfaa755bca",
+  "successor_animation_head": "51f1c0002f58f138911cce7d95a30add9a1e03af",
+  "successor_technical_art_head": "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7",
+  "owner_animation_head": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
+  "owner_sequence": "lid-latch-open-hold-close-001",
+  "owner_sample_count": 101,
+  "owner_rate_hz": 40,
+  "retained_sample_indices": [
+    0,
+    10,
+    50,
+    100
+  ],
+  "control_receiver": {
+    "component_nodes": 31,
+    "component_surface_instances": 33,
+    "triangles": 812
+  },
+  "candidate_rule": "Reuse only the semantically re-proven 7-moving/24-static classification on the exact current receiver. Preserve every semantic component node and every moving render mesh; detach only the 24 exact-sequence-static component meshes and union their exact indexed surfaces by identical material plus identical non-index attribute arrays into one shared static ArrayMesh. Fresh proof-host counters and pixels are mandatory.",
+  "required_evidence": [
+    "exact successor Animation artifact is hash-bound",
+    "exact successor Animation/Technical-Art source observer chain is consumed",
+    "draw calls lower at every retained sample",
+    "objects in frame lower at every retained sample",
+    "primitive count unchanged",
+    "texture memory unchanged",
+    "owner moving pose unchanged in successor host frame",
+    "fixed-view shaded raster delta no greater than one LSB",
+    "all 31 semantic component nodes remain addressable",
+    "deliberate removed draw-call win fails closed",
+    "deliberate visual regression fails closed",
+    "deliberate future-articulation authority inflation fails closed"
+  ],
+  "holds": [
+    "future sequences that animate a currently static component require debatch or rebind",
+    "target-device CPU/GPU/FPS/VRAM/thermal performance",
+    "Environment adoption",
+    "VFX adoption",
+    "Art Direction / Visual QA acceptance",
+    "CANON",
+    "production readiness"
+  ],
+  "coordination_repo": "mike-axiom-mir/axm-create-me remains coordination-only",
+  "merge_gate": [
+    "Truth",
+    "Agency / non-domination",
+    "Continuity",
+    "Wisdom before speed"
+  ],
+  "successor_animation_artifact_id": 10597371667,
+  "successor_animation_artifact_sha256": "7ba57d1cca074520b58b59ddaf2f2f7ab7956db9e1d5b5914d29d7b44c2593a3",
+  "object_technical_art_head": "b9848c62b2adde84e9e0afc219088113216799d6",
+  "historical_object_technical_art_head": "965fb2f24dbd0b0cbb748d9f8b8712d62966315f",
+  "historical_measured_runtime_head": "d2df5a7eb03b806eb991028d3ed5e3bfaa755bca",
+  "historical_measurements_reused_as_current": false
+}
