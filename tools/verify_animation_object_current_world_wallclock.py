@@ -4,11 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
-PASS_STATE = "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_E085_RECEIVER"
+PASS_STATE = "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_FC567_RECEIVER"
 SCHEMA = "axm.animation-object-current-world-wallclock-observation/v0.2"
-TA_PARENT = "e085437f6cc958bbf7c5c6464578923d542962b0"
-PREDECESSOR_EVIDENCE_HEAD = "c2695f654f9dd44312ca5d205eceb27f7c2680ee"
-ANIMATION_HEAD = "c688936a84f80f292e43587c9d3386bd717f8178"
+TA_PARENT = "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7"
+PREDECESSOR_EVIDENCE_HEAD = "343668b80acd52367e3427f3ef97d1662625c18f"
+ANIMATION_HEAD = "86bdbe9771bf9eb1bc92bd4160442941763fab1d"
 SEQUENCE_DIGEST = "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
 FRAME_RULE = "MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_TECHNICAL_ART_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN__DO_NOT_ASSUME_SOURCE_EULER_X_EQUALS_HOST_EULER_X"
 
@@ -17,6 +17,8 @@ def verify(data: dict) -> None:
     assert data["schema"] == SCHEMA
     assert data["state"] == PASS_STATE
     assert data["technical_art_parent_head"] == TA_PARENT
+    assert data["historical_technical_art_parent_head"] == "e085437f6cc958bbf7c5c6464578923d542962b0"
+    assert data["historical_receipts_reused_as_current_evidence"] is False
     assert data["predecessor_animation_evidence_head"] == PREDECESSOR_EVIDENCE_HEAD
     assert data["animation_head"] == ANIMATION_HEAD
     assert data["sequence_digest"] == SEQUENCE_DIGEST

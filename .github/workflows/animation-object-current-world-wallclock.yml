@@ -1,11 +1,10 @@
-name: Animation Object current-world wall-clock successor proof
+name: Animation Object current-world wall-clock current-TA receiver proof
 
 on:
   push:
     branches: [studio/animation-object-current-world-wallclock-002]
     paths:
       - "contracts/animation_object_current_world_wallclock.json"
-      - "environment-proof/animation_object_current_world_wallclock_observe.gd"
       - "environment-proof/animation_object_current_world_wallclock_rebind_observe.gd"
       - "environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd"
       - "tools/verify_animation_object_current_world_wallclock.py"
@@ -37,13 +36,31 @@ jobs:
           set -euo pipefail
           python -m py_compile tools/verify_animation_object_current_world_wallclock.py tools/technical_art_object_motion_current_world_bridge.py
           python -m json.tool contracts/animation_object_current_world_wallclock.json >/dev/null
-          git merge-base --is-ancestor e085437f6cc958bbf7c5c6464578923d542962b0 HEAD
-          git diff --exit-code e085437f6cc958bbf7c5c6464578923d542962b0 -- \
-            environment-proof/atmosphere_current_world_object_motion_observe.gd \
-            environment-proof/atmosphere_current_world_object_motion_observe_base.gd \
-            environment-proof/atmosphere_current_world_object_rigid_component_observe.gd \
-            tools/technical_art_object_motion_current_world_bridge.py \
-            contracts/technical_art_object_motion_current_world_bridge.json
+          python - <<'PY'
+          import json
+          d=json.load(open('contracts/animation_object_current_world_wallclock.json'))
+          assert d['technical_art_parent_head']=='fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7',d
+          assert d['technical_art_parent_artifact_id']==10596947383,d
+          assert d['technical_art_parent_artifact_sha256']=='ccffa0dcf90df584caf86f5c3b85f0c90bc306851a99da75dcbb1c28e11724ac',d
+          assert d['predecessor_animation_evidence_head']=='343668b80acd52367e3427f3ef97d1662625c18f',d
+          assert d['animation_head']=='86bdbe9771bf9eb1bc92bd4160442941763fab1d',d
+          assert d['historical_technical_art_parent_head']=='e085437f6cc958bbf7c5c6464578923d542962b0',d
+          assert d['historical_receipts_reused_as_current_evidence'] is False,d
+          PY
+          git merge-base --is-ancestor fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7 HEAD
+          python - <<'PY'
+          import subprocess
+          expected={
+            '.github/workflows/animation-object-current-world-wallclock.yml',
+            'contracts/animation_object_current_world_wallclock.json',
+            'environment-proof/animation_object_current_world_wallclock_quaternion_observe.gd',
+            'environment-proof/animation_object_current_world_wallclock_rebind_observe.gd',
+            'tools/verify_animation_object_current_world_wallclock.py',
+          }
+          changed=set(subprocess.check_output(['git','diff','--name-only','fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7','HEAD'],text=True).splitlines())
+          assert changed==expected,(sorted(changed),sorted(expected))
+          print('PASS_CURRENT_TA_PARENT_WITH_ANIMATION_ONLY_DELTA')
+          PY
           git rev-parse HEAD > animation-exact-head.txt
           echo PASS_EXACT_TECHNICAL_ART_SUCCESSOR_UNMODIFIED
 
@@ -55,16 +72,17 @@ jobs:
           root=evidence/animation_object_current_world_wallclock
           mkdir -p "$root/ta-parent" environment-proof/generated
           curl --fail --location --retry 3 -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10521663924/zip" -o "$root/ta-parent.zip"
-          echo "2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24  $root/ta-parent.zip" | sha256sum --check --strict
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10596947383/zip" -o "$root/ta-parent.zip"
+          echo "ccffa0dcf90df584caf86f5c3b85f0c90bc306851a99da75dcbb1c28e11724ac  $root/ta-parent.zip" | sha256sum --check --strict
           unzip -q "$root/ta-parent.zip" -d "$root/ta-parent"
           python - <<'PY'
           import json
           p='evidence/animation_object_current_world_wallclock/ta-parent/final-receipt.json'
           d=json.load(open(p))
-          assert d['exact_head']=='e085437f6cc958bbf7c5c6464578923d542962b0', d
+          assert d['exact_head']=='fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7', d
           assert d['result']=='PASS_CURRENT_WORLD_OBJECT_ANIMATION_OWNER_SAMPLES_THROUGH_RIGID_RECEIVER__VFX_RUNTIME_ENV_ADOPTION_HELD', d
-          assert d['animation_head']=='c688936a84f80f292e43587c9d3386bd717f8178', d
+          assert d['animation_head']=='86bdbe9771bf9eb1bc92bd4160442941763fab1d', d
+          assert d['object_technical_art_head']=='b9848c62b2adde84e9e0afc219088113216799d6', d
           assert d['samples_proven']==[0,10,50,100], d
           assert d['neutral_changed_pixels_vs_retained_parent']==0, d
           assert d['endpoint_changed_pixels_vs_neutral']==0, d
@@ -76,7 +94,7 @@ jobs:
           cp "$root/ta-parent/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
           cp "$root/ta-parent/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
           python tools/technical_art_object_motion_current_world_bridge.py validate-plan \
-            --contract contracts/technical_art_object_motion_current_world_bridge.json \
+            --contract contracts/technical_art_object_motion_current_world_current_object_rebind.json \
             --plan environment-proof/generated/object-motion-receiver-plan.json
 
       - name: Download exact current-world payload and selected roughness inputs

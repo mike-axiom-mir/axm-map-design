@@ -1,10 +1,10 @@
 {
   "schema": "axm.animation-object-current-world-wallclock/v0.2",
-  "technical_art_parent_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
-  "technical_art_parent_artifact_id": 10521663924,
-  "technical_art_parent_artifact_sha256": "2374d89abf5779b7470657082c3a43b974d6b16fcbaff4e82256753c97d6dc24",
-  "predecessor_animation_evidence_head": "c2695f654f9dd44312ca5d205eceb27f7c2680ee",
-  "animation_head": "c688936a84f80f292e43587c9d3386bd717f8178",
+  "technical_art_parent_head": "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7",
+  "technical_art_parent_artifact_id": 10596947383,
+  "technical_art_parent_artifact_sha256": "ccffa0dcf90df584caf86f5c3b85f0c90bc306851a99da75dcbb1c28e11724ac",
+  "predecessor_animation_evidence_head": "343668b80acd52367e3427f3ef97d1662625c18f",
+  "animation_head": "86bdbe9771bf9eb1bc92bd4160442941763fab1d",
   "sequence_id": "lid-latch-open-hold-close-001",
   "sequence_digest": "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3",
   "duration_s": 2.5,
@@ -15,5 +15,8 @@
   "review_pass": "second real AnimationPlayer.play() with shaded frame capture; capture timing is instrumentation and is not performance evidence",
   "reusable_rule": "REPLAY_FROZEN_OWNER_MOTION_ON_EACH_VERIFIED_TECHNICAL_ART_RECEIVER_SUCCESSOR__DO_NOT_TRANSFER_WALLCLOCK_ACCEPTANCE_BY_ANCESTRY__MATCH_ACTUAL_PIVOT_QUATERNIONS_ABOUT_THE_EXACT_HOST_AXIS_AGAINST_THE_ALREADY_ADAPTED_RECEIVER_PLAN",
   "frame_boundary": "Technical Art already owns and verifies source-to-host coordinate/angle adaptation in the receiver plan. Animation observes the actual host pivot quaternion around that exact host axis and compares it to the adapted receiver target; it does not apply a second source-to-host sign conversion or assume source Euler X equals host Euler X.",
-  "truth_boundary": "Animation may replay and characterize the exact owner clip on the exact Technical-Art current-world receiver successor. It does not own receiver construction or frame conversion, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness."
+  "truth_boundary": "Animation replays the unchanged 2.5 s / 40 Hz / 101-key owner sequence on the exact current Technical-Art current-world receiver successor. The prior e085437f6cc958bbf7c5c6464578923d542962b0 Technical-Art proof and prior wall-clock Animation head remain historical evidence only and are not reused as current proof. Animation does not own receiver construction/frame conversion, Runtime/controller policy, device performance, VFX, Environment adoption, Art/QA acceptance, gameplay, physics, CANON or production readiness.",
+  "historical_technical_art_parent_head": "e085437f6cc958bbf7c5c6464578923d542962b0",
+  "historical_animation_wallclock_head": "343668b80acd52367e3427f3ef97d1662625c18f",
+  "historical_receipts_reused_as_current_evidence": false
 }

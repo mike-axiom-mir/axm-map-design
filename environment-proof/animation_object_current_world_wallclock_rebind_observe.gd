@@ -1,12 +1,13 @@
-extends "res://atmosphere_current_world_object_motion_observe.gd"
+extends "res://atmosphere_current_world_object_motion_current_rebind_observe.gd"
 
 const ANIM_OUTPUT_PATH := "res://animation-object-current-world-wallclock-runtime.json"
 const ANIM_CONTRACT_SCHEMA := "axm.animation-object-current-world-wallclock/v0.2"
 const ANIM_RECEIPT_SCHEMA := "axm.animation-object-current-world-wallclock-observation/v0.2"
-const ANIM_PASS_STATE := "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_E085_RECEIVER"
-const ANIM_TA_PARENT_HEAD := "e085437f6cc958bbf7c5c6464578923d542962b0"
-const ANIM_PREDECESSOR_EVIDENCE_HEAD := "c2695f654f9dd44312ca5d205eceb27f7c2680ee"
-const ANIM_OWNER_HEAD := "c688936a84f80f292e43587c9d3386bd717f8178"
+const ANIM_PASS_STATE := "PASS_OBJECT_CURRENT_WORLD_OWNER_ANIMATION_WALLCLOCK_REBOUND_TO_TA_FC567_RECEIVER"
+const ANIM_TA_PARENT_HEAD := "fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7"
+const ANIM_PREDECESSOR_EVIDENCE_HEAD := "343668b80acd52367e3427f3ef97d1662625c18f"
+const ANIM_HISTORICAL_TA_PARENT_HEAD := "e085437f6cc958bbf7c5c6464578923d542962b0"
+const ANIM_OWNER_HEAD := "86bdbe9771bf9eb1bc92bd4160442941763fab1d"
 const ANIM_SEQUENCE_DIGEST := "0a3523cf792264f610881552fd2ebd438aabdfd05e30e92af9dbb33ded1fa2d3"
 const ANIM_DURATION_S := 2.5
 const ANIM_RATE_HZ := 40.0
@@ -433,6 +434,8 @@ func _initialize()->void:
         "state":"STARTED",
         "contract_schema":ANIM_CONTRACT_SCHEMA,
         "technical_art_parent_head":ANIM_TA_PARENT_HEAD,
+        "historical_technical_art_parent_head":ANIM_HISTORICAL_TA_PARENT_HEAD,
+        "historical_receipts_reused_as_current_evidence":false,
         "predecessor_animation_evidence_head":ANIM_PREDECESSOR_EVIDENCE_HEAD,
         "animation_head":ANIM_OWNER_HEAD,
         "sequence_digest":ANIM_SEQUENCE_DIGEST,
@@ -473,6 +476,6 @@ func _initialize()->void:
     anim_receipt["state"] = ANIM_PASS_STATE
     anim_receipt["timed_playback"] = timed
     anim_receipt["shaded_review_playback"] = review
-    anim_receipt["truth_boundary"] = "The frozen 2.5 s / 40 Hz / 101-key owner sequence is replayed on exact Technical-Art successor e085 after its verified owner-to-Godot-host frame adapter. Acceptance pose membership is measured from actual pivot quaternions about the exact receiver axis against Technical Art's already-adapted receiver plan; source Euler X is not assumed to equal host Euler X. The first playback uses frame_post_draw metadata only; the second retains shaded review frames. No source retime, receiver-construction authority, Runtime/controller, target-device/display performance, VFX, Environment adoption, gameplay, physics, Art/QA, CANON or production acceptance transfers."
+    anim_receipt["truth_boundary"] = "The frozen 2.5 s / 40 Hz / 101-key owner sequence is replayed on exact current Technical-Art successor fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7. The prior e085437f6cc958bbf7c5c6464578923d542962b0 receiver proof remains historical and is not reused as current evidence. Acceptance pose membership is measured from actual pivot quaternions about the exact receiver axis against Technical Art's already-adapted receiver plan; source Euler X is not assumed to equal host Euler X. No source retime, receiver-construction authority, Runtime/controller, target-device/display performance, VFX, Environment adoption, gameplay, physics, Art/QA, CANON or production acceptance transfers."
     _anim_write_receipt()
     quit(0)

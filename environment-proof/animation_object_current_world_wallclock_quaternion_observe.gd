@@ -1,6 +1,6 @@
 extends "res://animation_object_current_world_wallclock_rebind_observe.gd"
 
-# Acceptance shim for the Technical-Art e085 successor.
+# Acceptance shim for the current Technical-Art fc567 successor.
 # The receiver plan already contains the adapted host-frame target angles.
 # Compare the actual pivot quaternions directly with quaternions generated
 # from those targets about the exact Technical-Art host axis. Scalar angles
