@@ -1,0 +1,235 @@
+name: Environment Object articulated service clearance render review
+
+on:
+  push:
+    branches: [studio/environment-object-articulated-service-clearance-001]
+    paths:
+      - "environment-proof/atmosphere_current_world_object_articulated_service_clearance_successor_observe.gd"
+      - "tools/environment_object_articulated_service_clearance_render_review.py"
+      - "docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_RENDER_REVIEW_001.md"
+      - ".github/workflows/environment-object-articulated-service-clearance-render-review.yml"
+      - "contracts/environment_object_articulated_service_clearance.json"
+  pull_request:
+    paths:
+      - "environment-proof/atmosphere_current_world_object_articulated_service_clearance_successor_observe.gd"
+      - "tools/environment_object_articulated_service_clearance_render_review.py"
+      - "docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_RENDER_REVIEW_001.md"
+      - ".github/workflows/environment-object-articulated-service-clearance-render-review.yml"
+      - "contracts/environment_object_articulated_service_clearance.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  rendered-successor-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Environment head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate review sources
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input pillow numpy
+          python -m py_compile tools/environment_object_articulated_service_clearance_render_review.py
+          python -m json.tool contracts/environment_object_articulated_service_clearance.json >/dev/null
+          git merge-base --is-ancestor 04c7f27a749c634daef4bde98dc330fb83e13f91 HEAD
+          python - <<'PY'
+          import subprocess
+          expected={
+            '.github/workflows/environment-object-articulated-service-clearance-render-review.yml',
+            'docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_RENDER_REVIEW_001.md',
+            'environment-proof/atmosphere_current_world_object_articulated_service_clearance_successor_observe.gd',
+            'tools/environment_object_articulated_service_clearance_render_review.py',
+          }
+          changed=set(subprocess.check_output(['git','diff','--name-only','04c7f27a749c634daef4bde98dc330fb83e13f91','HEAD'],text=True).splitlines())
+          assert changed==expected,(sorted(changed),sorted(expected))
+          print('PASS_RENDER_REVIEW_ONLY_DELTA_OVER_CURRENT_CLEARANCE_CORE')
+          PY
+          git rev-parse HEAD > exact-head.txt
+
+      - name: Download exact spatial PASS and retained current-world inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_articulated_service_clearance_render_review
+          mkdir -p "$root/spatial" "$root/world" "$root/roughness" environment-proof/generated
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10597371960/zip" \
+            -o "$root/spatial.zip"
+          echo "92d3cd229d2aae99e383db1626d4f65a28eb8310b24d5a4da4efc4353109bc85  $root/spatial.zip" | sha256sum --check --strict
+          unzip -q "$root/spatial.zip" -d "$root/spatial"
+          test "$(cat "$root/spatial/exact-head.txt")" = "04c7f27a749c634daef4bde98dc330fb83e13f91"
+          python - <<'PY'
+          import json
+          p='evidence/environment_object_articulated_service_clearance_render_review/spatial/evidence/environment_object_articulated_service_clearance/report.json'
+          d=json.load(open(p))
+          assert d['technical_art_parent_head']=='fc567fd6dd061ccb5e8232bd17ee0af3d2e064b7',d
+          assert d['animation_head']=='86bdbe9771bf9eb1bc92bd4160442941763fab1d',d
+          assert d['decision']['environment_adoption'] is False,d
+          assert d['articulated_sweep']['candidate_minimum_inner_clearance_m']>=0.06,d
+          PY
+          test -f "$root/spatial/evidence/environment_object_articulated_service_clearance/report.json"
+          test -f "$root/spatial/evidence/environment_object_articulated_service_clearance/ta/object-rigid-component-map.json"
+          test -f "$root/spatial/evidence/environment_object_articulated_service_clearance/ta/object-motion-receiver-plan.json"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10509037278/zip" \
+            -o "$root/world.zip"
+          echo "8f2f8aa4bb11e2f868a6ce36dd381933ba1ea6c59be7b82ed00d1dfe5402ee97  $root/world.zip" | sha256sum --check --strict
+          unzip -q "$root/world.zip" -d "$root/world"
+          test -f "$root/world/combined_current_world.json"
+
+          curl --fail --location --retry 3 \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/mike-axiom-mir/axm-map-design/actions/artifacts/10502588586/zip" \
+            -o "$root/roughness.zip"
+          echo "60c1e589e3e1c3a7dab5430b55ef59542dd7ca35dad8b13653d165c79eee3a1e  $root/roughness.zip" | sha256sum --check --strict
+          unzip -q "$root/roughness.zip" -d "$root/roughness"
+          test -f "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json"
+          test -f "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png"
+
+          cp "$root/spatial/evidence/environment_object_articulated_service_clearance/ta/object-rigid-component-map.json" environment-proof/generated/object-rigid-component-map.json
+          cp "$root/spatial/evidence/environment_object_articulated_service_clearance/ta/object-motion-receiver-plan.json" environment-proof/generated/object-motion-receiver-plan.json
+          cp "$root/world/combined_current_world.json" environment-proof/generated/current_world_nature_winding_migration.json
+          cp "$root/roughness/donor-receipts/service-dark-selected-roughness-two-surface.surface.json" environment-proof/generated/object-selected-roughness-ta-surface.json
+          cp "$root/roughness/donor-receipts/service-dark-roughness-selected-field.png" environment-proof/generated/object-selected-roughness.png
+          cp contracts/environment_object_articulated_service_clearance.json environment-proof/generated/environment-object-articulated-service-clearance.json
+
+      - name: Checkout exact retained current-world observer dependencies
+        uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 29ef2d4cc4398b3f26290e4e1f1f10398ca9898c
+          path: .vfx-map
+          fetch-depth: 1
+
+      - uses: actions/checkout@v4
+        with:
+          repository: mike-axiom-mir/axm-map-design
+          ref: 15a03b7c3ba3aaa7c0475ca1a3091c15581f559b
+          path: .weather-width
+          fetch-depth: 1
+
+      - name: Compose exact current-world observer dependencies
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_articulated_service_clearance_render_review
+          cp .weather-width/environment-proof/atmosphere_current_world_weather_width_observe.gd environment-proof/atmosphere_current_world_weather_width_observe.gd
+          python tools/environment_selected_roughness_compact_east_composition.py compose-observer \
+            --donor .vfx-map/environment-proof/atmosphere_current_world_compact_east_visual_response_observe.gd \
+            --output environment-proof/atmosphere_current_world_selected_roughness_compact_east_observe.gd \
+            --receipt "$root/observer-composition.json"
+
+      - name: Download pinned Godot 4.7.2
+        env:
+          GODOT_URL: https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          GODOT_SHA256: cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4
+        run: |
+          set -euo pipefail
+          mkdir -p .godot-bin
+          curl --fail --location --retry 3 --retry-delay 2 "$GODOT_URL" -o .godot-bin/godot.zip
+          echo "$GODOT_SHA256  .godot-bin/godot.zip" | sha256sum --check --strict
+          unzip -q .godot-bin/godot.zip -d .godot-bin
+          chmod +x .godot-bin/Godot_v4.7.2-stable_linux.x86_64
+          if ! command -v xvfb-run >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y xvfb; fi
+
+      - name: Render exact predecessor and +20 mm successor at neutral and worst-case plateau
+        env:
+          AXM_OBJECT_FOOTPRINT_REVIEW_MODE: CANDIDATE_VISIBLE
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_articulated_service_clearance_render_review
+          for sample in 0 40; do
+            for variant in predecessor successor; do
+              out="$root/${variant}-${sample}"
+              mkdir -p "$out/rendered"
+              rm -f environment-proof/atmosphere-width-*.png environment-proof/atmosphere-current-world-weather-width-runtime.json
+              script=atmosphere_current_world_object_motion_current_rebind_observe.gd
+              if [ "$variant" = successor ]; then
+                script=atmosphere_current_world_object_articulated_service_clearance_successor_observe.gd
+              fi
+              AXM_OBJECT_MOTION_SAMPLE_INDEX="$sample" xvfb-run --auto-servernum --server-args="-screen 0 1200x800x24" \
+                .godot-bin/Godot_v4.7.2-stable_linux.x86_64 --display-driver x11 --rendering-method gl_compatibility \
+                --path environment-proof --script "$script" 2>&1 | tee "$out/godot.log"
+              cp environment-proof/atmosphere-current-world-weather-width-runtime.json "$out/runtime.json"
+              cp environment-proof/atmosphere-width-*.png "$out/rendered/"
+              test "$(find "$out/rendered" -maxdepth 1 -name 'atmosphere-width-*.png' -type f | wc -l | tr -d ' ')" = 68
+            done
+          done
+
+      - name: Verify current-world identity and characterize successor raster delta
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_articulated_service_clearance_render_review
+          python tools/environment_object_articulated_service_clearance_render_review.py \
+            --contract contracts/environment_object_articulated_service_clearance.json \
+            --spatial-report "$root/spatial/evidence/environment_object_articulated_service_clearance/report.json" \
+            --predecessor-runtime-0 "$root/predecessor-0/runtime.json" \
+            --successor-runtime-0 "$root/successor-0/runtime.json" \
+            --predecessor-rendered-0 "$root/predecessor-0/rendered" \
+            --successor-rendered-0 "$root/successor-0/rendered" \
+            --predecessor-runtime-40 "$root/predecessor-40/runtime.json" \
+            --successor-runtime-40 "$root/successor-40/runtime.json" \
+            --predecessor-rendered-40 "$root/predecessor-40/rendered" \
+            --successor-rendered-40 "$root/successor-40/rendered" \
+            --output "$root/report.json"
+
+      - name: Negative rejects historical predecessor masquerading as successor
+        run: |
+          set -euo pipefail
+          root=evidence/environment_object_articulated_service_clearance_render_review
+          set +e
+          python tools/environment_object_articulated_service_clearance_render_review.py \
+            --contract contracts/environment_object_articulated_service_clearance.json \
+            --spatial-report "$root/spatial/evidence/environment_object_articulated_service_clearance/report.json" \
+            --predecessor-runtime-0 "$root/predecessor-0/runtime.json" \
+            --successor-runtime-0 "$root/predecessor-0/runtime.json" \
+            --predecessor-rendered-0 "$root/predecessor-0/rendered" \
+            --successor-rendered-0 "$root/predecessor-0/rendered" \
+            --predecessor-runtime-40 "$root/predecessor-40/runtime.json" \
+            --successor-runtime-40 "$root/predecessor-40/runtime.json" \
+            --predecessor-rendered-40 "$root/predecessor-40/rendered" \
+            --successor-rendered-40 "$root/predecessor-40/rendered" \
+            --output "$root/negative-report.json" > "$root/negative.log" 2>&1
+          code=$?
+          set -e
+          test "$code" -ne 0
+          grep -Eq "render successor environment adoption must remain false|service-frame footprint drift" "$root/negative.log"
+          echo PASS_REJECTED_HISTORICAL_FRAME_AS_SUCCESSOR
+
+      - name: Retain exact rendered Environment review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: environment-object-articulated-service-clearance-render-review-${{ github.sha }}
+          path: |
+            exact-head.txt
+            contracts/environment_object_articulated_service_clearance.json
+            docs/ENVIRONMENT_OBJECT_ARTICULATED_SERVICE_CLEARANCE_RENDER_REVIEW_001.md
+            evidence/environment_object_articulated_service_clearance_render_review/report.json
+            evidence/environment_object_articulated_service_clearance_render_review/negative.log
+            evidence/environment_object_articulated_service_clearance_render_review/observer-composition.json
+            evidence/environment_object_articulated_service_clearance_render_review/predecessor-0/runtime.json
+            evidence/environment_object_articulated_service_clearance_render_review/predecessor-0/rendered/*.png
+            evidence/environment_object_articulated_service_clearance_render_review/successor-0/runtime.json
+            evidence/environment_object_articulated_service_clearance_render_review/successor-0/rendered/*.png
+            evidence/environment_object_articulated_service_clearance_render_review/predecessor-40/runtime.json
+            evidence/environment_object_articulated_service_clearance_render_review/predecessor-40/rendered/*.png
+            evidence/environment_object_articulated_service_clearance_render_review/successor-40/runtime.json
+            evidence/environment_object_articulated_service_clearance_render_review/successor-40/rendered/*.png
+          if-no-files-found: warn
